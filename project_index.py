@@ -10,10 +10,10 @@ import pymysql
 import re
 import operator
 
-def metaquery(connection, sqlquery):
+def metaquery(connection, sqlquery, values):
     """Carries out MySQL queries"""
     cur = connection.cursor()
-    cur.execute(sqlquery)
+    cur.execute(sqlquery, values)
     data = []
     for row in cur:
         data.append(row)
@@ -22,13 +22,13 @@ def metaquery(connection, sqlquery):
 def wikiquery(sqlquery):
     """Constructs a MySQL query to the Tool Labs database replica."""
     conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
-    data = metaquery(conn, sqlquery)
+    data = metaquery(conn, sqlquery, None)
     return data
 
-def indexquery(sqlquery):
+def indexquery(sqlquery, values):
     """Constructs a MySQL query to the WPX database."""
     conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
-    data = metaquery(conn, sqlquery)
+    data = metaquery(conn, sqlquery, values)
     return data
     
 def masterlist():
@@ -141,11 +141,11 @@ def main():
     
     # Saves it to the database
     print('Saving to the database...')
-    indexquery('drop table if exists projectindex') # We are going to re-build the table
-    indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255), pi_project VARCHAR(255), primary key (pi_id)) engine=innodb character set=utf8;')
+    indexquery('drop table if exists projectindex', None) # We are going to re-build the table
+    indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255), pi_project VARCHAR(255), primary key (pi_id)) engine=innodb character set=utf8;', None)
     for wikiproject in pages.keys():
         for page in pages[wikiproject]:
-            indexquery('insert into projectindex (pi_page, pi_project) values ("' + re.sub('"', '\"', page) + '", "' + re.sub('"', '\"', wikiproject) + '");')
+            indexquery('insert into projectindex (pi_page, pi_project) values (%s, %s);', (page, wikiproject))
                
         
 if __name__ == "__main__":
