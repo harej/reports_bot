@@ -17,7 +17,6 @@ def metaquery(connection, sqlquery, values):
     data = []
     for row in cur:
         data.append(row)
-    connnection.commit()
     return data
 
 def wikiquery(sqlquery):
@@ -30,6 +29,7 @@ def indexquery(sqlquery, values):
     """Constructs a MySQL query to the WPX database."""
     conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
     data = metaquery(conn, sqlquery, values)
+    conn.commit()
     return data
     
 def masterlist():
