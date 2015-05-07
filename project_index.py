@@ -6,13 +6,9 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 import sys
-#import json
-#import mw_lego # https://github.com/legoktm/supersimplemediawiki
-#import mw # the one by Aaron Halfaker
 import pymysql
 import re
 import operator
-#from pprint import pprint as print # legoktm magic
 
 def metaquery(connection, sqlquery):
     """Carries out MySQL queries"""
@@ -149,7 +145,7 @@ def main():
     indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255), pi_project VARCHAR(255), primary key (pi_id)) engine=innodb character set=utf8;')
     for wikiproject in pages.keys():
         for page in pages[wikiproject]:
-            indexquery('insert into projectindex (pi_page, pi_project) values ("' + page + '", "' + wikiproject + '");')
+            indexquery('insert into projectindex (pi_page, pi_project) values ("' + re.sub('"', '\"', page) + '", "' + re.sub('"', '\"', wikiproject) + '");')
                
         
 if __name__ == "__main__":
