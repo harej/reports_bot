@@ -148,7 +148,7 @@ def main():
     for wikiproject in pages.keys():
         for page in pages[wikiproject]:
             counter += 1
-            print('Query no. ' + counter + ': ' + wikiproject + ' × ' + page)
+            print('Query no. ' + str(counter) + ': ' + wikiproject + ' × ' + page)
             indexquery('insert into projectindex (pi_page, pi_project) values (%s, %s);', (page, wikiproject))
                
         
