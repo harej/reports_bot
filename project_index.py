@@ -14,7 +14,7 @@ import re
 import operator
 #from pprint import pprint as print # legoktm magic
 
-def metaquery(connection, sqlquery)
+def metaquery(connection, sqlquery):
     """Carries out MySQL queries"""
     cur = connection.cursor()
     cur.execute(sqlquery)
@@ -29,7 +29,7 @@ def wikiquery(sqlquery):
     data = metaquery(conn, sqlquery)
     return data
 
-def indexquery(sqlquery)
+def indexquery(sqlquery):
     """Constructs a MySQL query to the WPX database."""
     conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
     data = metaquery(conn, sqlquery)
