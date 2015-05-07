@@ -144,8 +144,11 @@ def main():
     print('Saving to the database...')
     indexquery('drop table if exists projectindex', None) # We are going to re-build the table
     indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
+    counter = 0
     for wikiproject in pages.keys():
         for page in pages[wikiproject]:
+            counter += 1
+            print('Query no. ' + counter + ': ' + wikiproject + ' × ' + page)
             indexquery('insert into projectindex (pi_page, pi_project) values (%s, %s);', (page, wikiproject))
                
         
