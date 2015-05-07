@@ -17,6 +17,7 @@ def metaquery(connection, sqlquery, values):
     data = []
     for row in cur:
         data.append(row)
+    connnection.commit()
     return data
 
 def wikiquery(sqlquery):
@@ -142,7 +143,7 @@ def main():
     # Saves it to the database
     print('Saving to the database...')
     indexquery('drop table if exists projectindex', None) # We are going to re-build the table
-    indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255), pi_project VARCHAR(255), primary key (pi_id)) engine=innodb character set=utf8;', None)
+    indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
     for wikiproject in pages.keys():
         for page in pages[wikiproject]:
             indexquery('insert into projectindex (pi_page, pi_project) values (%s, %s);', (page, wikiproject))
