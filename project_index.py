@@ -147,8 +147,7 @@ class WikiProjectTools:
         
         # Saves it to the database
         print('Saving to the database...')
-        WikiProjectTools.indexquery('drop table if exists projectindex', None) # We are going to re-build the table
-        WikiProjectTools.indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
+        WikiProjectTools.indexquery('create table projectindex_draft (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
         
         packages = []
         for i in range(0, len(dbinput), 10000):
@@ -156,7 +155,7 @@ class WikiProjectTools:
         
         counter = 0
         for package in packages:
-            query_builder = 'insert into projectindex (pi_page, pi_project) values ' # seeding really long query
+            query_builder = 'insert into projectindex_draft (pi_page, pi_project) values ' # seeding really long query
             mastertuple = ()
             for item in package:
                 query_builder += '(%s, %s), '
@@ -166,6 +165,9 @@ class WikiProjectTools:
             counter += 1
             print('Executing batch query no. ' + str(counter))
             WikiProjectTools.indexquery(query_builder, mastertuple)
+        
+        WikiProjectTools.indexquery('drop table if exists projectindex', None)
+        WikiProjectTools.indexquery('rename table projectindex_draft to projectindex', None) # Moving draft table over to live table
         
 if __name__ == "__main__":
     WikiProjectTools.main()
