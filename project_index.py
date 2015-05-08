@@ -143,7 +143,7 @@ def main():
     dbinput = []
     for wikiproject in pages.keys():
         for page in pages[wikiproject]:
-            dbinput.append((wikiproject, page))
+            dbinput.append((page, wikiproject))
     
     # Saves it to the database
     print('Saving to the database...')
