@@ -159,9 +159,9 @@ def main():
         query_builder = 'insert into projectindex (pi_page, pi_project) ' # seeding really long query
         mastertuple = ()
         for item in package:
-            query_builder += 'values (%s, %s) '
+            query_builder += 'values (%s, %s), '
             mastertuple += item
-        query_builder += ';'
+        query_builder = re.sub(r', $', ';', query_builder)
         counter += 1
         print('Executing batch query no. ' + str(counter))
         indexquery(query_builder, mastertuple)
