@@ -156,12 +156,13 @@ def main():
     
     counter = 0
     for package in packages:
-        query_builder = 'insert into projectindex (pi_page, pi_project) ' # seeding really long query
+        query_builder = 'insert into projectindex (pi_page, pi_project) values ' # seeding really long query
         mastertuple = ()
         for item in package:
-            query_builder += 'values (%s, %s), '
+            query_builder += '(%s, %s), '
             mastertuple += item
-        query_builder = re.sub(r', $', ';', query_builder)
+        query_builder = query_builder[:-2] # truncating the terminal comma and space
+        query_builder += ';'
         counter += 1
         print('Executing batch query no. ' + str(counter))
         indexquery(query_builder, mastertuple)
