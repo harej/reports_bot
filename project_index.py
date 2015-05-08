@@ -159,7 +159,7 @@ def main():
             mastertuple += item
         query_builder += ';'
         counter += 1
-        print('Executing batch query no. ' + counter)
+        print('Executing batch query no. ' + str(counter))
         indexquery(query_builder, mastertuple)
         
 if __name__ == "__main__":
