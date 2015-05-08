@@ -151,7 +151,7 @@ def main():
     indexquery('create table projectindex (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
     
     packages = []
-    for i in xrange(0, len(dbinput), 10000):
+    for i in range(0, len(dbinput), 10000):
         packages.append(dbinput[i:i+10000])
     
     counter = 0
