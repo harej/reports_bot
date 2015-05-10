@@ -10,25 +10,19 @@ import re
 
 
 class WikiProjectTools:
-    def metaquery(self, connection, sqlquery, values):
+    def query(self, switch, sqlquery, values):
         """Carries out MySQL queries"""
-        cur = connection.cursor()
+        if switch == 'wiki':  # Queries to the English Wikipedia database
+            conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
+        elif switch == 'index':  # Queries to our article-WikiProject pair index
+            conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/my.cnf', charset='utf8')
+        else:
+            raise
+        cur = conn.cursor()
         cur.execute(sqlquery, values)
         data = []
         for row in cur:
             data.append(row)
-        return data
-
-    def wikiquery(self, sqlquery, values):
-        """Constructs a MySQL query to the Tool Labs database replica."""
-        conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
-        data = self.metaquery(conn, sqlquery, values)
-        return data
-
-    def indexquery(self, sqlquery, values):
-        """Constructs a MySQL query to the WPX database."""
-        conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
-        data = self.metaquery(conn, sqlquery, values)
         conn.commit()
         return data
 
@@ -39,7 +33,7 @@ class WikiProjectTools:
         and the value being a list of categories.
         """
 
-        query = self.wikiquery('select page_title from page where page_namespace = 14 and (page_title like "%-Class_%_articles" or page_title like "Unassessed_%_articles" or page_title like "WikiProject_%_articles") and page_title not like "%-importance_%" and page_title not like "Wikipedia_%" and page_title not like "Template-%" and page_title not like "Redirect-%" and page_title not like "Project-%" and page_title not like "Portal-%" and page_title not like "File-%" and page_title not like "FM-%" and page_title not like "Category-%" and page_title not like "Cat-%" and page_title not like "Book-%" and page_title not like "NA-%" and page_title not like "%_Operation_Majestic_Titan_%" and page_title not like "%_Version_%" and page_title not like "All_Wikipedia_%" and page_title not like "%_Wikipedia-Books_%" and page_title not like "Assessed-%" and page_title not like "%-Priority_%" and page_title not like "Unassessed_field_%" and page_title not like "Unassessed_importance_%" and page_title not like "Unassessed-Class_articles" and page_title not like "%_Article_quality_research_articles" and page_title not like "WikiProject_lists_of_encyclopedic_articles";', None)
+        query = self.query('wiki', 'select page_title from page where page_namespace = 14 and (page_title like "%-Class_%_articles" or page_title like "Unassessed_%_articles" or page_title like "WikiProject_%_articles") and page_title not like "%-importance_%" and page_title not like "Wikipedia_%" and page_title not like "Template-%" and page_title not like "Redirect-%" and page_title not like "Project-%" and page_title not like "Portal-%" and page_title not like "File-%" and page_title not like "FM-%" and page_title not like "Category-%" and page_title not like "Cat-%" and page_title not like "Book-%" and page_title not like "NA-%" and page_title not like "%_Operation_Majestic_Titan_%" and page_title not like "%_Version_%" and page_title not like "All_Wikipedia_%" and page_title not like "%_Wikipedia-Books_%" and page_title not like "Assessed-%" and page_title not like "%-Priority_%" and page_title not like "Unassessed_field_%" and page_title not like "Unassessed_importance_%" and page_title not like "Unassessed-Class_articles" and page_title not like "%_Article_quality_research_articles" and page_title not like "WikiProject_lists_of_encyclopedic_articles";', None)
         categories = []
         for row in query:
             categories.append(row[0].decode('utf-8'))
@@ -75,9 +69,9 @@ class WikiProjectTools:
         # Heavens help me if WikiProjects end up in namespaces other than those.
 
         for key in buckets.keys():
-            query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
+            query = self.query('wiki', 'select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
             if len(query) == 0:
-                query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',))  # Checks for plural
+                query = self.query('wiki', 'select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',))  # Checks for plural
                 if len(query) == 0:
                     print('Warning: No project page found for key: ' + key)
                     continue
@@ -119,7 +113,7 @@ class WikiProjectTools:
         query_builder = query_builder[:-2]  # Truncate extraneous "or"
         query_builder += ');'  # Wrap up query
 
-        query = self.wikiquery(query_builder, mastertuple)
+        query = self.query('wiki', query_builder, mastertuple)
         namespaces = {1: "Talk:", 119: "Draft_talk:"}
         output = []
 
@@ -148,7 +142,7 @@ class WikiProjectTools:
 
         # Saves it to the database
         print('Saving to the database...')
-        self.indexquery('create table projectindex_draft (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
+        self.query('index', 'create table projectindex_draft (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
 
         packages = []
         for i in range(0, len(dbinput), 10000):
@@ -156,19 +150,19 @@ class WikiProjectTools:
 
         counter = 0
         for package in packages:
-            query_builder = 'insert into projectindex_draft (pi_page, pi_project) values '  # seeding really long query
+            query_builder = 'insert into projectindex_draft (pi_page, pi_project) values '  # Seeding really long query
             mastertuple = ()
             for item in package:
                 query_builder += '(%s, %s), '
                 mastertuple += item
-            query_builder = query_builder[:-2]  # truncating the terminal comma and space
+            query_builder = query_builder[:-2]  # Truncating the terminal comma and space
             query_builder += ';'
             counter += 1
             print('Executing batch query no. ' + str(counter))
-            self.indexquery(query_builder, mastertuple)
+            self.query('index', query_builder, mastertuple)
 
-        self.indexquery('drop table if exists projectindex', None)
-        self.indexquery('rename table projectindex_draft to projectindex', None)  # Moving draft table over to live table
+        self.query('index', 'drop table if exists projectindex', None)
+        self.query('index', 'rename table projectindex_draft to projectindex', None)  # Moving draft table over to live table
 
 if __name__ == "__main__":
     wptools = WikiProjectTools()

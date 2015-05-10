@@ -16,7 +16,7 @@ def main():
 
     print('Pulling from database...')
     wptools = WikiProjectTools()
-    query = wptools.indexquery('select pi_page, pi_project from projectindex;', None)
+    query = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
 
     pages = {}
     for row in query:
