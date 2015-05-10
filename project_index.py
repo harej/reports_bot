@@ -8,8 +8,9 @@ Licensed under MIT License: http://mitlicense.org
 import pymysql
 import re
 
+
 class WikiProjectTools:
-    def metaquery(connection, sqlquery, values):
+    def metaquery(self, connection, sqlquery, values):
         """Carries out MySQL queries"""
         cur = connection.cursor()
         cur.execute(sqlquery, values)
@@ -18,27 +19,27 @@ class WikiProjectTools:
             data.append(row)
         return data
     
-    def wikiquery(sqlquery, values):
+    def wikiquery(self, sqlquery, values):
         """Constructs a MySQL query to the Tool Labs database replica."""
         conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
-        data = WikiProjectTools.metaquery(conn, sqlquery, values)
+        data = self.metaquery(conn, sqlquery, values)
         return data
     
-    def indexquery(sqlquery, values):
+    def indexquery(self, sqlquery, values):
         """Constructs a MySQL query to the WPX database."""
         conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
-        data = WikiProjectTools.metaquery(conn, sqlquery, values)
+        data = self.metaquery(conn, sqlquery, values)
         conn.commit()
         return data
         
-    def masterlist():
+    def masterlist(self):
         """
         Prepares the master list of WikiProject quality assessment categories.
         Returns a dictionary of lists, with the key being the page_title of the WikiProject (or task force)
         and the value being a list of categories.
         """
         
-        query = WikiProjectTools.wikiquery('select page_title from page where page_namespace = 14 and (page_title like "%-Class_%_articles" or page_title like "Unassessed_%_articles" or page_title like "WikiProject_%_articles") and page_title not like "%-importance_%" and page_title not like "Wikipedia_%" and page_title not like "Template-%" and page_title not like "Redirect-%" and page_title not like "Project-%" and page_title not like "Portal-%" and page_title not like "File-%" and page_title not like "FM-%" and page_title not like "Category-%" and page_title not like "Cat-%" and page_title not like "Book-%" and page_title not like "NA-%" and page_title not like "%_Operation_Majestic_Titan_%" and page_title not like "%_Version_%" and page_title not like "All_Wikipedia_%" and page_title not like "%_Wikipedia-Books_%" and page_title not like "Assessed-%" and page_title not like "%-Priority_%" and page_title not like "Unassessed_field_%" and page_title not like "Unassessed_importance_%" and page_title not like "Unassessed-Class_articles" and page_title not like "%_Article_quality_research_articles" and page_title not like "WikiProject_lists_of_encyclopedic_articles";', None)
+        query = self.wikiquery('select page_title from page where page_namespace = 14 and (page_title like "%-Class_%_articles" or page_title like "Unassessed_%_articles" or page_title like "WikiProject_%_articles") and page_title not like "%-importance_%" and page_title not like "Wikipedia_%" and page_title not like "Template-%" and page_title not like "Redirect-%" and page_title not like "Project-%" and page_title not like "Portal-%" and page_title not like "File-%" and page_title not like "FM-%" and page_title not like "Category-%" and page_title not like "Cat-%" and page_title not like "Book-%" and page_title not like "NA-%" and page_title not like "%_Operation_Majestic_Titan_%" and page_title not like "%_Version_%" and page_title not like "All_Wikipedia_%" and page_title not like "%_Wikipedia-Books_%" and page_title not like "Assessed-%" and page_title not like "%-Priority_%" and page_title not like "Unassessed_field_%" and page_title not like "Unassessed_importance_%" and page_title not like "Unassessed-Class_articles" and page_title not like "%_Article_quality_research_articles" and page_title not like "WikiProject_lists_of_encyclopedic_articles";', None)
         categories = []
         for row in query:
             categories.append(row[0].decode('utf-8'))
@@ -74,9 +75,9 @@ class WikiProjectTools:
         
         for key in buckets.keys():
             project_area = key
-            query = WikiProjectTools.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
+            query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
             if len(query) == 0:
-                query = WikiProjectTools.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',)) # Checks for plural
+                query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',)) # Checks for plural
                 if len(query) == 0:
                     print('Warning: No project page found for key: ' + key)
                     continue
@@ -95,6 +96,7 @@ class WikiProjectTools:
             
         for key in buckets.keys():
             for category in buckets[key]:
+                # TODO: Use a collections.defaultdict here
                 try:
                     output[pagetitles[key]].append(category)
                 except KeyError:
@@ -103,7 +105,7 @@ class WikiProjectTools:
                     
         return output
        
-    def projectscope(project,categories):
+    def projectscope(self, project,categories):
         """
         Returns a list of articles in the scope of a WikiProject
         Requires the string 'project' and the list 'categories'
@@ -117,7 +119,7 @@ class WikiProjectTools:
         query_builder = query_builder[:-2] # Truncate extraneous "or"
         query_builder += ');' # Wrap up query
         
-        query = WikiProjectTools.wikiquery(query_builder, mastertuple)
+        query = self.wikiquery(query_builder, mastertuple)
         namespaces = {1: "Talk:", 119: "Draft_talk:"}
         output = []
         
@@ -128,16 +130,16 @@ class WikiProjectTools:
         
         return output
      
-    def main():
+    def main(self):
         # Prepare list of WikiProjects and their categories
         print('Preparing master list of WikiProjects...')
-        wikiprojects = WikiProjectTools.masterlist()
+        wikiprojects = self.masterlist()
         
         # Get list of pages for each WikiProject
         print('Getting list of pages for each WikiProject...')
         pages = {}
         for wikiproject in wikiprojects.keys():
-            pages[wikiproject] = WikiProjectTools.projectscope(wikiproject, wikiprojects[wikiproject])
+            pages[wikiproject] = self.projectscope(wikiproject, wikiprojects[wikiproject])
         
         dbinput = []
         for wikiproject in pages.keys():
@@ -146,7 +148,7 @@ class WikiProjectTools:
         
         # Saves it to the database
         print('Saving to the database...')
-        WikiProjectTools.indexquery('create table projectindex_draft (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
+        self.indexquery('create table projectindex_draft (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
         
         packages = []
         for i in range(0, len(dbinput), 10000):
@@ -163,10 +165,11 @@ class WikiProjectTools:
             query_builder += ';'
             counter += 1
             print('Executing batch query no. ' + str(counter))
-            WikiProjectTools.indexquery(query_builder, mastertuple)
+            self.indexquery(query_builder, mastertuple)
         
-        WikiProjectTools.indexquery('drop table if exists projectindex', None)
-        WikiProjectTools.indexquery('rename table projectindex_draft to projectindex', None) # Moving draft table over to live table
+        self.indexquery('drop table if exists projectindex', None)
+        self.indexquery('rename table projectindex_draft to projectindex', None) # Moving draft table over to live table
         
 if __name__ == "__main__":
-    WikiProjectTools.main()
+    wptools = WikiProjectTools()
+    wptools.main()
