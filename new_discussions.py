@@ -13,11 +13,13 @@ import datetime
 from project_index import WikiProjectTools
 
 def main():
+    wptools = WikiProjectTools()
+
     now = datetime.datetime.utcnow()
     wikitime = now.strftime('%Y%m%d%H%M%S') # converts timestamp to MediaWiki format
     thirtyminutesago = (now - datetime.timedelta(minutes=30)).strftime('%Y%m%d%H%M%S')
     
-    query = WikiProjectTools.wikiquery(('select distinct recentchanges.rc_title, recentchanges.rc_comment, recentchances.rc_timestamp, page.page_namespace',
+    query = wptools.query('wiki', ('select distinct recentchanges.rc_title, recentchanges.rc_comment, recentchances.rc_timestamp, page.page_namespace',
                                         'from recentchanges',
                                         'join page on recentchanges.rc_namespace = page.page_namespace',
                                         'and recentchanges.rc_title = page.page_title',
