@@ -15,7 +15,7 @@ class WikiProjectTools:
         if switch == 'wiki':  # Queries to the English Wikipedia database
             conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
         elif switch == 'index':  # Queries to our article-WikiProject pair index
-            conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/my.cnf', charset='utf8')
+            conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
         else:
             raise
         cur = conn.cursor()
