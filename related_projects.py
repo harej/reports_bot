@@ -5,9 +5,7 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-import sys
 #import mw_lego # https://github.com/legoktm/supersimplemediawiki
-import pymysql
 import re
 import operator
 from project_index import WikiProjectTools

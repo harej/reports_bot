@@ -5,7 +5,6 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-import sys
 import pymysql
 import re
 
