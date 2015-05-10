@@ -49,9 +49,9 @@ class WikiProjectTools:
 
         for category in categories:
             projectname = category
-            projectname = projectname.replace('WikiProject_', '') # Some categories include "WikiProject" in the category name.
-            projectname = projectname.replace('-related', '') # e.g. "Museum-related" -> "Museum"
-            projectname = projectname.replace('_quality', '') # e.g. "Unassessed_quality" -> "Unassessed"
+            projectname = projectname.replace('WikiProject_', '')  # Some categories include "WikiProject" in the category name.
+            projectname = projectname.replace('-related', '')  # e.g. "Museum-related" -> "Museum"
+            projectname = projectname.replace('_quality', '')  # e.g. "Unassessed_quality" -> "Unassessed"
             projectname = projectname.replace('_subproject_selected_articles', '')
             projectname = projectname.replace('_automatically_assessed', '')
             projectname = re.sub(r'_task_?forces?(_by)?', '', projectname)
@@ -59,7 +59,8 @@ class WikiProjectTools:
             projectname = re.sub(r'_articles$', '', projectname)
             projectname = re.sub(r'_newsletter$', '', projectname)
             projectname = re.sub(r'^((.*)-Class|Unassessed)_', '', projectname)
-            projectname = projectname[0].upper() + projectname[1:] # Capitalize the first letter
+            projectname = projectname[0].upper() + projectname[1:]  # Capitalize the first letter
+            # TODO: Use collections.defaultdict
             try:
                 buckets[projectname].append(category)
             except KeyError:
@@ -74,10 +75,9 @@ class WikiProjectTools:
         # Heavens help me if WikiProjects end up in namespaces other than those.
 
         for key in buckets.keys():
-            project_area = key
             query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
             if len(query) == 0:
-                query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',)) # Checks for plural
+                query = self.wikiquery('select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',))  # Checks for plural
                 if len(query) == 0:
                     print('Warning: No project page found for key: ' + key)
                     continue
@@ -105,7 +105,7 @@ class WikiProjectTools:
 
         return output
 
-    def projectscope(self, project,categories):
+    def projectscope(self, project, categories):
         """
         Returns a list of articles in the scope of a WikiProject
         Requires the string 'project' and the list 'categories'
@@ -116,8 +116,8 @@ class WikiProjectTools:
         for category in categories:
             query_builder += '%s, '
             mastertuple += (category,)
-        query_builder = query_builder[:-2] # Truncate extraneous "or"
-        query_builder += ');' # Wrap up query
+        query_builder = query_builder[:-2]  # Truncate extraneous "or"
+        query_builder += ');'  # Wrap up query
 
         query = self.wikiquery(query_builder, mastertuple)
         namespaces = {1: "Talk:", 119: "Draft_talk:"}
@@ -156,19 +156,19 @@ class WikiProjectTools:
 
         counter = 0
         for package in packages:
-            query_builder = 'insert into projectindex_draft (pi_page, pi_project) values ' # seeding really long query
+            query_builder = 'insert into projectindex_draft (pi_page, pi_project) values '  # seeding really long query
             mastertuple = ()
             for item in package:
                 query_builder += '(%s, %s), '
                 mastertuple += item
-            query_builder = query_builder[:-2] # truncating the terminal comma and space
+            query_builder = query_builder[:-2]  # truncating the terminal comma and space
             query_builder += ';'
             counter += 1
             print('Executing batch query no. ' + str(counter))
             self.indexquery(query_builder, mastertuple)
 
         self.indexquery('drop table if exists projectindex', None)
-        self.indexquery('rename table projectindex_draft to projectindex', None) # Moving draft table over to live table
+        self.indexquery('rename table projectindex_draft to projectindex', None)  # Moving draft table over to live table
 
 if __name__ == "__main__":
     wptools = WikiProjectTools()
