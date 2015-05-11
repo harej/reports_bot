@@ -41,7 +41,7 @@ def main():
     except ValueError as ack:  # If JSON is invalid
         now = datetime.datetime.utcnow()
         wikitime = now.strftime('%Y%m%d%H%M%S')
-        report = wikitime + ': ' + ack
+        report = str(wikitime) + ': ' + str(ack)
         filename = "errors.log"
         save = open(filename, "w")
         save.write(report)
