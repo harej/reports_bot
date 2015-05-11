@@ -6,7 +6,7 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 import os
-import ConfigParser
+import configparser
 import json
 import mw
 from bs4 import BeautifulSoup
@@ -15,10 +15,10 @@ from project_index import WikiProjectTools
 
 def main():
 
-    logininfo = ConfigParser.ConfigParser()
-    logininfo.read([os.path.expanduser('~/.wiki.ini')])
-    username = config.get('wiki', 'username')
-    password = config.get('wiki', 'password')
+    loginfile = configparser.ConfigParser()
+    loginfile.read([os.path.expanduser('~/.wiki.ini')])
+    username = loginfile.get('wiki', 'username')
+    password = loginfile.get('wiki', 'password')
 
     enwp = mw.Wiki('https://en.wikipedia.org/w/api.php')
     enwp.login(username, password)
