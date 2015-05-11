@@ -9,7 +9,7 @@ import os
 import sys
 import configparser
 import json
-import mw_lego
+import mw_lego as legoktm
 import datetime
 from bs4 import BeautifulSoup
 from project_index import WikiProjectTools
@@ -22,7 +22,7 @@ def main():
     username = loginfile.get('wiki', 'username')
     password = loginfile.get('wiki', 'password')
 
-    enwp = mw.Wiki('https://en.wikipedia.org/w/api.php')
+    enwp = legoktm.Wiki('https://en.wikipedia.org/w/api.php')
     enwp.login(username, password)
 
     # Exports the contents of the wikiproject.json page
