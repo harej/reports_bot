@@ -37,8 +37,15 @@ def main():
     # We now have the JSON blob, in string format.
     try:
         output = json.loads(output)
-    except ValueError:  # If JSON is invalid
-        print('Bad JSON! Bad JSON!')
+    except ValueError as ack:  # If JSON is invalid
+        now = datetime.datetime.utcnow()
+        wikitime = now.strftime('%Y%m%d%H%M%S')
+        report = wikitime + ': ' + ack
+        filename = "errors.log"
+        save = open(filename, "w")
+        save.write(report)
+        save.close()
+        sys.exit()
 
     print(output)
 
