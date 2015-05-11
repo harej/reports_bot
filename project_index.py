@@ -10,7 +10,7 @@ import re
 
 
 class WikiProjectTools:
-    def query(self, switch, sqlquery, values, morevalues=None):
+    def query(self, switch, sqlquery, values):
         """Carries out MySQL queries"""
         if switch == 'wiki':  # Queries to the English Wikipedia database
             conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
@@ -19,7 +19,7 @@ class WikiProjectTools:
         else:
             raise
         cur = conn.cursor()
-        cur.execute(sqlquery, values, morevalues)
+        cur.execute(sqlquery, values)
         data = []
         for row in cur:
             data.append(row)
