@@ -53,7 +53,7 @@ def main():
 
     wptools = WikiProjectTools()
     wptools.query('index', 'create table config_draft (json mediumtext character set utf8 collate utf8_unicode_ci) engine=innodb character set=utf8;', None)
-    wptools.query('index', 'insert into config_draft (json) values (%s);', (output,))
+    wptools.query('index', 'insert into config_draft (json) values (%s);', (str(output),))
     wptools.query('index', 'drop table if exists config', None)
     wptools.query('index', 'rename table config_draft to config', None)
 
