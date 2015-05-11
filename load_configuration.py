@@ -9,7 +9,7 @@ import os
 import sys
 import configparser
 import json
-import mw
+import mw_lego
 import datetime
 from bs4 import BeautifulSoup
 from project_index import WikiProjectTools
