@@ -28,11 +28,9 @@ def main():
     except ValueError as ack:  # If JSON is invalid
         now = datetime.datetime.utcnow()
         wikitime = now.strftime('%Y%m%d%H%M%S')
-        report = str(wikitime) + ': ' + str(ack)
-        filename = "errors.log"
-        save = open(filename, "w")
-        save.write(report)
-        save.close()
+        page = pywikibot.Page(bot, 'Wikipedia talk:WikiProject X/wikiproject.json/Errors')
+        page.text = str(wikitime) + ': ' + str(ack)
+        page.save('Error while loading configuration')
         sys.exit()
 
     # At this point, we have valid JSON at our disposal. Time to save to the database.
