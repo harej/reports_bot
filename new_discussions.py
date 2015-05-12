@@ -55,7 +55,7 @@ def main():
             continue
 
         entry = {'title': page_namespace + rc_title, 'section': rc_comment, 'timestamp': rc_timestamp}
-        output.append()
+        output.append(entry)
 
     # Generating list of WikiProjects for each thread
     wikiprojects = {}
