@@ -53,8 +53,8 @@ def main():
 
         # Check if revision has been reverted
         reverted = reverts.api.check(session, entry['revid'], entry['pageid'], 3, None, 172800, None)
-            if reverted is not None:
-                continue
+        if reverted is not None:
+            continue
 
         output.append(entry)
 
