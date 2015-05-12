@@ -11,16 +11,21 @@ import configparser
 import re
 import time
 import datetime
+import pywikibot
 from mw import api
 from mw.lib import reverts
 from project_index import WikiProjectTools
 
 
 def main():
+    # This is used for Aaron Halfaker's API wrapper...
     loginfile = configparser.ConfigParser()
     loginfile.read([os.path.expanduser('~/.wiki.ini')])
     username = loginfile.get('wiki', 'username')
     password = loginfile.get('wiki', 'password')
+
+    # ...And this is for Pywikibot
+    bot = pywikibot.Site('en', 'wikipedia')
 
     wptools = WikiProjectTools()
 
@@ -43,6 +48,8 @@ def main():
         rc_comment = rc_comment[3:]  # Truncate beginning part of the edit summary
         rc_comment = rc_comment[:-15]  # Truncate end of the edit summary
         rc_timestamp = row[4].decode('utf-8')
+        rc_timestamp = datetime.datetime.strptime(rc_timestamp, '%Y%m%d%H%M%S')
+        rc_timestamp = rc_timestamp.strftime('%H:%M, %d %B %Y (UTC)')
         page_namespace = row[5]
         page_namespace = namespace[page_namespace]
 
@@ -77,18 +84,25 @@ def main():
     # A whitelist of [] is one where there is a whitelist, but it's just empty.
     # A whitelist of None is for situations where the need for a whitelist has been obviated.
 
-
     # Generating list of WikiProjects for each thread
-    wikiprojects = {}
     for thread in output:
         query = wptools.query('index', 'select distinct pi_project from projectindex where pi_page = %s;', (thread['title']))
         thread['wikiprojects'] = []
         for row in query:
-            wikiproject = row[0]
+            wikiproject = row[0].replace('_', ' ')
             if wikiproject in whitelist or whitelist is None:
                 thread['wikiprojects'].append(wikiproject)
-
-    print(output)
+        for wikiproject in thread['wikiprojects']:
+            page = pywikibot.Page(bot, 'User:Reports bot/Discussions/' + thread['title'])
+            draft = '<noinclude>{{Clickable button 2|{1}|Return to WikiProject|class=mw-ui-progressive}}</noinclude>\n\n'.format(thread['title'])
+            submission = '{{WPX new discussion|title={1}|section={2}|timestamp={3}}}\n\n'.format(thread['title'], thread['section'], thread['timestamp'])
+            regex = re.compile('\{\{WPX new discussion\|.*\}\}')
+            index = re.findall(regex, page.text)
+            index = index[:14]  # Sayonara, old threads!
+            page.text = draft + submission
+            for i in index:
+                page.text += i
+            page.save('New discussion on [[{1}]]'.format(thread['title']))
 
 if __name__ == "__main__":
     main()
