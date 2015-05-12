@@ -19,7 +19,7 @@ def main():
     bot = pywikibot.Site('en', 'wikipedia')
 
     # Exports the contents of the wikiproject.json page
-    page = pywikibot.Page(bot, Wikipedia:WikiProject X/wikiproject.json)
+    page = pywikibot.Page(bot, 'Wikipedia:WikiProject X/wikiproject.json')
     output = page.text
 
     # We now have the JSON blob, in string format.
