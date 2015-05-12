@@ -57,7 +57,12 @@ def main():
         entry = {'title': page_namespace + rc_title, 'section': rc_comment, 'timestamp': rc_timestamp}
         output.append()
 
-    print(output)
+    # Generating list of WikiProjects for each thread
+    wikiprojects = {}
+    for thread in output:
+        query = wptools.query('index', 'select distinct pi_project from projectindex where pi_page = %s;', (thread['title']))
+        for row in query:
+            print(thread['title'] + ': ' + row)
 
 if __name__ == "__main__":
     main()
