@@ -9,32 +9,18 @@ import os
 import sys
 import configparser
 import json
-import mw_lego as legoktm
+import pywikibot
 import datetime
-from bs4 import BeautifulSoup
 from project_index import WikiProjectTools
 
 
 def main():
 
-    loginfile = configparser.ConfigParser()
-    loginfile.read([os.path.expanduser('~/.wiki.ini')])
-    username = loginfile.get('wiki', 'username')
-    password = loginfile.get('wiki', 'password')
-
-    enwp = legoktm.Wiki('https://en.wikipedia.org/w/api.php')
-    enwp.login(username, password)
+    bot = pywikibot.Site('en', 'wikipedia')
 
     # Exports the contents of the wikiproject.json page
-    params = {'action': 'query', 'format': 'json', 'titles': 'Wikipedia:WikiProject X/wikiproject.json', 'export': ''}
-    data = enwp.request(params)
-
-    dump = data['query']['export']['*']
-
-    # We now have a calzone with JSON filling in an XML crust. Boy is this stupid.
-    output = BeautifulSoup(dump, 'xml')
-    output = output.find('text')  # The contents are stored in an XML field called 'text'
-    output = output.get_text()
+    page = pywikibot.Page(bot, Wikipedia:WikiProject X/wikiproject.json)
+    output = page.text
 
     # We now have the JSON blob, in string format.
     try:
