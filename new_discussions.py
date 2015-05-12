@@ -93,8 +93,9 @@ def main():
             if (whitelist is None) or (wikiproject in whitelist):
                 thread['wikiprojects'].append(wikiproject)
         for wikiproject in thread['wikiprojects']:
-            page = pywikibot.Page(bot, 'User:Reports bot/Discussions/' + wikiproject)
-            draft = '<noinclude>{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-progressive}}}}</noinclude>\n\n'.format(wikiproject)
+            saveto = 'User:Reports bot/Discussions/' + wikiproject
+            page = pywikibot.Page(bot, saveto)
+            draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-progressive}}}}</div>\n</noinclude>===New discussions===\n{{{{WPX last updated|{1}}}}}\n\n'.format(wikiproject, saveto)
             submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'], thread['section'], thread['timestamp'])
             regex = re.compile('\{\{WPX new discussion\|.*\}\}')
             index = re.findall(regex, page.text)
