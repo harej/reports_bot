@@ -58,7 +58,7 @@ def main():
         output.append(entry)
 
     # Loading list of WikiProjects signed up to get lists of new discussions
-    config = wptools.query('index', 'select json from config;' None)
+    config = wptools.query('index', 'select json from config;', None)
     config = eval(config[0][0])
     
     if config['defaults']['new_discussions'] == False:  # i.e. if New Discussions is an opt-in system
