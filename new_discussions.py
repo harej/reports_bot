@@ -54,15 +54,41 @@ def main():
         if reverted is not None:
             continue
 
-        entry = {'title': page_namespace + rc_title, 'section': rc_comment, 'timestamp': rc_timestamp}
+        entry = {'title': (page_namespace + rc_title).replace('_', ' '), 'section': rc_comment, 'timestamp': rc_timestamp}
         output.append(entry)
+
+    # Loading list of WikiProjects signed up to get lists of new discussions
+    config = wptools.query('index', 'select json from config;' None)
+    config = eval(config[0][0])
+    
+    if config['defaults']['new_discussions'] == False:  # i.e. if New Discussions is an opt-in system
+        whitelist = []  # Whitelisted WikiProjects for new discussion lists
+        for project in config['projects']:
+            try:
+                project['new_discussions']
+            except KeyError:
+                continue
+            else:
+                if project['new_discussions'] == True:
+                    whitelist.append(project['name'])
+    else:
+        whitelist = None
+
+    # A whitelist of [] is one where there is a whitelist, but it's just empty.
+    # A whitelist of None is for situations where the need for a whitelist has been obviated.
+
 
     # Generating list of WikiProjects for each thread
     wikiprojects = {}
     for thread in output:
         query = wptools.query('index', 'select distinct pi_project from projectindex where pi_page = %s;', (thread['title']))
+        thread['wikiprojects'] = []
         for row in query:
-            print(thread['title'] + ': ' + row[0])
+            wikiproject = row[0]
+            if wikiproject in whitelist or whitelist is None:
+                thread['wikiprojects'].append(wikiproject)
+
+    print(output)
 
 if __name__ == "__main__":
     main()
