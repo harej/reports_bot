@@ -12,7 +12,7 @@ import re
 import time
 import datetime
 from mw import api
-from mw.libs import reverts
+from mw.lib import reverts
 from project_index import WikiProjectTools
 
 
