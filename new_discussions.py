@@ -94,15 +94,15 @@ def main():
                 thread['wikiprojects'].append(wikiproject)
         for wikiproject in thread['wikiprojects']:
             page = pywikibot.Page(bot, 'User:Reports bot/Discussions/' + thread['title'])
-            draft = '<noinclude>{{Clickable button 2|{1}|Return to WikiProject|class=mw-ui-progressive}}</noinclude>\n\n'.format(thread['title'])
-            submission = '{{WPX new discussion|title={1}|section={2}|timestamp={3}}}\n\n'.format(thread['title'], thread['section'], thread['timestamp'])
+            draft = '<noinclude>{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-progressive}}</noinclude>\n\n'.format(thread['title'])
+            submission = '{{WPX new discussion|title={0}|section={1}|timestamp={2}}}\n\n'.format(thread['title'], thread['section'], thread['timestamp'])
             regex = re.compile('\{\{WPX new discussion\|.*\}\}')
             index = re.findall(regex, page.text)
             index = index[:14]  # Sayonara, old threads!
             page.text = draft + submission
             for i in index:
                 page.text += i
-            page.save('New discussion on [[{1}]]'.format(thread['title']))
+            page.save('New discussion on [[{0}]]'.format(thread['title']))
 
 if __name__ == "__main__":
     main()
