@@ -46,7 +46,7 @@ def main():
         page_namespace = row[5]
         page_namespace = namespace[page_namespace]
 
-        entry = {'revid': rc_id, 'pageid': page_id, 'namespace': page_namespace, 'title': rc_title, 'section': rc_comment, 'timestamp': rc_timestamp})
+        entry = {'revid': rc_id, 'pageid': page_id, 'namespace': page_namespace, 'title': rc_title, 'section': rc_comment, 'timestamp': rc_timestamp}
 
         session = api.Session("https://en.wikipedia.org/w/api.php")
         session.login(username, password)
