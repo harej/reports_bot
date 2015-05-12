@@ -9,6 +9,7 @@ Licensed under MIT License: http://mitlicense.org
 # import mw_lego # https://github.com/legoktm/supersimplemediawiki
 import re
 import operator
+import pywikibot
 from project_index import WikiProjectTools
 
 
@@ -47,13 +48,17 @@ def main():
             s = set(pages[wikiproject_x])
             intersect_counts[wikiproject_x][wikiproject_y] = len([n for n in pages[wikiproject_y] if n in s])
 
+    bot = pywikibot.Site('en', 'wikipedia')
+
     for project in intersect_counts.keys():
         # Sorts from highest to lowest
         ordered = sorted(intersect_counts[project].items(), key=operator.itemgetter(1), reverse=True)
-        print('\nSimilar to: ' + project)
+        saveto = 'Wikipedia:Related_WikiProjects/' + project[10:]
+        page = pywikibot.Page(bot, saveto)
         for x in range(0, 10):
             if ordered[x][1] > 0:
-                print(ordered[x][0] + " sharing " + str(ordered[x][1]) + " articles")
+                page.text += "* '''[[{0}|{1}]]''': {2} articles in common\n".format(ordered[x][0], ordered[x][0][10:].replace('_', ' '), str(ordered[x][1]))
+        page.save('Updating')
 
 if __name__ == "__main__":
     main()
