@@ -62,7 +62,7 @@ def main():
     for thread in output:
         query = wptools.query('index', 'select distinct pi_project from projectindex where pi_page = %s;', (thread['title']))
         for row in query:
-            print(thread['title'] + ': ' + row)
+            print(thread['title'] + ': ' + row[0])
 
 if __name__ == "__main__":
     main()
