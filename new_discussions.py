@@ -90,7 +90,7 @@ def main():
         thread['wikiprojects'] = []
         for row in query:
             wikiproject = row[0].replace('_', ' ')
-            if wikiproject in whitelist or whitelist is None:
+            if (wikiproject in whitelist) or (whitelist is None):
                 thread['wikiprojects'].append(wikiproject)
         for wikiproject in thread['wikiprojects']:
             page = pywikibot.Page(bot, 'User:Reports bot/Discussions/' + thread['title'])
