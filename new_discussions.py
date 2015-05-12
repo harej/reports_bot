@@ -46,17 +46,16 @@ def main():
         page_namespace = row[5]
         page_namespace = namespace[page_namespace]
 
-        entry = {'revid': rc_id, 'pageid': page_id, 'namespace': page_namespace, 'title': rc_title, 'section': rc_comment, 'timestamp': rc_timestamp}
-
-        session = api.Session("https://en.wikipedia.org/w/api.php")
+        session = api.Session("https://en.wikipedia.org/w/api.php", user_agent='WPX Revert Checker')
         session.login(username, password)
 
         # Check if revision has been reverted
-        reverted = reverts.api.check(session, entry['revid'], entry['pageid'], 3, None, 172800, None)
+        reverted = reverts.api.check(session, rc_id, page_id, 3, None, 172800, None)
         if reverted is not None:
             continue
 
-        output.append(entry)
+        entry = {'title': page_namespace + rc_title, 'section': rc_comment, 'timestamp': rc_timestamp}
+        output.append()
 
     print(output)
 
