@@ -103,7 +103,7 @@ def main():
             page.text = draft + submission
             for i in index:
                 page.text += i
-            page.save('New discussion on [[{0}]]'.format(thread['title']))
+            page.save('New discussion on [[{0}]]'.format(thread['title']), minor=False)
 
 if __name__ == "__main__":
     main()

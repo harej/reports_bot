@@ -30,7 +30,7 @@ def main():
         wikitime = now.strftime('%Y%m%d%H%M%S')
         page = pywikibot.Page(bot, 'Wikipedia talk:WikiProject X/wikiproject.json/Errors')
         page.text = str(wikitime) + ': ' + str(ack)
-        page.save('Error while loading configuration')
+        page.save('Error while loading configuration', minor=False)
         sys.exit()
 
     # At this point, we have valid JSON at our disposal. Time to save to the database.
