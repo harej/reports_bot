@@ -8,10 +8,10 @@ Licensed under MIT License: http://mitlicense.org
 
 import os
 import configparser
-import re
 import time
 import datetime
 import pywikibot
+import mwparserfromhell
 from mw import api
 from mw.lib import reverts
 from project_index import WikiProjectTools
@@ -29,7 +29,7 @@ def main():
 
     wptools = WikiProjectTools()
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.utcnow()  # TODO: Make this pull a "last fetch" time from the database; populate new value with current time
     wikitime = now.strftime('%Y%m%d%H%M%S') # converts timestamp to MediaWiki format
     thirtyminutesago = (now - datetime.timedelta(minutes=30)).strftime('%Y%m%d%H%M%S')
     
@@ -82,6 +82,8 @@ def main():
     # A whitelist of [] is one where there is a whitelist, but it's just empty.
     # A whitelist of None is for situations where the need for a whitelist has been obviated.
 
+    # TODO: output list needs to be in old-to-new order by timestamp, because otherwise bot adds them out of order.
+
     # Generating list of WikiProjects for each thread
     for thread in output:
         query = wptools.query('index', 'select distinct pi_project from projectindex where pi_page = %s;', (thread['title']))
@@ -95,12 +97,16 @@ def main():
             page = pywikibot.Page(bot, saveto)
             draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-progressive}}}}</div>\n</noinclude>===New discussions===\n{{{{WPX last updated|{1}}}}}\n\n'.format(wikiproject, saveto)
             submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'], thread['section'], thread['timestamp'])
-            regex = re.compile('\{\{WPX new discussion\|.*\}\}')
-            index = re.findall(regex, page.text)
-            index = index[:14]  # Sayonara, old threads!
-            page.text = draft + submission
+            index = mwparserfromhell.parse(page.text)
+            index = index.filter_templates()
+            list = []
             for i in index:
-                page.text += i
+                if i.name == "WPX new discussion":
+                    list.append(i)
+            list = list[:14]  # Sayonara, old threads!
+            page.text = draft + submission
+            for i in list:
+                page.text += i + "\n\n"
             page.save('New discussion on [[{0}]]'.format(thread['title']), minor=False)
 
 if __name__ == "__main__":
