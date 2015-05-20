@@ -106,7 +106,7 @@ def main():
             list = list[:14]  # Sayonara, old threads!
             page.text = draft + submission
             for i in list:
-                page.text += i + "\n\n"
+                page.text += str(i) + "\n\n"
             page.save('New discussion on [[{0}]]'.format(thread['title']), minor=False)
 
 if __name__ == "__main__":
