@@ -76,6 +76,7 @@ def get_opt_out():
             users.append(user)
     users.extend(get_bots())
     return users
+
 # main report object
 class project_stats(object):
     def __init__(self,project,opted_out):
@@ -114,7 +115,7 @@ class project_stats(object):
         f3.close()
     def run(self):
         # Main thread of the report
-        if default_config['projects'].has_key(self.project):
+        if self.project in default_config['projects']:
             for key in self.report_page: 
                 if key in default_config['projects'][project]:
                     self.report_page[key] = default_config['projects'][project][key]
