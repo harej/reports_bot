@@ -38,20 +38,28 @@ def main():
     # Methodology: List from Project Index + List from Formal Definition, minus duplicates
     # This will cover all of our bases.
     projects = []
+    articlecounter = {}
     for pair in projectindex:
         if pair[1] not in projects:
             projects.append(pair[1])
+            articlecounter[pair[1]] = 1  # Establishing counter in the article counter
+        else:
+            articlecounter[pair[1]] += 1
+    
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
     for row in formaldefinition:
         row = 'Wikipedia:' + row[0].decode('utf-8')  # Making output consistent with formatting used in projects list
         if row not in projects:
             projects.append(row)
+    
     projects.sort()
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
     # Alright! Let's run some reports!
-    #for project in projects:
-            
+    for project in projects:
+        if project not in articlecounter:
+            articlecounter[project] = None  # Filling in article counts for projects not in Project Index
+
         # Profile Page: List of active project participants (less blacklist)
         # Directory Entry: Count of active project participants
 
