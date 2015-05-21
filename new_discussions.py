@@ -108,11 +108,14 @@ def main():
             list = []
             for i in index:
                 if i.name == "WPX new discussion":
-                    list.append(i)
+                    list.append(str(i))
             list = list[:14]  # Sayonara, old threads!
             page.text = draft + submission
+            if len(list) > 3:
+                list[2] += "<noinclude>"  # Anything after the third item will not be transcluded
+                list[len(list) - 1] += "</noinclude>"
             for i in list:
-                page.text += str(i) + "\n\n"
+                page.text += i + "\n\n"
             page.save('New discussion on [[{0}]]'.format(thread['title']), minor=False)
 
 if __name__ == "__main__":
