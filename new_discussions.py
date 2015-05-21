@@ -37,7 +37,7 @@ def main():
     lastupdated = query[0][0]
     
     # Polling for newest talk page posts in the last thirty minutes
-    query = wptools.query('wiki', 'select distinct recentchanges.rc_this_oldid, page.page_id, recentchanges.rc_title, recentchanges.rc_comment, recentchanges.rc_timestamp, page.page_namespace from recentchanges join page on recentchanges.rc_namespace = page.page_namespace and recentchanges.rc_title = page.page_title join categorylinks on page.page_id=categorylinks.cl_from where rc_timestamp >= {0} and rc_timestamp < {1} and rc_comment like "% new section" and rc_deleted = 0 and cl_to like "%_articles" and page_namespace not in (0, 2, 6, 8, 10, 12, 14, 100, 108, 118) order by rc_timestamp desc;'.format(lastupdated, now), None)
+    query = wptools.query('wiki', 'select distinct recentchanges.rc_this_oldid, page.page_id, recentchanges.rc_title, recentchanges.rc_comment, recentchanges.rc_timestamp, page.page_namespace from recentchanges join page on recentchanges.rc_namespace = page.page_namespace and recentchanges.rc_title = page.page_title join categorylinks on page.page_id=categorylinks.cl_from where rc_timestamp >= {0} and rc_timestamp < {1} and rc_comment like "% new section" and rc_deleted = 0 and cl_to like "%_articles" and page_namespace not in (0, 2, 6, 8, 10, 12, 14, 100, 108, 118) order by rc_timestamp asc;'.format(lastupdated, now), None)
 
     # Update the Last Updated field with new timestamp
     wptools.query('index', 'update lastupdated set lu_timestamp = {0} where lu_key = "new_discussions";'.format(now), None)
@@ -87,8 +87,6 @@ def main():
 
     # A whitelist of [] is one where there is a whitelist, but it's just empty.
     # A whitelist of None is for situations where the need for a whitelist has been obviated.
-
-    # TODO: output list needs to be in old-to-new order by timestamp, because otherwise bot adds them out of order.
 
     # Generating list of WikiProjects for each thread
     for thread in output:
