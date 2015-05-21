@@ -5,6 +5,7 @@ Copyright (C) 2015 Betacommand, James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
+
 import sys
 import json
 import codecs
@@ -174,7 +175,7 @@ class project_stats(object):
                         'wp_name': self.project,
                         }
         query = "SELECT count(page_title) FROM templatelinks LEFT JOIN page ON page_id = tl_from WHERE tl_namespace = 10 AND tl_title = \"%(wp_name)s\"" % data
-        self.number_of_articles = run_query(query,'enwiki_p')[0][0]
+        self.number_of_articles = wptools.query('wiki', query, None)[0][0]
         return self.number_of_articles
     # get a count of the number of edits to the wikiproject space
     
@@ -193,7 +194,7 @@ class project_stats(object):
                         }
         query = "SELECT COUNT(*) FROM revision_userindex LEFT JOIN page ON page_id = rev_page WHERE (page_namespace = 0 OR page_namespace = 1) AND page_title IN (SELECT page_title FROM templatelinks LEFT JOIN page ON page_id = tl_from WHERE tl_namespace = 10 AND tl_title = \"%(wp_name)s\") AND rev_timestamp > %(start_date)s AND rev_timestamp < %(end_date)s;" % data
         # print query
-        self.total_scope_editcount = run_query(query,'enwiki_p')[0][0]
+        self.total_scope_editcount = wptools.query('wiki', query, None)[0][0]
         return self.total_scope_editcount
 
     # get a list of editors and edit count for contributions to the project scope in the last 30 days and at least 5 edits
@@ -212,7 +213,7 @@ class project_stats(object):
                         }
         query = "SELECT rev_user_text,COUNT(*) FROM revision_userindex LEFT JOIN page ON page_id = rev_page WHERE (page_namespace = 0 OR page_namespace = 1) AND page_title IN (SELECT page_title FROM templatelinks LEFT JOIN page ON page_id = tl_from WHERE tl_namespace = 10 AND tl_title = \"%(wp_name)s\") AND rev_timestamp > %(start_date)s AND rev_timestamp < %(end_date)s GROUP BY rev_user_text HAVING count(*) >= 5 ORDER BY COUNT(*) DESC;" % data
         # print query
-        for result in run_query(query,'enwiki_p'):
+        for result in wptools.query('wiki', query, None):
             yield result[0].decode('utf-8'),result[1]
     # same as above but for the last 90 days and at least 2 edits
     def query_wikiproject_edits(self):
@@ -229,32 +230,13 @@ class project_stats(object):
                         'end_date'    :time.strftime('%Y%m%d000000',time.gmtime(time.time())),
                         }
         query = "select rev_user_text,count(*) from page left join revision on page_id = rev_page where (page_namespace = 4 OR page_namespace = 5) and (page_title like \"%(wp_name)s/%%\" OR page_title = \"%(wp_name)s\")    and rev_timestamp > %(start_date)s and rev_timestamp < %(end_date)s group by rev_user_text HAVING count(*) > 1 ORDER BY COUNT(*) DESC;"    % data
-        for result in run_query(query,'enwiki_p'):
+        for result in wptools.query('wiki', query, None):
             yield result[0].decode('utf-8'),result[1]
-
-
-# abstract wrapper for running queries, handles opening, retrieving results, and closing the database
-def run_query(query,database):
-    # query        : a string formatted mysql query
-    # database : the database that you want to run the query on formatted in a enwiki_p format
-
-    # strip the _p from the database name so we can connect to the correct host.
-    database2 = re.sub(u'_p',u'',database)
-    # create connection, and use the credential file in the tool account
-    db = MySQLdb.connect(db=database, host=database2+".labsdb", read_default_file=os.path.expanduser("~/replica.my.cnf"))
-    cursor = db.cursor()
-    cursor.execute(query)
-    # grab results
-    results = cursor.fetchall()
-    # close the connection to avoid issues.
-    db.close()
-    # return the unprocessed database query results
-    return results
 
 # basic function for taking a list and iterating over it to save each item into a file
 def get_bots():
     bots = []
-    for result in run_query("select user_name from user_groups left join user on user_id = ug_user where ug_group = 'bot';",'enwiki_p'):
+    for result in wptools.query('wiki', "select user_name from user_groups left join user on user_id = ug_user where ug_group = 'bot';", None):
         bots.append(result[0].decode('utf-8'))
     return bots
 def log_lines(list,file,purge = True):
