@@ -242,8 +242,6 @@ def get_file(file):
 
 
 def main():
-    site = wikipedia.getSite('en','wikipedia')
-    wptools = WikiProjectTools()
 
     # Basic object for getting a time delta, IE tracking how long different parts of the code take to run
     default_config = wptools.query('index', 'select json from config;', None)
@@ -275,4 +273,6 @@ def main():
 
 
 if __name__ == "__main__":
+    site = wikipedia.getSite('en','wikipedia')
+    wptools = WikiProjectTools()
     main()
