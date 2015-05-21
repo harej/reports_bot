@@ -65,7 +65,7 @@ def main():
         # Check if revision has been reverted
         reverted = reverts.api.check(session, rc_id, page_id, 3, None, 172800, None)
         if reverted is None:
-            entry = {'title': (page_namespace + rc_title).replace('_', ' '), 'section': rc_comment, 'timestamp': rc_timestamp}
+            entry = {'title': (page_namespace + rc_title), 'section': rc_comment, 'timestamp': rc_timestamp}
             output.append(entry)
 
     # Loading list of WikiProjects signed up to get lists of new discussions
@@ -100,7 +100,7 @@ def main():
             saveto = 'User:Reports bot/Discussions/' + wikiproject
             page = pywikibot.Page(bot, saveto)
             draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-progressive}}}}</div>\n</noinclude>===New discussions===\n{{{{WPX last updated|{1}}}}}\n\n'.format(wikiproject, saveto)
-            submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'], thread['section'], thread['timestamp'])
+            submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
             list = []
