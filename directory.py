@@ -37,7 +37,7 @@ class td(object):
 
 # main report object
 class project_stats(object):
-    def __init__(self,project,opted_out):
+    def __init__(self,project,opted_out,default_config):
         # takes a unicode project name, and a list of users who do not want to be in the reports.
         self.opted_out = opted_out
         self.project = project
@@ -268,7 +268,7 @@ def main():
     opted_out = get_opt_out()
     # iterate over the project list and run a report for each
     for project in projects:
-        report = project_stats(project,opted_out)
+        report = project_stats(project,opted_out,default_config)
         report.run()
 
 
