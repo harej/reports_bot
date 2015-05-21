@@ -15,7 +15,6 @@ from project_index import WikiProjectTools
 
 def main():
 
-    print('Pulling from database...')
     wptools = WikiProjectTools()
     query = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
 
@@ -30,11 +29,8 @@ def main():
 
     # Compare!
     intersect_counts = {}
-    counter = 0
     regex = re.compile('/.*')
     for wikiproject_x in pages.keys():  # lol WikiProject X
-        counter += 1
-        print(str(counter) + '. Working on: ' + wikiproject_x)
         intersect_counts[wikiproject_x] = {}
         for wikiproject_y in pages.keys():
             if wikiproject_x == wikiproject_y:
