@@ -40,43 +40,6 @@ class td(object):
             return u'%02d:%02d:%02ds' % (hours,minutes,seconds)
         else:
             return u'%02d:%02ds' % (minutes,seconds)
-
-def main():
-
-    # Purge the two runtime logs.
-    log2('','project_analysis.log')
-    log2('','project_stats.log')
-
-    # List of projects we are working on
-    # Methodology: List from Project Index + List from Formal Definition, minus duplicates
-    # This will cover all of our bases.
-    projects = []
-    projectindex = wptools.query('index', 'select distinct pi_project from projectindex;', None)
-    for row in projectindex:
-        projects.append(row[0])
-    formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
-    for row in formaldefinition:
-        row = 'Wikipedia:' + row[0].decode('utf-8')  # Making output consistent with formatting used in projects list
-        if row not in projects:
-            projects.append(row)
-
-    # Get our list of users who opted out
-    opted_out = get_opt_out()
-    # iterate over the project list and run a report for each
-    for project in projects:
-        report = project_stats(project,opted_out)
-        report.run()
-
-def get_opt_out():
-    text = wikipedia.Page(site,'User:Reports bot/Opt-out').get()
-    users = []
-    regexes =[re.findall('\[\[User:(.*?)\|',text,re.I), re.findall('\{\{user\|(.*?)\}\}',text,re.I), re.findall('\[\[:User:(.*?)\]',text,re.I), re.findall('\[\[:User talk:(.*?)\]',text,re.I)]
-    for results in regexes:
-        for user in results:
-            users.append(user)
-    users.extend(get_bots())
-    return users
-
 # main report object
 class project_stats(object):
     def __init__(self,project,opted_out):
@@ -233,6 +196,16 @@ class project_stats(object):
         for result in wptools.query('wiki', query, None):
             yield result[0].decode('utf-8'),result[1]
 
+def get_opt_out():
+    text = wikipedia.Page(site,'User:Reports bot/Opt-out').get()
+    users = []
+    regexes =[re.findall('\[\[User:(.*?)\|',text,re.I), re.findall('\{\{user\|(.*?)\}\}',text,re.I), re.findall('\[\[:User:(.*?)\]',text,re.I), re.findall('\[\[:User talk:(.*?)\]',text,re.I)]
+    for results in regexes:
+        for user in results:
+            users.append(user)
+    users.extend(get_bots())
+    return users
+
 # basic function for taking a list and iterating over it to save each item into a file
 def get_bots():
     bots = []
@@ -263,6 +236,32 @@ def get_file(file):
     names = f.read()
     f.close()
     return names
+
+def main():
+
+    # Purge the two runtime logs.
+    log2('','project_analysis.log')
+    log2('','project_stats.log')
+
+    # List of projects we are working on
+    # Methodology: List from Project Index + List from Formal Definition, minus duplicates
+    # This will cover all of our bases.
+    projects = []
+    projectindex = wptools.query('index', 'select distinct pi_project from projectindex;', None)
+    for row in projectindex:
+        projects.append(row[0])
+    formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
+    for row in formaldefinition:
+        row = 'Wikipedia:' + row[0].decode('utf-8')  # Making output consistent with formatting used in projects list
+        if row not in projects:
+            projects.append(row)
+
+    # Get our list of users who opted out
+    opted_out = get_opt_out()
+    # iterate over the project list and run a report for each
+    for project in projects:
+        report = project_stats(project,opted_out)
+        report.run()
 
 if __name__ == "__main__":
     main()
