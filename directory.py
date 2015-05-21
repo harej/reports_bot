@@ -47,7 +47,7 @@ def main():
     # Methodology: List from Project Index + List from Formal Definition, minus duplicates
     # This will cover all of our bases.
     projects = []
-    projectindex = wptools.query('index', 'select distinct pi_project from projectindex;' None)
+    projectindex = wptools.query('index', 'select distinct pi_project from projectindex;', None)
     for row in projectindex:
         projects.append(row[0])
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
