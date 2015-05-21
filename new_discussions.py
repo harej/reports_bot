@@ -29,12 +29,18 @@ def main():
 
     wptools = WikiProjectTools()
 
-    now = datetime.datetime.utcnow()  # TODO: Make this pull a "last fetch" time from the database; populate new value with current time
-    wikitime = now.strftime('%Y%m%d%H%M%S') # converts timestamp to MediaWiki format
-    thirtyminutesago = (now - datetime.timedelta(minutes=30)).strftime('%Y%m%d%H%M%S')
+    now = datetime.datetime.utcnow()
+    now = now.strftime('%Y%m%d%H%M%S') # converts timestamp to MediaWiki format
+
+    # Pulling timestamp of the last time the script was run
+    query = wptools.query('index', 'select lu_timestamp from lastupdated where lu_key = "new_discussions";', None)
+    lastupdated = query[0][0]
     
     # Polling for newest talk page posts in the last thirty minutes
-    query = wptools.query('wiki', 'select distinct recentchanges.rc_this_oldid, page.page_id, recentchanges.rc_title, recentchanges.rc_comment, recentchanges.rc_timestamp, page.page_namespace from recentchanges join page on recentchanges.rc_namespace = page.page_namespace and recentchanges.rc_title = page.page_title join categorylinks on page.page_id=categorylinks.cl_from where rc_timestamp >= ' + thirtyminutesago + ' and rc_timestamp < ' + wikitime + ' and rc_comment like "% new section" and rc_deleted = 0 and cl_to like "%_articles" and page_namespace not in (0, 2, 6, 8, 10, 12, 14, 100, 108, 118) order by rc_timestamp desc;', None)
+    query = wptools.query('wiki', 'select distinct recentchanges.rc_this_oldid, page.page_id, recentchanges.rc_title, recentchanges.rc_comment, recentchanges.rc_timestamp, page.page_namespace from recentchanges join page on recentchanges.rc_namespace = page.page_namespace and recentchanges.rc_title = page.page_title join categorylinks on page.page_id=categorylinks.cl_from where rc_timestamp >= ' + lastupdated + ' and rc_timestamp < ' + now + ' and rc_comment like "% new section" and rc_deleted = 0 and cl_to like "%_articles" and page_namespace not in (0, 2, 6, 8, 10, 12, 14, 100, 108, 118) order by rc_timestamp desc;', None)
+
+    # Update the Last Updated field with new timestamp
+    query = wptools.query('index', 'update lastupdated set lu_timestamp = {0} where lu_key = "new_discussions";'.format(now), None)
 
     # Cleaning up output
     namespace = {1: 'Talk:', 3: 'User_talk:', 4: 'Wikipedia:', 5: 'Wikipedia_talk:', 7: 'File_talk:', 9: 'MediaWiki_talk:', 11: 'Template_talk:', 13: 'Help_talk:', 15: 'Category_talk:', 101: 'Portal_talk:', 109: 'Book_talk:', 119: 'Draft_talk:', 447: 'Education_Program_talk:', 711: 'TimedText_talk:', 829: 'Module_talk:', 2600: 'Topic:'}
