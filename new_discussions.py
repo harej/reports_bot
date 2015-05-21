@@ -114,7 +114,7 @@ def main():
                 list[len(list) - 1] += "</noinclude>"
             for i in list:
                 page.text += i + "\n\n"
-            page.save('New discussion on [[{0}]]'.format(thread['title']), minor=False)
+            page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
 
 if __name__ == "__main__":
     main()
