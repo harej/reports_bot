@@ -17,8 +17,12 @@ from project_index import WikiProjectTools
 
 
 site = wikipedia.getSite('en','wikipedia')
+wptools = WikiProjectTools()
+
 # Basic object for getting a time delta, IE tracking how long different parts of the code take to run
-default_config = get_wiki_json()
+default_config = wptools.query('index', 'select json from config;', None)
+default_config = eval(default_config[0][0])
+
 class td(object):
     def __init__(self):
         self.start_time = None
@@ -38,7 +42,6 @@ class td(object):
             return u'%02d:%02ds' % (minutes,seconds)
 
 def main():
-    wptools = WikiProjectTools()
 
     # Purge the two runtime logs.
     log2('','project_analysis.log')
@@ -73,10 +76,6 @@ def get_opt_out():
             users.append(user)
     users.extend(get_bots())
     return users
-def get_wiki_json():
-    data = wptools.query('index', 'select json from config;', None)
-    data = eval(data[0][0])
-    return data
 # main report object
 class project_stats(object):
     def __init__(self,project,opted_out):
