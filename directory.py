@@ -12,7 +12,7 @@ import codecs
 import re
 import os
 import time
-import pywikibot
+import pywikibot as wikipedia
 from project_index import WikiProjectTools
 
 
