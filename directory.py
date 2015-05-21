@@ -154,7 +154,7 @@ class project_stats(object):
         # log the stats for each project in a primary list log
         self.log(u'{{WikiProject directory entry|project=%s|number_of_articles=%s|wp_editors=%s|scope_editors=%s|scope_member_edit_count=%s|scope_edit_count=%s}}\n' % (self.project,self.number_of_articles,len(self.project_totals),len(self.scope_totals),self.scope_member_edit_count,self.total_scope_editcount),'project_stats.log')
         # dump a list of users who have not opted out to a file in the wp_reports subdirectory
-        log_lines(sorted(set(users),'wp_reports/%s_project.log' % self.project)
+        log_lines(sorted(set(users)),'wp_reports/%s_project.log' % self.project)
         log_lines(sorted(list(set(scope_editors))),'wp_reports/%s_scope.log' % self.project)
         
         wikipedia.Page(site,u'User:Reports bot/Directory/%s' % self.project)
