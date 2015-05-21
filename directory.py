@@ -16,13 +16,6 @@ import pywikibot as wikipedia
 from project_index import WikiProjectTools
 
 
-site = wikipedia.getSite('en','wikipedia')
-wptools = WikiProjectTools()
-
-# Basic object for getting a time delta, IE tracking how long different parts of the code take to run
-default_config = wptools.query('index', 'select json from config;', None)
-default_config = eval(default_config[0][0])
-
 class td(object):
     def __init__(self):
         self.start_time = None
@@ -40,6 +33,8 @@ class td(object):
             return u'%02d:%02d:%02ds' % (hours,minutes,seconds)
         else:
             return u'%02d:%02ds' % (minutes,seconds)
+
+
 # main report object
 class project_stats(object):
     def __init__(self,project,opted_out):
@@ -196,6 +191,7 @@ class project_stats(object):
         for result in wptools.query('wiki', query, None):
             yield result[0].decode('utf-8'),result[1]
 
+
 def get_opt_out():
     text = wikipedia.Page(site,'User:Reports bot/Opt-out').get()
     users = []
@@ -206,12 +202,15 @@ def get_opt_out():
     users.extend(get_bots())
     return users
 
+
 # basic function for taking a list and iterating over it to save each item into a file
 def get_bots():
     bots = []
     for result in wptools.query('wiki', "select user_name from user_groups left join user on user_id = ug_user where ug_group = 'bot';", None):
         bots.append(result[0].decode('utf-8'))
     return bots
+
+
 def log_lines(list,file,purge = True):
     str = u'\n'
     f3 = codecs.open(file, 'a', 'utf-8')
@@ -224,12 +223,16 @@ def log_lines(list,file,purge = True):
         except:
             pass
     f3.close()
+
+
 # similar to the log() function above, but truncates the file before saving to it
 def log2(text,file):
     f3 = codecs.open(file, 'a', 'utf-8')
     f3.truncate(0)
     f3.write(text)
     f3.close()
+
+
 # basic function to get the contents of a file
 def get_file(file):
     f = codecs.open(file,'r', 'utf-8')
@@ -237,7 +240,14 @@ def get_file(file):
     f.close()
     return names
 
+
 def main():
+    site = wikipedia.getSite('en','wikipedia')
+    wptools = WikiProjectTools()
+
+    # Basic object for getting a time delta, IE tracking how long different parts of the code take to run
+    default_config = wptools.query('index', 'select json from config;', None)
+    default_config = eval(default_config[0][0])
 
     # Purge the two runtime logs.
     log2('','project_analysis.log')
@@ -262,6 +272,7 @@ def main():
     for project in projects:
         report = project_stats(project,opted_out)
         report.run()
+
 
 if __name__ == "__main__":
     main()
