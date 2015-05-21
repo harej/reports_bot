@@ -97,9 +97,9 @@ def main():
             if (whitelist is None) or (wikiproject in whitelist):
                 thread['wikiprojects'].append(wikiproject)
         for wikiproject in thread['wikiprojects']:
-            saveto = 'User:Reports bot/Discussions/' + wikiproject
+            saveto = wikiproject + '/New discussions'
             page = pywikibot.Page(bot, saveto)
-            draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-progressive}}}}</div>\n</noinclude>===New discussions===\n{{{{WPX last updated|{1}}}}}\n\n'.format(wikiproject, saveto)
+            draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>===New discussions===\n{{{{WPX last updated|{1}}}}}\n\n'.format(wikiproject, saveto)
             submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
@@ -114,6 +114,7 @@ def main():
                 list[len(list) - 1] += "</noinclude>"
             for i in list:
                 page.text += i + "\n\n"
+            page.text += "{{WPX block|largetext='''[//en.wikipedia.org/w/index.php?title={0}&action=watch Add this feed to your Watchlist]'''}}".format(saveto.replace(' ', '_'))
             page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
 
 if __name__ == "__main__":
