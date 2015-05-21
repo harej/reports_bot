@@ -48,7 +48,7 @@ def main():
 
     # Alright! Let's run some reports!
     for project in projects:
-        
+        print(project)
 
 if __name__ == "__main__":
     main()
