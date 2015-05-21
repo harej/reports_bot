@@ -61,6 +61,8 @@ def main():
             articlecounter[project] = None  # Filling in article counts for projects not in Project Index
 
         # Profile Page: List of active project participants (less blacklist)
+        profilepage[project] = "{{WikiProject description page | project = {0} | number_of_article = {1}".format(project[10:].replace('_', ' '), articlecounter[project])
+
         # Directory Entry: Count of active project participants
 
         # Profile Page: List of act subject area editors (less blacklist)
