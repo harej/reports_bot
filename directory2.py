@@ -57,8 +57,8 @@ def main():
         row = row[0].decode('utf-8')
         if row not in projects:
             projects.append(row)
-    
     projects.sort()
+    projects = projects[29:] # DEBUG MODE
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
     directories = {'All': ''}  # In the future, there will be other directories in addition to the exhaustive one.
@@ -95,6 +95,7 @@ def main():
     
             counter = 0
             for package in packages:
+                counter += 1
                 print('Executing batch query no. ' + str(counter))
                 query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(tuple(package), start_date, end_date)
                 for result in wptools.query('wiki', query_builder, None):
@@ -117,23 +118,23 @@ def main():
         subject_editors_formatted = ""
         if len(wp_editors) > 0:
             for editor in wp_editors:
-                wp_editors_formatted += "\n* {{user|{0}}}".format(editor)
+                wp_editors_formatted += "\n* {{{{user|{0}}}}}".format(editor)
         else:
                 wp_editors_formatted = "\n* N/A"
         if len(subject_editors) > 0:
             for editor in subject_editors:
-                subject_editors_formatted += "\n* {{user|{0}}}".format(editor)
+                subject_editors_formatted += "\n* {{{{user|{0}}}}}".format(editor)
         else:
                 subject_editors_formatted = "\n* N/A"
         
-        profilepage = "{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
+        profilepage = "{{{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
         page = pywikibot.Page(bot, rootpage + 'Description/' + project_normalized)
         if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries
             page.text = profilepage
             page.save('Updating', minor=False)
 
         # Construct directory entry
-        directoryrow = "{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
+        directoryrow = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
         # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
         directories['All'] += directoryrow
