@@ -45,6 +45,7 @@ def main():
     articles = {}
     for pair in projectindex:
         pair = list(pair)  # For manipulation
+        pair[0] = re.sub(r'(Draft_)?[Tt]alk:', '', pair[0])  # Normalizing by getting rid of namespace
         pair[1] = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
         if pair[1] not in projects:
             projects.append(pair[1])
@@ -58,7 +59,7 @@ def main():
         if row not in projects:
             projects.append(row)
     projects.sort()
-    projects = projects[29:] # DEBUG MODE
+    projects = projects[:150] # DEBUG MODE
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
     directories = {'All': ''}  # In the future, there will be other directories in addition to the exhaustive one.
@@ -131,7 +132,7 @@ def main():
         page = pywikibot.Page(bot, rootpage + 'Description/' + project_normalized)
         if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries
             page.text = profilepage
-            page.save('Updating', minor=False)
+            page.save('Updating', minor=False, async=True)
 
         # Construct directory entry
         directoryrow = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
@@ -145,7 +146,7 @@ def main():
         page = pywikibot.Page(bot, rootpage + directory)
         if directory != page.text:  # Checking to see if a change was made to cut down on API queries
             page.text = directory
-            page.save('Updating', minor=False)
+            page.save('Updating', minor=False, async=True)
 
 
 if __name__ == "__main__":
