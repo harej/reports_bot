@@ -87,7 +87,7 @@ def main():
         start_date = time.strftime('%Y%m%d000000',time.gmtime(time.time()-(60*60*24*30)))  # 30 days
         end_date = time.strftime('%Y%m%d000000',time.gmtime(time.time()))  # Today
 
-        if articles[project] > 0:
+        if len(articles[project]) > 0:
             subject_editors = []
             packages = []
             for i in range(0, len(articles[project]), 10000):
