@@ -96,21 +96,21 @@ def main():
             counter = 0
             for package in packages:
                 print('Executing batch query no. ' + str(counter))
-                query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2};'.format(tuple(package), start_date, end_date)
+                query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(tuple(package), start_date, end_date)
                 for result in wptools.query('wiki', query_builder, None):
                     subject_editors.append(result[0].decode('utf-8'))
 
             subject_editors = dict(Counter(subject_editors))  # Convert the list to a dictionary with username as key and edit count as value
-            subject_editors_filtered = {}
+            subject_editors_filtered = []
             for user in subject_editors.keys():
                 if subject_editors[user] not in blacklist:
                     if subject_editors[user] > 4:
-                        subject_editors_filtered[user] = subject_editors[user]  # We need to create a separate dictionary otherwise the for-loop breaks
+                        subject_editors_filtered.append(user)
             subject_editors = subject_editors_filtered   # And now assigned back.
             subject_editors.sort()
 
         else:
-            subject_editors = {}
+            subject_editors = []
 
         # Generate and Save Profile Page
         wp_editors_formatted = ""
