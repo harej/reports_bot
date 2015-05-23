@@ -34,7 +34,6 @@ def main():
     for result in wptools.query('wiki', "select user_name from user_groups left join user on user_id = ug_user where ug_group = 'bot';", None):
         blacklist.append(result[0].decode('utf-8'))
     print('With bots, there are ' + str(len(blacklist)) + ' usernames on the blacklist.')
-    print(blacklist) # debug
 
     # Loading the Project Index
     projectindex = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
@@ -82,6 +81,7 @@ def main():
         for result in wptools.query('wiki', query, None):
             if result[0] is not None:
                 user = result[0].decode('utf-8')
+                print(user) # debug
                 if user not in blacklist:
                     wp_editors.append(user)
         wp_editors.sort()
