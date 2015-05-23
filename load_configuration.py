@@ -34,7 +34,7 @@ def main():
         sys.exit()
 
     # At this point, we have valid JSON at our disposal. Time to save to the database.
-
+    output = json.dumps(output)
     wptools = WikiProjectTools()
     wptools.query('index', 'create table config_draft (json mediumtext character set utf8 collate utf8_unicode_ci) engine=innodb character set=utf8;', None)
     wptools.query('index', 'insert into config_draft (json) values (%s);', (str(output),))

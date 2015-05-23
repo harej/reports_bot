@@ -8,6 +8,7 @@ Licensed under MIT License: http://mitlicense.org
 
 import os
 import configparser
+import json
 import time
 import datetime
 import pywikibot
@@ -69,8 +70,7 @@ def main():
             output.append(entry)
 
     # Loading list of WikiProjects signed up to get lists of new discussions
-    config = wptools.query('index', 'select json from config;', None)
-    config = eval(config[0][0])
+    config = json.loads(wptools.query('index', 'select json from config;', None)[0][0])
     
     if config['defaults']['new_discussions'] == False:  # i.e. if New Discussions is an opt-in system
         whitelist = []  # Whitelisted WikiProjects for new discussion lists
