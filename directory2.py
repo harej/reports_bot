@@ -44,6 +44,7 @@ def main():
     projects = []
     articles = {}
     for pair in projectindex:
+        pair = list(pair)  # For manipulation
         pair[1] = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
         if pair[1] not in projects:
             projects.append(pair[1])
