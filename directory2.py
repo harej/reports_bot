@@ -79,9 +79,10 @@ def main():
         end_date = time.strftime('%Y%m%d000000',time.gmtime(time.time()))  # Today
         query = "select rev_user_text from page left join revision on page_id = rev_page where (page_namespace = 4 OR page_namespace = 5) and (page_title like \"{0}/%%\" OR page_title = \"{0}\") and rev_timestamp > {1} and rev_timestamp < {2} group by rev_user_text HAVING count(*) > 1;".format(project, start_date, end_date)
         for result in wptools.query('wiki', query, None):
-            user = result[0].decode('utf-8')
-            if user not in blacklist:
-                wp_editors.append(user)
+            if result[0] is not None:
+                user = result[0].decode('utf-8')
+                if user not in blacklist:
+                    wp_editors.append(user)
         wp_editors.sort()
 
         # List of active subject area editors (less blacklist)
