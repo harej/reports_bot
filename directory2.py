@@ -34,6 +34,7 @@ def main():
     for result in wptools.query('wiki', "select user_name from user_groups left join user on user_id = ug_user where ug_group = 'bot';", None):
         blacklist.append(result[0].decode('utf-8'))
     print('With bots, there are ' + str(len(blacklist)) + ' usernames on the blacklist.')
+    print(blacklist) # debug
 
     # Loading the Project Index
     projectindex = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
@@ -101,7 +102,8 @@ def main():
                 print('Executing batch query no. ' + str(counter))
                 query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(tuple(package), start_date, end_date)
                 for result in wptools.query('wiki', query_builder, None):
-                    subject_editors.append(result[0].decode('utf-8'))
+                    if result[0] is not None:
+                        subject_editors.append(result[0].decode('utf-8'))
 
             subject_editors = dict(Counter(subject_editors))  # Convert the list to a dictionary with username as key and edit count as value
             subject_editors_filtered = []
