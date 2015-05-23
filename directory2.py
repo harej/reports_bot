@@ -60,10 +60,9 @@ def main():
     projects.sort()
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
-    # Alright! Let's run some reports!
-    directoryrow = {}
-    profilepage = {}
+    directories = {'All': ''}  # In the future, there will be other directories in addition to the exhaustive one.
 
+    # Alright! Let's run some reports!
     for project in projects:
         print("Working on: " + project)
 
@@ -103,28 +102,49 @@ def main():
             subject_editors = dict(Counter(subject_editors))  # Convert the list to a dictionary with username as key and edit count as value
             subject_editors_filtered = {}
             for user in subject_editors.keys():
-                if subject_editors[user] > 4:
-                    subject_editors_filtered[user] = subject_editors[user]  # We need to create a separate dictionary otherwise the for-loop breaks
+                if subject_editors[user] not in blacklist:
+                    if subject_editors[user] > 4:
+                        subject_editors_filtered[user] = subject_editors[user]  # We need to create a separate dictionary otherwise the for-loop breaks
             subject_editors = subject_editors_filtered   # And now assigned back.
             subject_editors.sort()
 
         else:
             subject_editors = {}
 
-        # Save Profile Page
-        # Construct Directory Entry
-
+        # Generate and Save Profile Page
         wp_editors_formatted = ""
         subject_editors_formatted = ""
-        for editor in wp_editors:
-            wp_editors_formatted += "* {{user|{0}}}\n".format(editor)
-        for editor in subject_editors:
-            subject_editors_formatted += "* {{user|{0}}}\n".format(editor)
+        if len(wp_editors) > 0:
+            for editor in wp_editors:
+                wp_editors_formatted += "\n* {{user|{0}}}".format(editor)
+        else:
+                wp_editors_formatted = "\n* N/A"
+        if len(subject_editors) > 0:
+            for editor in subject_editors:
+                subject_editors_formatted += "\n* {{user|{0}}}".format(editor)
+        else:
+                subject_editors_formatted = "\n* N/A"
+        
+        profilepage = "{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
+        page = pywikibot.Page(bot, rootpage + 'Description/' + project_normalized)
+        if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries
+            page.text = profilepage
+            page.save('Updating', minor=False)
 
-        directoryrow[project] = "{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
-        profilepage[project] = "{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
+        # Construct directory entry
+        directoryrow = "{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
         # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
+        directories['All'] += directoryrow
+
+    # Generate directories and save!
+    for directory in directories:
+        directory = "{{WikiProject directory top}}\n" + directory + "|}"
+        page = pywikibot.Page(bot, rootpage + directory)
+        if directory != page.text:  # Checking to see if a change was made to cut down on API queries
+            page.text = directory
+            page.save('Updating', minor=False)
+
 
 if __name__ == "__main__":
     main()
