@@ -81,7 +81,6 @@ def main():
         for result in wptools.query('wiki', query, None):
             if result[0] is not None:
                 user = result[0].decode('utf-8')
-                print(user) # debug
                 if user not in blacklist:
                     wp_editors.append(user)
         wp_editors.sort()
@@ -144,11 +143,11 @@ def main():
         directories['All'] += directoryrow
 
     # Generate directories and save!
-    for directory in directories:
-        directory = "{{WikiProject directory top}}\n" + directory + "|}"
+    for directory in directories.keys():
+        contents = "{{WikiProject directory top}}\n" + directories[directory] + "|}"
         page = pywikibot.Page(bot, rootpage + directory)
-        if directory != page.text:  # Checking to see if a change was made to cut down on API queries
-            page.text = directory
+        if contents != page.text:  # Checking to see if a change was made to cut down on API queries
+            page.text = contents
             page.save('Updating', minor=False, async=True)
 
 
