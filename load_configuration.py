@@ -18,18 +18,12 @@ class WPXConfig:
         page = pywikibot.Page(bot, 'Wikipedia talk:WikiProject X/wikiproject.json/Errors')
         page.text = str(wikitime) + ': ' + message
         page.save('Error while loading configuration', minor=False)
-        sys.exit()
-    
-    def validatebyiterate(self, bot, schema, tocheck):
-        for entry in tocheck:
-            for setting in entry:
-                if setting not in schema:
-                    self.stopthepresses(bot, 'Invalid setting {0} in project entry {1}'.format(setting, entry))
+        sys.exit()     
     
     def now(self):
         bot = pywikibot.Site('en', 'wikipedia')
     
-        # Exports the contents of the wikiproject.json page
+        # Exports the contents of the wikiproject.json page.
         page = pywikibot.Page(bot, 'Wikipedia:WikiProject X/wikiproject.json')
         output = page.text
     
@@ -41,10 +35,15 @@ class WPXConfig:
     
         # At this point, we have valid JSON at our disposal. But does it comply with the schema?
         schema = list(output['schema'].keys())
-        self.validatebyiterate(bot, schema, output['defaults'])
-        self.validatebyiterate(bot, schema, output['projects'])
+        for setting in output['defaults']:
+            if setting not in schema:
+                self.stopthepresses(bot, 'Invalid setting {0} in project entry {1}'.format(setting, entry))
+        for entry in output['projects']:
+            for setting in entry:
+                if setting not in schema:
+                    self.stopthepresses(bot, 'Invalid setting {0} in project entry {1}'.format(setting, entry))
     
-        # If the script hasn't been killed yet by validatebyiterate(), 
+        # If the script hasn't been killed yet, save to database.
         output = json.dumps(output)
         wptools = WikiProjectTools()
         wptools.query('index', 'create table config_draft (json mediumtext character set utf8 collate utf8_unicode_ci) engine=innodb character set=utf8;', None)
