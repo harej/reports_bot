@@ -10,6 +10,7 @@ import re
 import time
 import pywikibot
 import json
+import mwparserfromhell as mwph
 from collections import Counter
 from project_index import WikiProjectTools
 
@@ -146,9 +147,22 @@ def main():
     for directory in directories.keys():
         contents = "{{WikiProject directory top}}\n" + directories[directory] + "|}"
         page = pywikibot.Page(bot, rootpage + directory)
-        if contents != page.text:  # Checking to see if a change was made to cut down on API queries
+        if contents != page.text:  # Checking to see if a change was made to cut down on API save queries
+            oldcontents = page.text
             page.text = contents
             page.save('Updating', minor=False, async=True)
+            if directory == 'All':  # Cleanup of obsolete description pages
+                oldcontents = mwph.parse(oldcontents)
+                oldcontents = oldcontents.filter_templates()
+                oldprojectlist = []
+                for t in oldcontents:
+                    if t.name == "WikiProject directory top":
+                        oldprojectlist.append(t.get('project').value)
+                for oldproject in oldprojectlist:
+                    if oldproject.replace(' ', '_') not in projects:
+                        deletethis = pywikibot.Page(bot, rootpage + 'Description/' + oldproject)
+                        deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect.}}\n" + deletethis.text
+                        deletethis.save('Nominating page for deletion', minor=False, async=True)
 
 
 if __name__ == "__main__":
