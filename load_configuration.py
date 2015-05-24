@@ -20,7 +20,7 @@ class WPXConfig:
         page.save('Error while loading configuration', minor=False)
         sys.exit()
     
-    def validatebyiterate(self, bot, schema, tocheck)
+    def validatebyiterate(self, bot, schema, tocheck):
         for entry in tocheck:
             for setting in entry:
                 if setting not in schema:
