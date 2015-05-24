@@ -108,7 +108,7 @@ def main():
             subject_editors = dict(Counter(subject_editors))  # Convert the list to a dictionary with username as key and edit count as value
             subject_editors_filtered = []
             for user in subject_editors.keys():
-                if subject_editors[user] not in blacklist:
+                if user not in blacklist:
                     if subject_editors[user] > 4:
                         subject_editors_filtered.append(user)
             subject_editors = subject_editors_filtered   # And now assigned back.
