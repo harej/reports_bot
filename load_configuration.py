@@ -37,7 +37,7 @@ class WPXConfig:
         schema = list(output['schema'].keys())
         for setting in output['defaults']:
             if setting not in schema:
-                self.stopthepresses(bot, 'Invalid setting {0} in project entry {1}'.format(setting, entry))
+                self.stopthepresses(bot, 'Invalid setting {0} in default configuration.'.format(setting))
         for entry in output['projects']:
             for setting in entry:
                 if setting not in schema:
