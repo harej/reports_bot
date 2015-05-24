@@ -93,8 +93,8 @@ def main():
         if len(articles[project]) > 0:
             subject_editors = []
             packages = []
-            for i in range(0, len(articles[project]), 10000):
-                packages.append(articles[project][i:i+10000])
+            for i in range(0, len(articles[project]), 5000):
+                packages.append(articles[project][i:i+5000])
     
             counter = 0
             for package in packages:
@@ -161,7 +161,7 @@ def main():
                 for oldproject in oldprojectlist:
                     if oldproject.strip().replace(' ', '_') not in projects:
                         deletethis = pywikibot.Page(bot, rootpage + 'Description/' + oldproject)
-                        deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect.}}\n" + deletethis.text
+                        deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect.}}\n"
                         deletethis.save('Nominating page for deletion', minor=False, async=True)
 
 
