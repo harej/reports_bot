@@ -156,10 +156,10 @@ def main():
                 oldcontents = oldcontents.filter_templates()
                 oldprojectlist = []
                 for t in oldcontents:
-                    if t.name == "WikiProject directory top":
+                    if t.name.strip() == "WikiProject directory entry":
                         oldprojectlist.append(t.get('project').value)
                 for oldproject in oldprojectlist:
-                    if oldproject.replace(' ', '_') not in projects:
+                    if oldproject.strip().replace(' ', '_') not in projects:
                         deletethis = pywikibot.Page(bot, rootpage + 'Description/' + oldproject)
                         deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect.}}\n" + deletethis.text
                         deletethis.save('Nominating page for deletion', minor=False, async=True)
