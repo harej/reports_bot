@@ -103,16 +103,16 @@ def main():
             submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
-            list = []
+            templatelist = []
             for i in index:
                 if i.name == "WPX new discussion":
-                    list.append(str(i))
-            list = list[:14]  # Sayonara, old threads!
+                    templatelist.append(str(i))
+            templatelist = templatelist[:14]  # Sayonara, old threads!
             page.text = draft + submission
-            if len(list) > 3:
-                list[2] += "<noinclude>"  # Anything after the third item will not be transcluded
-                list[len(list) - 1] += "</noinclude>"
-            for i in list:
+            if len(templatelist) > 3:
+                templatelist[2] += "<noinclude>"  # Anything after the third item will not be transcluded
+                templatelist[len(templatelist) - 1] += "</noinclude>"
+            for i in templatelist:
                 page.text += i + "\n\n"
             page.text += "{{WPX block|largetext='''[//en.wikipedia.org/w/index.php?title={0}&action=watch Add this feed to your Watchlist]'''}}".format(saveto.replace(' ', '_'))
             page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
