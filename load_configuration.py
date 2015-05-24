@@ -5,17 +5,21 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-import os
 import sys
-import configparser
 import json
 import pywikibot
 import datetime
 from project_index import WikiProjectTools
 
+def stopthepresses(message):
+    now = datetime.datetime.utcnow()
+    wikitime = now.strftime('%Y%m%d%H%M%S')
+    page = pywikibot.Page(bot, 'Wikipedia talk:WikiProject X/wikiproject.json/Errors')
+    page.text = str(wikitime) + ': ' + message
+    page.save('Error while loading configuration', minor=False)
+    sys.exit()
 
 def main():
-
     bot = pywikibot.Site('en', 'wikipedia')
 
     # Exports the contents of the wikiproject.json page
@@ -26,14 +30,16 @@ def main():
     try:
         output = json.loads(output)
     except ValueError as ack:  # If JSON is invalid
-        now = datetime.datetime.utcnow()
-        wikitime = now.strftime('%Y%m%d%H%M%S')
-        page = pywikibot.Page(bot, 'Wikipedia talk:WikiProject X/wikiproject.json/Errors')
-        page.text = str(wikitime) + ': ' + str(ack)
-        page.save('Error while loading configuration', minor=False)
-        sys.exit()
+        stopthepresses(str(ack))
 
-    # At this point, we have valid JSON at our disposal. Time to save to the database.
+    # At this point, we have valid JSON at our disposal. But does it comply with the schema?
+    schema = list(output['schema'].keys())
+    for entry in output['projects']:
+        for setting in entry:
+            if setting not in schema:
+                stopthepresses('Invalid setting {0} in project entry {1}'.format(setting, entry))
+
+    # Save to database
     output = json.dumps(output)
     wptools = WikiProjectTools()
     wptools.query('index', 'create table config_draft (json mediumtext character set utf8 collate utf8_unicode_ci) engine=innodb character set=utf8;', None)
