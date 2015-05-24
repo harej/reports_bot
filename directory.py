@@ -93,8 +93,8 @@ def main():
         if len(articles[project]) > 0:
             subject_editors = []
             packages = []
-            for i in range(0, len(articles[project]), 5000):
-                packages.append(articles[project][i:i+5000])
+            for i in range(0, len(articles[project]), 10000):
+                packages.append(articles[project][i:i+10000])
     
             counter = 0
             for package in packages:
@@ -157,7 +157,7 @@ def main():
                 oldprojectlist = []
                 for t in oldcontents:
                     if t.name.strip() == "WikiProject directory entry":
-                        oldprojectlist.append(t.get('project').value)
+                        oldprojectlist.append(str(t.get('project').value))
                 for oldproject in oldprojectlist:
                     if oldproject.strip().replace(' ', '_') not in projects:
                         deletethis = pywikibot.Page(bot, rootpage + 'Description/' + oldproject)
