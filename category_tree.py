@@ -13,7 +13,7 @@ def build_cat_tree(cat_name, max_depth=5):
     if max_depth == 0:
         return None
     wptools = WikiProjectTools()
-    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = "{0}" and page_title like "%\_WikiProjects";'.format(cat_name), None)
+    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = "{0}" and page_title like "%\_WikiProjects" and page_title not like "Inactive_%";'.format(cat_name), None)
     retval = {}
     for row in query:
         category = row[0].decode('utf-8')
