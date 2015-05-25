@@ -10,7 +10,7 @@ from project_index import WikiProjectTools
 
 
 class WikiProjectCategories:
-    def generate(audit=False, production=True):
+    def generate(self, audit=False, production=True):
         '''
         "audit" prints the category tree to stdout
         "production" returns a dictionary for use in some other script
