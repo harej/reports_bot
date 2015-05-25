@@ -28,7 +28,7 @@ class WikiProjectCategories:
         "production" returns a dictionary for use in some other script
         '''
 
-        tree = build_cat_tree('WikiProjects_by_area', max_depth=5)
+        tree = build_cat_tree('WikiProjects_by_area', max_depth=10)
 
         if audit == True:
             pprint(tree)
