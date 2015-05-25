@@ -23,7 +23,7 @@ class WikiProjectCategories:
         for row in wptools.query('wiki', query, None):
             category = row[0].decode('utf-8')
             tree[category] = {}
-            nextquery = 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = {0} and page_title like "%\_WikiProjects";'.format(category)
+            nextquery = 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = "{0}" and page_title like "%\_WikiProjects";'.format(category)
             for nextrow in wptools.query('wiki', nextquery, None):
                 nextcategory = nextrow[0].decode('utf-8')
                 tree[category][nextcategory] = {}
