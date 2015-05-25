@@ -1,12 +1,23 @@
 # -*- coding: utf-8 -*-
 """
 Prepares the WikiProject category tree
-Copyright (C) 2015 James Hare
+Copyright (C) 2015 James Hare, Merlijn Van Deen
 Licensed under MIT License: http://mitlicense.org
 """
 
 from pprint import pprint
 from project_index import WikiProjectTools
+
+
+def build_cat_tree(cat_name, max_depth=5):
+    if max_depth == 0:
+        return None
+    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = "{0}" and page_title like "%\_WikiProjects";', cat_name)
+    retval = {}
+    for row in query:
+        category = row[0].decode('utf-8')
+        retval[category] = build_cat_tree(category, max_depth=max_depth-1)
+    return retval
 
 
 class WikiProjectCategories:
@@ -17,16 +28,7 @@ class WikiProjectCategories:
         '''
 
         wptools = WikiProjectTools()
-
-        tree = {}
-        category = 'WikiProjects_by_area' # seed category
-
-        query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = "WikiProjects_by_area" and page_title like "%\_WikiProjects";', None)
-        for row in query:
-            while len(query) > 0:
-                category = row[0].decode('utf-8')
-                tree[category] = {}
-                query = 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and cl_to = "{0}" and page_title like "%\_WikiProjects";'.format(category)
+        tree = build_cat_tree('WikiProjects_by_area', max_depth=2)
 
         if audit == True:
             pprint(tree)
@@ -37,3 +39,6 @@ class WikiProjectCategories:
 if __name__ == "__main__":
     wpc = WikiProjectCategories()
     wpc.generate(audit=True, production=False)  # If the script is invoked directly, run in audit mode
+
+
+
