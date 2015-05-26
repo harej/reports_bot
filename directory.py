@@ -168,7 +168,8 @@ def main():
     for directory in directoryrow.keys():
         directories['All'] += directoryrow[directory]
     
-        tree = dict(WikiProjectCategories())
+        wpcats = WikiProjectCategories()
+        tree = wpcats.generate()
         for firstlevel in tree.keys():
             directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
             directories[firstlevel] += treeiterator(wptools, tree, projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
