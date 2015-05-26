@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Updates the WikiProject Directory
-Copyright (C) 2015 Betacommand, James Hare
+Copyright (C) 2015 James Hare, Betacommand, Merlijn Van Deen
 Licensed under MIT License: http://mitlicense.org
 """
 
@@ -32,7 +32,8 @@ def treeiterator(wptools, tree, projects, directoryrow, key, counter=2, output='
         header = "=" * counter  # Python always finds new ways to amaze me.
         for step in tree.keys():
             output += header + step + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
-            output += treeiterator(wptools, tree[step], projects, directoryrow, step, counter=counter+1, output=output)
+            if len(tree[step]) > 0:
+                output += treeiterator(wptools, tree[step], projects, directoryrow, step, counter=counter+1, output=output)
     return output
 
 
