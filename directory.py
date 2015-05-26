@@ -27,10 +27,10 @@ def listpull(wptools, projects, directoryrow, key):
 
 
 def treeiterator(wptools, tree, projects, directoryrow, key, counter=2, output=''):
-    if len(tree[key]) > 0:
+    if len(tree) > 0:
         print("Populating directory page: " + key + " (level " + str(counter) + ")")
         header = "=" * counter  # Python always finds new ways to amaze me.
-        for step in tree[key].keys():
+        for step in tree[step].keys():
             output += header + step + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
             output += treeiterator(wptools, tree[step], projects, directoryrow, step, counter=counter+1, output=output)
     else:
@@ -76,7 +76,7 @@ def main():
             articles[pair[1]] = [pair[0]]
         else:
             articles[pair[1]].append(pair[0])
-    
+
     print("Preparing the Formal Definition index...")
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
     for row in formaldefinition:
@@ -120,7 +120,7 @@ def main():
             packages = []
             for i in range(0, len(articles[project]), 10000):
                 packages.append(articles[project][i:i+10000])
-    
+
             counter = 0
             for package in packages:
                 counter += 1
@@ -155,7 +155,7 @@ def main():
                 subject_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
         else:
                 subject_editors_formatted = ""
-        
+
         profilepage = "{{{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
         page = pywikibot.Page(bot, rootpage + '/Description/' + project_normalized)
         if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries
@@ -169,7 +169,7 @@ def main():
     print("Populating total directory...")
     for directory in directoryrow.keys():
         directories['All'] += directoryrow[directory]
-    
+
         wpcats = WikiProjectCategories()
         tree = wpcats.generate()
         for firstlevel in tree.keys():
