@@ -28,7 +28,7 @@ def listpull(wptools, projects, directoryrow, key):
 
 def treeiterator(wptools, tree, projects, directoryrow, key, counter=2, output=''):
     if len(tree[key]) > 0:
-        print("Populating directory page:" + key + " (level " + counter + ")")
+        print("Populating directory page:" + key + " (level " + str(counter) + ")")
         header = "=" * counter  # Python always finds new ways to amaze me.
         for step in tree[key].keys():
             output += header + step + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
