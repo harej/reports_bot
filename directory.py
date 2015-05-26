@@ -20,15 +20,15 @@ def listpull(wptools, projects, directoryrow, key):
     query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}"'.format(key), None)
     output = ''
     for row in query:
-        category = row[0].decode('utf-8')
-        if category in projects:  # This check is to filter against query results like "WikiProject_Stupid/talkheader" from being considered as projects.
-            output += directoryrow[key]
+        proj = row[0].decode('utf-8')
+        if proj in projects:  # This check is to filter against query results like "WikiProject_Stupid/talkheader" from being considered as projects.
+            output += directoryrow[proj]
     return output
 
 
 def treeiterator(wptools, tree, projects, directoryrow, key, counter=2, output=''):
     if len(tree[key]) > 0:
-        print("Populating directory page:" + key + " (level " + str(counter) + ")")
+        print("Populating directory page: " + key + " (level " + str(counter) + ")")
         header = "=" * counter  # Python always finds new ways to amaze me.
         for step in tree[key].keys():
             output += header + step + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
@@ -59,6 +59,7 @@ def main():
     print('With bots, there are ' + str(len(blacklist)) + ' usernames on the blacklist.')
 
     # Loading the Project Index
+    print("Loading the Project Index...")
     projectindex = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
 
     # List of projects we are working on
@@ -76,6 +77,7 @@ def main():
         else:
             articles[pair[1]].append(pair[0])
     
+    print("Preparing the Formal Definition index...")
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
     for row in formaldefinition:
         row = row[0].decode('utf-8')
