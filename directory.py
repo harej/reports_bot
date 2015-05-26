@@ -148,7 +148,7 @@ def main():
             for editor in wp_editors:
                 wp_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
         else:
-                wp_editors_formatted = "\n''There are no active participants on this WikiProject.''"
+                wp_editors_formatted = ""
         if len(subject_editors) > 0:
             for editor in subject_editors:
                 subject_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
