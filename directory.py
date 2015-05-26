@@ -28,9 +28,10 @@ def listpull(wptools, projects, directoryrow, key):
 
 def treeiterator(wptools, tree, projects, directoryrow, key, counter=2, output=''):
     if len(tree[key]) > 0:
+        print("Populating directory page:" + key + " (level " + counter + ")")
         header = "=" * counter  # Python always finds new ways to amaze me.
         for step in tree[key].keys():
-            output += header + tree[key][step] + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
+            output += header + step + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
             output += treeiterator(wptools, tree, projects, directoryrow, step, counter=counter+1, output=output)
     else:
         return output
@@ -163,6 +164,7 @@ def main():
         directoryrow[project] = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
     # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
+    print("Populating total directory...")
     for directory in directoryrow.keys():
         directories['All'] += directoryrow[directory]
     
