@@ -13,6 +13,29 @@ import json
 import mwparserfromhell as mwph
 from collections import Counter
 from project_index import WikiProjectTools
+from category_tree import WikiProjectCategories
+
+
+def listpull(wptools, projects, directoryrow, key):
+    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}"'.format(key), None)
+    output = ''
+    for row in query:
+        category = row[0].decode('utf-8')
+        if category in projects:  # This check is to filter against query results like "WikiProject_Stupid/talkheader" from being considered as projects.
+            output += directoryrow[key]
+    return output
+
+
+def treeiterator(wptools, tree, projects, directoryrow, key, counter=1, output=''):
+    if len(tree[key]) > 0:
+        header = "="
+        for i in counter:
+            header += "="
+        for step in tree[key].keys():
+            output += header + tree[key][step] + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
+            output += treeiterator(wptools, projects, directoryrow, step, counter=counter+1, output=output)
+    else:
+        return output
 
 
 def main():
@@ -20,7 +43,7 @@ def main():
     bot = pywikibot.Site('en', 'wikipedia')
     wptools = WikiProjectTools()
     config = json.loads(wptools.query('index', 'select json from config;', None)[0][0])
-    rootpage = 'User:Reports bot/Directory/'
+    rootpage = 'User:Reports bot/Directory'
     print("Let's get this show on the road!")
 
     # Get list of people who opted out
@@ -64,6 +87,7 @@ def main():
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
     directories = {'All': ''}  # In the future, there will be other directories in addition to the exhaustive one.
+    directoryrow = {}
 
     # Alright! Let's run some reports!
     for project in projects:
@@ -132,21 +156,27 @@ def main():
                 subject_editors_formatted = "\n* N/A"
         
         profilepage = "{{{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
-        page = pywikibot.Page(bot, rootpage + 'Description/' + project_normalized)
+        page = pywikibot.Page(bot, rootpage + '/Description/' + project_normalized)
         if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries
             page.text = profilepage
             page.save('Updating', minor=False, async=True)
 
         # Construct directory entry
-        directoryrow = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
+        directoryrow[project] = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
-        # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
-        directories['All'] += directoryrow
+    # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
+    for directory in directoryrow.keys():
+        directories['All'] += directoryrow[directory]
+    
+        tree = WikiProjectCategories()
+        for firstlevel in tree.keys():
+            directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
+            directories[firstlevel] += treeiterator(wptools, tree, projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
 
     # Generate directories and save!
     for directory in directories.keys():
         contents = "{{WikiProject directory top}}\n" + directories[directory] + "|}"
-        page = pywikibot.Page(bot, rootpage + directory)
+        page = pywikibot.Page(bot, rootpage + "/" + directory)
         if contents != page.text:  # Checking to see if a change was made to cut down on API save queries
             oldcontents = page.text
             page.text = contents
@@ -161,7 +191,7 @@ def main():
                 for oldproject in oldprojectlist:
                     oldproject = oldproject.strip().replace(' ', '_')  # Normalizing
                     if oldproject not in projects:
-                        deletethis = pywikibot.Page(bot, rootpage + 'Description/' + oldproject)
+                        deletethis = pywikibot.Page(bot, rootpage + '/Description/' + oldproject)
                         deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect.}}\n"
                         deletethis.save('Nominating page for deletion', minor=False, async=True)
 
