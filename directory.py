@@ -33,7 +33,7 @@ def treeiterator(wptools, tree, projects, directoryrow, key, counter=1, output='
             header += "="
         for step in tree[key].keys():
             output += header + tree[key][step] + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
-            output += treeiterator(wptools, projects, directoryrow, step, counter=counter+1, output=output)
+            output += treeiterator(wptools, tree, projects, directoryrow, step, counter=counter+1, output=output)
     else:
         return output
 
