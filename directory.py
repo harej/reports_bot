@@ -146,14 +146,14 @@ def main():
         subject_editors_formatted = ""
         if len(wp_editors) > 0:
             for editor in wp_editors:
-                wp_editors_formatted += "\n* {{{{user|{0}}}}}".format(editor)
+                wp_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
         else:
-                wp_editors_formatted = "\n* N/A"
+                wp_editors_formatted = "\n''There are no active participants on this WikiProject.''"
         if len(subject_editors) > 0:
             for editor in subject_editors:
-                subject_editors_formatted += "\n* {{{{user|{0}}}}}".format(editor)
+                subject_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
         else:
-                subject_editors_formatted = "\n* N/A"
+                subject_editors_formatted = ""
         
         profilepage = "{{{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
         page = pywikibot.Page(bot, rootpage + '/Description/' + project_normalized)
@@ -168,7 +168,7 @@ def main():
     for directory in directoryrow.keys():
         directories['All'] += directoryrow[directory]
     
-        tree = WikiProjectCategories()
+        tree = dict(WikiProjectCategories())
         for firstlevel in tree.keys():
             directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
             directories[firstlevel] += treeiterator(wptools, tree, projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
@@ -192,7 +192,7 @@ def main():
                     oldproject = oldproject.strip().replace(' ', '_')  # Normalizing
                     if oldproject not in projects:
                         deletethis = pywikibot.Page(bot, rootpage + '/Description/' + oldproject)
-                        deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect.}}\n"
+                        deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect}}\n"
                         deletethis.save('Nominating page for deletion', minor=False, async=True)
 
 
