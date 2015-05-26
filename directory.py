@@ -174,7 +174,7 @@ def main():
         tree = wpcats.generate()
         for firstlevel in tree.keys():
             directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
-            directories[firstlevel] += treeiterator(wptools, tree, projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
+            directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
 
     # Generate directories and save!
     for directory in directories.keys():
@@ -184,7 +184,8 @@ def main():
             oldcontents = page.text
             page.text = contents
             page.save('Updating', minor=False, async=True)
-            if directory == 'All':  # Cleanup of obsolete description pages
+            # Cleanup of obsolete description pages
+            if directory == 'All':
                 oldcontents = mwph.parse(oldcontents)
                 oldcontents = oldcontents.filter_templates()
                 oldprojectlist = []
