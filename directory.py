@@ -190,7 +190,7 @@ def main(rootpage):
             index_secondary[firstlevel].append(secondlevel)
 
     # Updating the directory index
-    index_primary = index.primary.sort()
+    index_primary = index_primary.sort()
     for sectionlist in index_secondary.keys():
         index_secondary[sectionlist] = index_secondary[sectionlist].sort()
 
