@@ -194,7 +194,7 @@ def main(rootpage):
     for sectionlist in index_secondary.keys():
         index_secondary[sectionlist] = index_secondary[sectionlist].sort()
 
-    for firstlevel in index_primary
+    for firstlevel in index_primary:
         firstlevel_normalized = firstlevel.replace('_', ' ')
         indextext += ";[[{0}/{1}|{1}]]".format(rootpage, firstlevel_normalized)
         if len(tree[firstlevel]) > 0:
