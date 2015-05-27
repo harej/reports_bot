@@ -10,6 +10,7 @@ import re
 import time
 import pywikibot
 import json
+import operator
 import mwparserfromhell as mwph
 from collections import Counter
 from project_index import WikiProjectTools
@@ -168,10 +169,11 @@ def main():
         directoryrow[project] = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
     # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
+    directoryrow = sorted(directoryrow.items(), key=operator.itemgetter(1))
     print("Populating total directory...")
     for entry in directoryrow.keys():
         directories['All'] += directoryrow[entry]
-    directories['All'] == "{{WikiProject directory top}}\n" + directories[directory] + "|}"
+    directories['All'] == "{{WikiProject directory top}}\n" + directories['All'] + "|}"
 
     wpcats = WikiProjectCategories()
     tree = wpcats.generate()
