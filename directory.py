@@ -34,7 +34,7 @@ def treeiterator(wptools, tree, projects, directoryrow, key, counter=2):
         print("Populating directory page: " + key + " (level " + str(counter - 1) + ")")
         header = "=" * counter  # Python always finds new ways to amaze me.
         for step in tree.keys():
-            output += header + step + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
+            output += header + step.replace('_', ' ') + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
             if len(tree[step]) > 0:
                 output += treeiterator(wptools, tree[step], projects, directoryrow, step, counter=counter+1)
     return output
@@ -176,9 +176,21 @@ def main(rootpage):
 
     wpcats = WikiProjectCategories()
     tree = wpcats.generate()
+    directoryindex = "'''[[{0}/All|All WikiProjects]]'''\n\n".format(rootpage)
     for firstlevel in tree.keys():
         directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
         directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
+        # Updating the directory index
+        directoryindex += "'''[[{0}/{1}|{1}]]'''".format(rootpage, firstlevel)
+        if len(tree[firstlevel]) > 0:
+            directoryindex += ": "
+            for secondlevel in tree[firstlevel].keys():
+                directoryindex += "[[{0}/{1}#{2}|{2} – ".format(rootpage, firstlevel, secondlevel)
+            directoryindex = directoryindex[:-3]  # Truncates trailing dash and is also a cute smiley face
+        directoryindex += "\n\n"
+    saveindex = pywikibot.Page(bot, 'Template:WikiProject directory index')
+    saveindex.text = directoryindex
+    saveindex.save('Updating', minor=False, async=True)
 
     # Generate directories and save!
     for directory in directories.keys():
