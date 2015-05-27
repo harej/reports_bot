@@ -40,12 +40,11 @@ def treeiterator(wptools, tree, projects, directoryrow, key, counter=2):
     return output
 
 
-def main():
+def main(rootpage):
     # Initializing...
     bot = pywikibot.Site('en', 'wikipedia')
     wptools = WikiProjectTools()
     config = json.loads(wptools.query('index', 'select json from config;', None)[0][0])
-    rootpage = 'User:Reports bot/Directory'
     print("Let's get this show on the road!")
 
     # Get list of people who opted out
@@ -206,4 +205,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main('User:Reports bot/Directory')
