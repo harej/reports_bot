@@ -23,6 +23,7 @@ def listpull(wptools, projects, directoryrow, key):
         proj = row[0].decode('utf-8')
         if proj in projects:  # This check is to filter against query results like "WikiProject_Stupid/talkheader" from being considered as projects.
             output += directoryrow[proj]
+    output = "{{WikiProject directory top}}\n" + output + "|}"
     return output
 
 
@@ -170,6 +171,7 @@ def main():
     print("Populating total directory...")
     for entry in directoryrow.keys():
         directories['All'] += directoryrow[entry]
+    directories['All'] == "{{WikiProject directory top}}\n" + directories[directory] + "|}"
 
     wpcats = WikiProjectCategories()
     tree = wpcats.generate()
@@ -179,7 +181,7 @@ def main():
 
     # Generate directories and save!
     for directory in directories.keys():
-        contents = "{{WikiProject directory top}}\n" + directories[directory] + "|}"
+        contents = directories[directory]
         page = pywikibot.Page(bot, rootpage + "/" + directory)
         if contents != page.text:  # Checking to see if a change was made to cut down on API save queries
             oldcontents = page.text
