@@ -18,7 +18,7 @@ from category_tree import WikiProjectCategories
 
 
 def listpull(wptools, projects, directoryrow, key):
-    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}"'.format(key), None)
+    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}" order by page.page_title'.format(key), None)
     output = ''
     for row in query:
         proj = row[0].decode('utf-8')
@@ -168,10 +168,9 @@ def main(rootpage):
         directoryrow[project] = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
     # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
-    directoryrow = sorted(directoryrow.items(), key=operator.itemgetter(1))
     print("Populating total directory...")
-    for entry in directoryrow.keys():
-        directories['All'] += directoryrow[entry]
+    for entry in sorted(directoryrow.items(), key=operator.itemgetter(1)):  # Sorting into alphabetical order
+        directories['All'] += entry[1]
     directories['All'] == "{{WikiProject directory top}}\n" + directories['All'] + "|}"
 
     wpcats = WikiProjectCategories()
