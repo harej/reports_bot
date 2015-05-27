@@ -178,22 +178,15 @@ def main(rootpage):
 
     wpcats = WikiProjectCategories()
     tree = wpcats.generate()
-    index_primary = []
+    index_primary = sorted([key for key in tree.keys()])
     index_secondary = {}
     indextext = "'''[[{0}/All|All WikiProjects]]'''\n\n".format(rootpage)
     for firstlevel in tree.keys():
         directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
         directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
-        index_primary.append(firstlevel)
-        index_secondary[firstlevel] = []
-        for secondlevel in tree[firstlevel].keys():
-            index_secondary[firstlevel].append(secondlevel)
+        index_secondary[firstlevel] = sorted([key for key in tree[firstlevel].keys()])
 
     # Updating the directory index
-    index_primary = index_primary.sort()
-    for sectionlist in index_secondary.keys():
-        index_secondary[sectionlist] = index_secondary[sectionlist].sort()
-
     for firstlevel in index_primary:
         firstlevel_normalized = firstlevel.replace('_', ' ')
         indextext += ";[[{0}/{1}|{1}]]".format(rootpage, firstlevel_normalized)
