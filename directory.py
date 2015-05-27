@@ -189,7 +189,7 @@ def main(rootpage):
         if len(tree[firstlevel]) > 0:
             directoryindex += ": "
             for secondlevel in tree[firstlevel].keys():
-                directoryindex += "[[{0}/{1}#{2}|{2}]] – ".format(rootpage, firstlevel_normalized, secondlevel.replace('_', ' ')
+                directoryindex += "[[{0}/{1}#{2}|{2}]] – ".format(rootpage, firstlevel_normalized, secondlevel.replace('_', ' '))
             directoryindex = directoryindex[:-3]  # Truncates trailing dash and is also a cute smiley face
         directoryindex += "\n\n"
     saveindex = pywikibot.Page(bot, 'Template:WikiProject directory index')
