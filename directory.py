@@ -89,7 +89,7 @@ def main(rootpage):
         if row not in projects:
             projects.append(row)
     projects.sort()
-    projects = projects[:150] # DEBUG MODE
+    projects = projects[:500] # DEBUG MODE
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
     directories = {'All': ''}  # All projects, plus subdirectories to be defined below.
