@@ -88,7 +88,7 @@ def main():
     projects = projects[:150] # DEBUG MODE
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
-    directories = {'All': ''}  # In the future, there will be other directories in addition to the exhaustive one.
+    directories = {'All': ''}  # All projects, plus subdirectories to be defined below.
     directoryrow = {}
 
     # Alright! Let's run some reports!
@@ -168,14 +168,14 @@ def main():
 
     # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
     print("Populating total directory...")
-    for directory in directoryrow.keys():
-        directories['All'] += directoryrow[directory]
+    for entry in directoryrow.keys():
+        directories['All'] += directoryrow[entry]
 
-        wpcats = WikiProjectCategories()
-        tree = wpcats.generate()
-        for firstlevel in tree.keys():
-            directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
-            directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
+    wpcats = WikiProjectCategories()
+    tree = wpcats.generate()
+    for firstlevel in tree.keys():
+        directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
+        directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
 
     # Generate directories and save!
     for directory in directories.keys():
