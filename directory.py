@@ -20,11 +20,15 @@ from category_tree import WikiProjectCategories
 def listpull(wptools, projects, directoryrow, key):
     query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}" order by page.page_title'.format(key), None)
     output = ''
+    outputlist = []
     for row in query:
         proj = row[0].decode('utf-8')
         if proj in projects:  # This check is to filter against query results like "WikiProject_Stupid/talkheader" from being considered as projects.
+            outputlist.append(proj)
+    if len(outputlist) > 0:  # i.e., if we actually *have* WikiProjects to append to the list or just garbage
+        for proj in outputlist:
             output += directoryrow[proj]
-    output = "{{WikiProject directory top}}\n" + output + "|}"
+        output = "{{WikiProject directory top}}\n" + output + "|}\n\n"
     return output
 
 
@@ -171,7 +175,7 @@ def main(rootpage):
     print("Populating total directory...")
     for entry in sorted(directoryrow.items(), key=operator.itemgetter(1)):  # Sorting into alphabetical order
         directories['All'] += entry[1]
-    directories['All'] == "{{WikiProject directory top}}\n" + directories['All'] + "|}"
+    directories['All'] = "{{WikiProject directory top}}\n" + directories['All'] + "|}"
 
     wpcats = WikiProjectCategories()
     tree = wpcats.generate()
@@ -180,11 +184,12 @@ def main(rootpage):
         directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
         directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
         # Updating the directory index
-        directoryindex += "'''[[{0}/{1}|{1}]]'''".format(rootpage, firstlevel)
+        firstlevel_normalized = firstlevel.replace('_', ' ')
+        directoryindex += "'''[[{0}/{1}|{1}]]'''".format(rootpage, firstlevel_normalized)
         if len(tree[firstlevel]) > 0:
             directoryindex += ": "
             for secondlevel in tree[firstlevel].keys():
-                directoryindex += "[[{0}/{1}#{2}|{2} – ".format(rootpage, firstlevel, secondlevel)
+                directoryindex += "[[{0}/{1}#{2}|{2}]] – ".format(rootpage, firstlevel_normalized, secondlevel.replace('_', ' ')
             directoryindex = directoryindex[:-3]  # Truncates trailing dash and is also a cute smiley face
         directoryindex += "\n\n"
     saveindex = pywikibot.Page(bot, 'Template:WikiProject directory index')
