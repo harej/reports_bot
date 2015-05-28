@@ -57,7 +57,8 @@ def main():
         for x in range(0, 10):
             if ordered[x][1] > 0:
                 page.text += "* '''[[{0}|{1}]]''': {2} articles in common\n".format(ordered[x][0], ordered[x][0][10:].replace('_', ' '), str(ordered[x][1]))
-        page.save('Updating', minor=False, async=True)
+        if page.text != "":
+            page.save('Updating', minor=False, async=True)
 
 if __name__ == "__main__":
     main()
