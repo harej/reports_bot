@@ -69,15 +69,15 @@ def main(rootpage):
     print("Loading the Project Index...")
     projects = []
     articles = {}
-    for row in wptools.query('index', 'select distinct pi_project from projectindex;', None):
-        proj = row[0]  # Turning one-entry list into a string
-        proj_normalized = proj[10:]  # Normalizing by getting rid of "Wikipedia:"
-        projects.append(proj_normalized)
-        articles[proj] = []
-        for article_row in wptools.query('index', 'select distinct pi_page from projectindex where pi_project = "{0}";'.format(proj), None):
-            article = article_row[0]
-            article = re.sub(r'(Draft_)?[Tt]alk:', '', article)  # Normalizing by getting rid of namespace
-            articles[proj].append(article)
+    for pair in wptools.query('index', 'select pi_page, pi_project from projectindex;', None):
+        pair = list(pair)  # For manipulation
+        pair[0] = re.sub(r'(Draft_)?[Tt]alk:', '', pair[0])  # Normalizing by getting rid of namespace
+        pair[1] = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
+        if pair[1] not in projects:
+            projects.append(pair[1])
+            articles[pair[1]] = [pair[0]]
+        else:
+            articles[pair[1]].append(pair[0])
 
     print("Preparing the Formal Definition index...")
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
