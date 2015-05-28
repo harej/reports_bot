@@ -15,6 +15,7 @@ from project_index import WikiProjectTools
 
 def main():
 
+    print("Loading...")
     wptools = WikiProjectTools()
     query = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
 
@@ -31,6 +32,7 @@ def main():
     intersect_counts = {}
     regex = re.compile('/.*')
     for wikiproject_x in pages.keys():  # lol WikiProject X
+        print("Working on: " + wikiproject_x)
         intersect_counts[wikiproject_x] = {}
         for wikiproject_y in pages.keys():
             if wikiproject_x == wikiproject_y:
@@ -46,6 +48,7 @@ def main():
 
     bot = pywikibot.Site('en', 'wikipedia')
 
+    print("Sorting and saving...")
     for project in intersect_counts.keys():
         # Sorts from highest to lowest
         ordered = sorted(intersect_counts[project].items(), key=operator.itemgetter(1), reverse=True)
@@ -54,7 +57,7 @@ def main():
         for x in range(0, 10):
             if ordered[x][1] > 0:
                 page.text += "* '''[[{0}|{1}]]''': {2} articles in common\n".format(ordered[x][0], ordered[x][0][10:].replace('_', ' '), str(ordered[x][1]))
-        page.save('Updating', minor=False)
+        page.save('Updating', minor=False, async=True)
 
 if __name__ == "__main__":
     main()
