@@ -68,6 +68,7 @@ class WikiProjectTools:
         namespaces = {2: 'User:', 3: 'User_talk:', 4: 'Wikipedia:', 5: 'Wikipedia_talk:', 100: 'Portal:', 101: 'Portal_talk:'}
         # Heavens help me if WikiProjects end up in namespaces other than those.
 
+        output = {}
         for key in buckets.keys():
             query = self.query('wiki', 'select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
             if len(query) == 0:
@@ -85,10 +86,7 @@ class WikiProjectTools:
             elif rd_title is None and page_title is not None:
                 pagetitles[key] = namespaces[4] + page_title.decode('utf-8')
 
-        # At this point, each key of buckets should be tied to an actual page name
-        output = {}
-
-        for key in buckets.keys():
+            # At this point, each key of buckets should be tied to an actual page name
             for category in buckets[key]:
                 # TODO: Use a collections.defaultdict here
                 try:
