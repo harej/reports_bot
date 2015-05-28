@@ -25,7 +25,7 @@ def main():
         try:
             pages[pi_project].append(pi_page)
         except KeyError:
-            pages[pi_project] = []
+            pages[pi_project] = [pi_page]
 
     # Compare!
     intersect_counts = {}
