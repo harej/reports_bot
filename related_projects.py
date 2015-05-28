@@ -54,10 +54,12 @@ def main():
         ordered = sorted(intersect_counts[project].items(), key=operator.itemgetter(1), reverse=True)
         saveto = 'Wikipedia:Related_WikiProjects/' + project[10:]
         page = pywikibot.Page(bot, saveto)
+        draft = ''
         for x in range(0, 10):
             if ordered[x][1] > 0:
-                page.text += "* '''[[{0}|{1}]]''': {2} articles in common\n".format(ordered[x][0], ordered[x][0][10:].replace('_', ' '), str(ordered[x][1]))
-        if page.text != "":
+                draft += "* '''[[{0}|{1}]]''': {2} articles in common\n".format(ordered[x][0], ordered[x][0][10:].replace('_', ' '), str(ordered[x][1]))
+        if page.text != draft:
+            page.text = draft
             page.save('Updating', minor=False, async=True)
 
 if __name__ == "__main__":
