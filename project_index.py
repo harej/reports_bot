@@ -5,6 +5,7 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
+
 import pymysql
 import re
 
@@ -58,8 +59,7 @@ class WikiProjectTools:
             try:
                 buckets[projectname].append(category)
             except KeyError:
-                buckets[projectname] = []
-                buckets[projectname].append(category)
+                buckets[projectname] = [category]
 
         # For each key in buckets, try to match it to a real WikiProject or task force name
         # Checks against the redirect table so that it can follow redirects
@@ -122,6 +122,7 @@ class WikiProjectTools:
             page_namespace = namespaces[row[1]]
             output.append(page_namespace + page_title)
 
+        output = list(set(output))  # De-duplication
         return output
 
     def main(self):
