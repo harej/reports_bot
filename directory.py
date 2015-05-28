@@ -70,7 +70,8 @@ def main(rootpage):
     articles = {}
     counter = 0
     while True:  # I am a bad man for doing this
-        query = wptools.query('index', 'select pi_page, pi_project from projectindex where pi_id > {0} and pi_id <= {1};'.format(counter, counter+100), None)
+        print("Query for IDs " + str(counter + 1) + " through " + str(counter+ 1000000))
+        query = wptools.query('index', 'select pi_page, pi_project from projectindex where pi_id > {0} and pi_id <= {1};'.format(counter, counter+1000000), None)
         if len(query) == 0:
             break
         for pair in query:
@@ -83,7 +84,7 @@ def main(rootpage):
                 articles[proj].append(page)
             except KeyError:
                 articles[proj] = [page]
-        counter += 100
+        counter += 1000000
 
     projects = [project for project in articles.keys()]
 
