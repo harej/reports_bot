@@ -136,7 +136,12 @@ def main(rootpage):
             for package in packages:
                 counter += 1
                 print('Executing batch query no. ' + str(counter))
-                for result in wptools.query('wiki', 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in %s and rev_timestamp > %s and rev_timestamp %s order by rev_user_text;', (tuple(package), starst_date, end_date)):
+                if len(package) > 1:
+                    query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(tuple(package), start_date, end_date)
+                else:
+                    query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title = "{0}" and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(package[0], start_date, end_date)
+                
+                for result in wptools.query('wiki', query_builder, None):
                     if result[0] is not None:
                         subject_editors.append(result[0].decode('utf-8'))
 
