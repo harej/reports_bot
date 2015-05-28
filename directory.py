@@ -73,11 +73,11 @@ def main(rootpage):
         pair = list(pair)  # For manipulation
         pair[0] = re.sub(r'(Draft_)?[Tt]alk:', '', pair[0])  # Normalizing by getting rid of namespace
         pair[1] = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
-        if pair[1] not in projects:
-            projects.append(pair[1])
-            articles[pair[1]] = [pair[0]]
-        else:
+        projects.append(pair[1])
+        try:
             articles[pair[1]].append(pair[0])
+        except KeyError:
+            articles[pair[1]] = [pair[0]]
 
     print("Preparing the Formal Definition index...")
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
