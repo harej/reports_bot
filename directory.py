@@ -74,7 +74,6 @@ def main(rootpage):
         page = page.replace('Draft_talk:', '')
         page = page.replace('Talk:', '')
         proj = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
-        projects.append(proj)
         try:
             articles[proj].append(page)
         except KeyError:
