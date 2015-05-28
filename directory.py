@@ -218,7 +218,7 @@ def main(rootpage):
             oldcontents = page.text
             page.text = contents
             page.save('Updating', minor=False, async=True)
-            # Cleanup of obsolete description pages
+            # Cleanup of obsolete description pages and "Related WikiProjects" pages
             if directory == 'All':
                 oldcontents = mwph.parse(oldcontents)
                 oldcontents = oldcontents.filter_templates()
@@ -232,6 +232,10 @@ def main(rootpage):
                         deletethis = pywikibot.Page(bot, rootpage + '/Description/' + oldproject)
                         deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect}}\n"
                         deletethis.save('Nominating page for deletion', minor=False, async=True)
+                        deletethis = pywikibot.Page(bot, 'Wikipedia:Related WikiProjects/' + oldproject)
+                        if deletethis.text != "":
+                            deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect}}\n"
+                            deletethis.save('Nominating page for deletion', minor=False, async=True)
 
 
 if __name__ == "__main__":
