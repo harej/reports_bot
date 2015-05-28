@@ -63,24 +63,21 @@ def main(rootpage):
         blacklist.append(result[0].decode('utf-8'))
     print('With bots, there are ' + str(len(blacklist)) + ' usernames on the blacklist.')
 
-    # Loading the Project Index
-    print("Loading the Project Index...")
-    projectindex = wptools.query('index', 'select pi_page, pi_project from projectindex;', None)
-
     # List of projects we are working on
     # Methodology: List from Project Index + List from Formal Definition, minus duplicates
     # This will cover all of our bases.
+    print("Loading the Project Index...")
     projects = []
     articles = {}
-    for pair in projectindex:
-        pair = list(pair)  # For manipulation
-        pair[0] = re.sub(r'(Draft_)?[Tt]alk:', '', pair[0])  # Normalizing by getting rid of namespace
-        pair[1] = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
-        if pair[1] not in projects:
-            projects.append(pair[1])
-            articles[pair[1]] = [pair[0]]
-        else:
-            articles[pair[1]].append(pair[0])
+    for row in wptools.query('index', 'select distinct pi_project from projectindex;', None):
+        proj = row[0]  # Turning one-entry list into a string
+        proj_normalized = proj[10:]  # Normalizing by getting rid of "Wikipedia:"
+        projects.append(proj_normalized)
+        articles[proj] = []
+        for article_row in wptools.query('index', 'select distinct pi_page from projectindex where pi_project = {0};'.format(proj), None):
+            article = article.row[0].decode('utf-8')
+            article = re.sub(r'(Draft_)?[Tt]alk:', '', article)  # Normalizing by getting rid of namespace
+            articles[proj].append(article)
 
     print("Preparing the Formal Definition index...")
     formaldefinition = wptools.query('wiki', 'select distinct page.page_title from page join categorylinks on page.page_id = categorylinks.cl_from left join redirect on page.page_id = redirect.rd_from where page_namespace = 4 and page_title not like "%/%" and rd_title is null and (cl_to in (select page.page_title from page where page_namespace = 14 and page_title like "%\_WikiProjects" and page_title not like "%\_for\_WikiProjects" and page_title not like "%\_of\_WikiProjects") or page_title like "WikiProject\_%");', None)  # http://quarry.wmflabs.org/query/3509
