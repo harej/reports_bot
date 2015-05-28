@@ -68,16 +68,23 @@ def main(rootpage):
     # This will cover all of our bases.
     print("Loading the Project Index...")
     articles = {}
-    for pair in wptools.query('index', 'select pi_page, pi_project from projectindex;', None):
-        # Normalizing by getting rid of namespace
-        page = pair[0]
-        page = page.replace('Draft_talk:', '')
-        page = page.replace('Talk:', '')
-        proj = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
-        try:
-            articles[proj].append(page)
-        except KeyError:
-            articles[proj] = [page]
+    counter = 1
+    while True:  # I am a bad man for doing this
+        query = wptools.query('index', 'select pi_page, pi_project from projectindex where pi_id > {0} and pi_id <= {1};'.format(counter, counter+100), None)
+        if len(query) == 0:
+            break
+        for pair in query:
+            # Normalizing by getting rid of namespace
+            page = pair[0]
+            page = page.replace('Draft_talk:', '')
+            page = page.replace('Talk:', '')
+            proj = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
+            try:
+                articles[proj].append(page)
+            except KeyError:
+                articles[proj] = [page]
+            counter += 100
+
     projects = [project for project in articles.keys()]
 
     print("Preparing the Formal Definition index...")
