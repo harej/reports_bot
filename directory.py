@@ -75,7 +75,7 @@ def main(rootpage):
         projects.append(proj_normalized)
         articles[proj] = []
         for article_row in wptools.query('index', 'select distinct pi_page from projectindex where pi_project = "{0}";'.format(proj), None):
-            article = article.row[0].decode('utf-8')
+            article = article_row[0]
             article = re.sub(r'(Draft_)?[Tt]alk:', '', article)  # Normalizing by getting rid of namespace
             articles[proj].append(article)
 
