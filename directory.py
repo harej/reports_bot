@@ -70,7 +70,10 @@ def main(rootpage):
     projects = []
     articles = {}
     for pair in wptools.query('index', 'select pi_page, pi_project from projectindex;', None):
-        page = re.sub(r'(Draft_)?[Tt]alk:', '', pair[0])  # Normalizing by getting rid of namespace
+        # Normalizing by getting rid of namespace
+        page = pair[0]
+        page = page.replace('Draft_talk:', '')
+        page = page.replace('Talk:', '')
         proj = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
         projects.append(proj)
         try:
