@@ -74,7 +74,7 @@ def main(rootpage):
         proj = pair[1][10:]  # Normalizing by getting rid of "Wikipedia:"
         projects.append(proj)
         try:
-            articles[proj].append(pair[0])
+            articles[proj].append(page)
         except KeyError:
             articles[proj] = [page]
     projects = list(set(projects))
