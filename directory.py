@@ -68,7 +68,7 @@ def main(rootpage):
     # This will cover all of our bases.
     print("Loading the Project Index...")
     articles = {}
-    counter = 1
+    counter = 0
     while True:  # I am a bad man for doing this
         query = wptools.query('index', 'select pi_page, pi_project from projectindex where pi_id > {0} and pi_id <= {1};'.format(counter, counter+100), None)
         if len(query) == 0:
@@ -94,8 +94,8 @@ def main(rootpage):
         if row not in projects:
             projects.append(row)
     projects.sort()
-    projects = projects[:500] # DEBUG MODE
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
+    projects = projects[:500] # DEBUG MODE
 
     directories = {'All': ''}  # All projects, plus subdirectories to be defined below.
     directoryrow = {}
