@@ -20,15 +20,13 @@ from category_tree import WikiProjectCategories
 def listpull(wptools, projects, directoryrow, key):
     query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}" order by page.page_title'.format(key), None)
     output = ''
-    outputlist = []
     for row in query:
         proj = row[0].decode('utf-8')
         if proj in projects:  # This check is to filter against query results like "WikiProject_Stupid/talkheader" from being considered as projects.
-            outputlist.append(proj)
-    if len(outputlist) > 0:  # i.e., if we actually *have* WikiProjects to append to the list or just garbage
-        for proj in outputlist:
             output += directoryrow[proj]
+    if output != "":
         output = "{{WikiProject directory top}}\n" + output + "|}\n\n"
+
     return output
 
 
