@@ -94,7 +94,6 @@ def main(rootpage):
             projects.append(row)
     projects.sort()
     print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
-    projects = projects[:500] # DEBUG MODE
 
     directories = {'All': ''}  # All projects, plus subdirectories to be defined below.
     directoryrow = {}
@@ -237,4 +236,4 @@ def main(rootpage):
 
 
 if __name__ == "__main__":
-    main('User:Reports bot/Directory')
+    main('Wikipedia:WikiProject Directory')
