@@ -221,7 +221,7 @@ def main(rootpage):
                 oldcontents = oldcontents.filter_templates()
                 oldprojectlist = []
                 for t in oldcontents:
-                    if t.name.strip() == "WikiProject directory entry":
+                    if t.name.strip() == "WikiProject directory entry small":
                         oldprojectlist.append(str(t.get('project').value))
                 for oldproject in oldprojectlist:
                     oldproject = oldproject.strip().replace(' ', '_')  # Normalizing
