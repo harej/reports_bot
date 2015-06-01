@@ -18,7 +18,7 @@ from category_tree import WikiProjectCategories
 
 
 def listpull(wptools, projects, directoryrow, key):
-    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and cl_to = "{0}" order by page.page_title'.format(key), None)
+    query = wptools.query('wiki', 'select distinct page.page_title from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace in (4, 14) and cl_to = "{0}" order by page.page_title'.format(key), None)
     output = ''
     for row in query:
         proj = row[0].decode('utf-8')
