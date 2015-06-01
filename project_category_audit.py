@@ -21,16 +21,15 @@ class ProjectCategoryAudit:
 
         for row in wptools.query('wiki', query, None):
             project = row[0].decode('utf-8')
-            output += "* '''{0}'''\n".format(project)
 
             cl_projectspace = []  # read as "category links, Wikipedia namespace"
             cl_categoryspace = []  # read as "category links, Category namespace"
 
             for match in wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and page_title = "{0}" and cl_to like "%\_WikiProjects" and cl_to not in ("Active_WikiProjects", "Semi-active WikiProjects", "Inactive_WikiProjects", "Defunct_WikiProjects")'.format(project), None):
-                cl_projectspace.append(match[0].decode('utf-8'))
+                cl_projectspace.append(match[0].decode('utf-8').replace('_', ' '))
 
             for match in wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and page_title = "{0}" and cl_to like "%\_WikiProjects" and cl_to not in ("Active_WikiProjects", "Semi-active WikiProjects", "Inactive_WikiProjects", "Defunct_WikiProjects")'.format(project), None):
-                cl_categoryspace.append(match[0].decode('utf-8'))
+                cl_categoryspace.append(match[0].decode('utf-8').replace('_', ' '))
 
             cl_projectspace.sort()
             cl_categoryspace.sort()
@@ -40,23 +39,26 @@ class ProjectCategoryAudit:
 
             both = list(set(cl_projectspace).intersection(cl_categoryspace))
 
+            project = project.replace('_', ' ')
+
+            output += "* '''{0}'''\n".format(project)
             output += "** [[Wikipedia:{0}]]: ".format(project)
             for entry in cl_projectspace:
                 if entry in both:
-                    output += "<span style='color: #999'>{0}</span> – ".format(entry.replace('_', ' '))
+                    output += "<span style='color: #999'>{0}</span> – ".format(entry)
                 else:
-                    output += "<span style='color: #FF0000'>{0}</span> – ".format(entry.replace('_', ' '))
+                    output += "<span style='color: #FF0000'>{0}</span> – ".format(entry)
 
-            output = output[:-3] + "\n"  # Truncate trailing endash and add line break
+            output = output[:-2] + "\n"  # Truncate trailing endash and add line break
 
             output += "** [[:Category:{0}]]: ".format(project)
             for entry in cl_categoryspace:
                 if entry in both:
-                    output += "<span style='color: #999'>{0}</span> –".format(entry.replace('_', ' '))
+                    output += "<span style='color: #999'>{0}</span> –".format(entry)
                 else:
-                    output += "<span style='color: #FF0000'>{0}</span> –".format(entry.replace('_', ' '))
+                    output += "<span style='color: #FF0000'>{0}</span> –".format(entry)
 
-            output = output[:-3] + "\n"  # Truncate trailing endash and add line break
+            output = output[:-2] + "\n"  # Truncate trailing endash and add line break
 
         return output
 
