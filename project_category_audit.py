@@ -17,7 +17,7 @@ class ProjectCategoryAudit:
         # Get list of WikiProjects that also have a self-named category
 
         output = 'This report highlights discrepancies in WikiProject categorization between WikiProjects and their self-named categories.\n\n'
-        query = 'select page_title from page where page_title like "WikiProject\_%" and page_namespace = 4 and page_title in (select page_title from page where page_title like "WikiProject\_%" and page_namespace = 14);'
+        query = 'select page_title from page left join redirect on page.page_id = redirect.rd_from where page_title like "WikiProject\_%" and page_namespace = 4 and page_title in (select page_title from page where page_title like "WikiProject\_%" and page_namespace = 14) and rd_title is null;'
 
         for row in wptools.query('wiki', query, None):
             project = row[0].decode('utf-8')
