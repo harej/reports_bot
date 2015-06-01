@@ -21,7 +21,7 @@ class ProjectCategoryAudit:
 
         for row in wptools.query('wiki', query, None):
             project = row[0].decode('utf-8')
-            output += "* '''{0}}'''\n".format(project)
+            output += "* '''{0}'''\n".format(project)
 
             cl_projectspace = []  # read as "category links, Wikipedia namespace"
             cl_categoryspace = []  # read as "category links, Category namespace"
