@@ -26,10 +26,10 @@ class ProjectCategoryAudit:
             cl_projectspace = []  # read as "category links, Wikipedia namespace"
             cl_categoryspace = []  # read as "category links, Category namespace"
 
-            for match in wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and page_title = "{0}" and cl_to like "%\_WikiProjects" and cl_to not in ("Active_WikiProjects", "Semi-active WikiProjects", "Inactive_WikiProjects", "Defunct_WikiProjects"'.format(project), None):
+            for match in wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and page_title = "{0}" and cl_to like "%\_WikiProjects" and cl_to not in ("Active_WikiProjects", "Semi-active WikiProjects", "Inactive_WikiProjects", "Defunct_WikiProjects")'.format(project), None):
                 cl_projectspace.append(match[0].decode('utf-8'))
 
-            for match in wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and page_title = "{0}" and cl_to like "%\_WikiProjects" and cl_to not in ("Active_WikiProjects", "Semi-active WikiProjects", "Inactive_WikiProjects", "Defunct_WikiProjects"'.format(project), None):
+            for match in wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 14 and page_title = "{0}" and cl_to like "%\_WikiProjects" and cl_to not in ("Active_WikiProjects", "Semi-active WikiProjects", "Inactive_WikiProjects", "Defunct_WikiProjects")'.format(project), None):
                 cl_categoryspace.append(match[0].decode('utf-8'))
 
             cl_projectspace.sort()
