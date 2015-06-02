@@ -39,7 +39,7 @@ def main(rootpage, saveto):
             project = str(t.get('project').value).strip()
 
             # Give me a list of all the categories, as long as it's on the whitelist
-            query = wptools.query('wiki', 'select cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace = 4 and page_title = "{0}" and cl_to in {1};'.format(project, whitelist), None)
+            query = wptools.query('wiki', 'select distinct cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace in (4, 14) and page_title = "{0}" and cl_to in {1};'.format(project, whitelist), None)
             if len(query) == 0:  # If page is in none of the whitelisted categories
                 output += "# [[Wikipedia:{0}|{0}]]\n".format(project.replace('_', ' '))
 
