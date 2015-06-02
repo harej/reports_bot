@@ -34,7 +34,34 @@ class WikiProjectTools:
         and the value being a list of categories.
         """
 
-        query = self.query('wiki', 'select page_title from page where page_namespace = 14 and (page_title like "%-Class_%_articles" or page_title like "Unassessed_%_articles" or page_title like "WikiProject_%_articles") and page_title not like "%-importance_%" and page_title not like "Wikipedia_%" and page_title not like "Template-%" and page_title not like "Redirect-%" and page_title not like "Project-%" and page_title not like "Portal-%" and page_title not like "File-%" and page_title not like "FM-%" and page_title not like "Category-%" and page_title not like "Cat-%" and page_title not like "Book-%" and page_title not like "NA-%" and page_title not like "%_Operation_Majestic_Titan_%" and page_title not like "%_Version_%" and page_title not like "All_Wikipedia_%" and page_title not like "%_Wikipedia-Books_%" and page_title not like "Assessed-%" and page_title not like "%-Priority_%" and page_title not like "Unassessed_field_%" and page_title not like "Unassessed_importance_%" and page_title not like "Unassessed-Class_articles" and page_title not like "%_Article_quality_research_articles" and page_title not like "WikiProject_lists_of_encyclopedic_articles";', None)
+        q = ('select page_title from page where page_namespace = 14 and '
+             '(page_title like "%-Class\_%\_articles" '
+             'or page_title like "Unassessed\_%\_articles" '
+             'or page_title like "WikiProject\_%\_articles") '
+             'and page_title not like "%-importance\_%" '
+             'and page_title not like "Wikipedia\_%" '
+             'and page_title not like "Template-%" '
+             'and page_title not like "Redirect-%" '
+             'and page_title not like "Project-%" '
+             'and page_title not like "Portal-%" '
+             'and page_title not like "File-%" '
+             'and page_title not like "FM-%" '
+             'and page_title not like "Category-%" '
+             'and page_title not like "Cat-%" '
+             'and page_title not like "Book-%" '
+             'and page_title not like "NA-%" '
+             'and page_title not like "%\_Operation\_Majestic\_Titan_%" '
+             'and page_title not like "%\_Version_%" '
+             'and page_title not like "All\_Wikipedia\_%" '
+             'and page_title not like "%\_Wikipedia-Books\_%" '
+             'and page_title not like "Assessed-%" '
+             'and page_title not like "%-Priority\_%" '
+             'and page_title not like "Unassessed\_field\_%" '
+             'and page_title not like "Unassessed\_importance\_%" '
+             'and page_title not like "Unassessed-Class\_articles" '
+             'and page_title not like "%\_Article\_quality\_research\_articles" '
+             'and page_title not like "WikiProject\_lists\_of\_encyclopedic\_articles";')
+        query = self.query('wiki', q, None)
         categories = []
         for row in query:
             categories.append(row[0].decode('utf-8'))
