@@ -35,9 +35,9 @@ class WikiProjectDirectory:
         if len(tree) > 0:
             header = "=" * counter  # Python always finds new ways to amaze me.
             for step in tree.keys():
-                output += header + step.replace('_', ' ') + header + "\n" + listpull(wptools, projects, directoryrow, step) + "\n"
+                output += header + step.replace('_', ' ') + header + "\n" + self.listpull(wptools, projects, directoryrow, step) + "\n"
                 if len(tree[step]) > 0:
-                    output += treeiterator(wptools, tree[step], projects, directoryrow, step, counter=counter+1)
+                    output += self.treeiterator(wptools, tree[step], projects, directoryrow, step, counter=counter+1)
         return output
 
 
@@ -189,8 +189,8 @@ class WikiProjectDirectory:
         index_secondary = {}
         indextext = "'''[[{0}/All|All WikiProjects]]'''\n\n".format(rootpage)
         for firstlevel in tree.keys():
-            directories[firstlevel] = listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
-            directories[firstlevel] += treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
+            directories[firstlevel] = self.listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
+            directories[firstlevel] += self.treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
             index_secondary[firstlevel] = sorted([key for key in tree[firstlevel].keys()])
 
         # Updating the directory index
