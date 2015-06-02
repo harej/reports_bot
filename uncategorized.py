@@ -36,7 +36,7 @@ def main(rootpage, saveto):
     contents = contents.filter_templates()
     for t in contents:
         if t.name.strip() == "WikiProject directory entry small":
-            project = str(t.get('project').value).strip()
+            project = str(t.get('project').value).strip().replace(' ', '_')
 
             # Give me a list of all the categories, as long as it's on the whitelist
             query = wptools.query('wiki', "select distinct cl_to from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace in (4, 14) and page_title = {0} and cl_to in {1};".format('"' + project + '"', whitelist), None)
