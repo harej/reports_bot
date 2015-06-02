@@ -236,5 +236,5 @@ class WikiProjectDirectory:
 
 
 if __name__ == "__main__":
-    dir = WikiProjectDirectory()
-    dir.main('Wikipedia:WikiProject Directory')
+    d = WikiProjectDirectory()
+    d.main('Wikipedia:WikiProject Directory')
