@@ -31,7 +31,7 @@ def main(rootpage):
         if t.name.strip() == "WikiProject directory entry small":
             name = str(t.get('project').value).strip().replace(' ', '_')
             projects.append(name)
-            directoryrow[name] = str(t).replace('entry small', 'entry')
+            directoryrow[name] = str(t).replace('entry small', 'entry') + "\n"
 
     # The rest of this stuff is copied from directory.py
     index_primary = sorted([key for key in tree.keys()])
