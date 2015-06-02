@@ -189,7 +189,7 @@ class WikiProjectDirectory:
         index_secondary = {}
         indextext = "'''[[{0}/All|All WikiProjects]]'''\n\n".format(rootpage)
         for firstlevel in tree.keys():
-            directories[firstlevel] = "={0}=\n".format(firstlevel)
+            directories[firstlevel] = "={0}=\n".format(firstlevel.replace('_',  ' ' ))
             directories[firstlevel] += self.listpull(wptools, projects, directoryrow, firstlevel)  # For immmedate subcats of WikiProjects_by_area
             directories[firstlevel] += self.treeiterator(wptools, tree[firstlevel], projects, directoryrow, firstlevel)  # For descendants of those immediate subcats.
             index_secondary[firstlevel] = sorted([key for key in tree[firstlevel].keys()])
