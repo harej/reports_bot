@@ -114,7 +114,7 @@ def main():
                 templatelist[len(templatelist) - 1] += "</noinclude>"
             for i in templatelist:
                 page.text += i + "\n\n"
-            page.text += "{{WPX block|largetext='''[//en.wikipedia.org/w/index.php?title={0}&action=watch Add this feed to your Watchlist]'''}}".format(saveto.replace(' ', '_'))
+            page.text += "{{{{WPX block|largetext='''[//en.wikipedia.org/w/index.php?title={0}&action=watch Add this feed to your Watchlist]'''}}}}".format(saveto.replace(' ', '_'))
             page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
 
 if __name__ == "__main__":
