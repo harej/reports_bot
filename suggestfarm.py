@@ -25,7 +25,7 @@ def main(rootpage):
                 postto.append(project['name'])
                 page = pywikibot.Page(bot, rootpage + '/SuggestFarm/' + project['name'][10:])
                 page.text = "{{{{User:SuggestBot/suggest|Category:{0}}}}}".format(project['source'])
-                page.save("Requesting latest recommendations from SuggestBot", minor=False, async=True)
+                page.save("Requesting latest recommendations from SuggestBot", minor=False)
 
     print("Sleeping for 30 minutes.")
     time.sleep(1800)  # Sleeping 30 minutes to wait for SuggestBot to do its thing
