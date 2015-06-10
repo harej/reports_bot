@@ -83,7 +83,7 @@ class PriorityPredictor:
             packages.append(self.articles[i:i+10000])
 
         for package in packages:
-                toappend = getlinkcount(wptools, package)
+                toappend = getlinkcount(self.wptools, package)
                 for item in toappend:
                     linkcount.append(item)
 
@@ -135,10 +135,10 @@ class PriorityPredictor:
         midpriority = unknownpriority.replace("Unknown-", "Mid-")
         lowpriority = unknownpriority.replace("Unknown-", "Low-")  # Easy enough...
 
-        toppriority_count = wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(toppriority), None)[0][0]
-        highpriority_count = wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(highpriority), None)[0][0]
-        midpriority_count = wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(midpriority), None)[0][0]
-        lowpriority_count = wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(lowpriority), None)[0][0]
+        toppriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(toppriority), None)[0][0]
+        highpriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(highpriority), None)[0][0]
+        midpriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(midpriority), None)[0][0]
+        lowpriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(lowpriority), None)[0][0]
 
         total_assessed = toppriority_count + highpriority_count + midpriority_count + lowpriority_count
 
