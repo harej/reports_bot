@@ -23,7 +23,7 @@ def getpageviews(article):
     '''
 
     grok = requests.get("http://stats.grok.se/json/en/latest30/{0}".format(article))
-    result = grok.json
+    result = grok.json()
     counter = 0
     for dailyvalue in result['daily_views']:
         counter += dailyvalue
