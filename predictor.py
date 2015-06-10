@@ -33,7 +33,7 @@ def getpageviews(article):
 def getlinkcount(wptools, package):
     '''
     Gets a list of inbound links for a list of articles
-    Takes list *package* as input, returns list of tuples (article, linkcount)
+    Takes list *package* as input, returns list of tuples (article, log of linkcount)
     Input MUST be a list. If there is just one article, enter it as such: [article]
     '''
 
@@ -55,11 +55,13 @@ class QualityPredictor:
 
 class PriorityPredictor:
     def __init__(self, wikiproject, unknownpriority):
+        print("Initializing the Priority Predictor for: " + wikiproject)
         self.wptools = WikiProjectTools()
         self.score = []  # Sorted list of tuples; allows for ranking
         self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
 
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
+        print("Getting list of articles in the WikiProject...")
         self.articles = []   # List of strings (article titles)
         pageviews = []  # List of tuples (article title, log of view count)
         linkcount = []  # List of tuples (article title, log of link count)
@@ -70,10 +72,12 @@ class PriorityPredictor:
 
                 # Page view count
                 # Unfortunately, there is no way to batch this.
+                print("Getting pageviews for: " + article)
                 pageviews.append((article, log(getpageviews(article))))
 
         # Inbound link count
         # This *is* batched, thus broken out of the loop
+        print("Getting inbound link count...")
         packages = []
         for i in range(0, len(self.articles), 10000):
             packages.append(self.articles[i:i+10000])
@@ -91,6 +95,7 @@ class PriorityPredictor:
         # "Relative" means "as a ratio to the highest rank".
         # The most viewed article has a relative pageview score of 1.00. Goes lower from there.
 
+        print("Computing relative pageviews and linkcount...")
         pageviews_relative = {}
         linkcount_relative = {}
 
@@ -124,6 +129,7 @@ class PriorityPredictor:
         # This gives us a general sense of what proportion of articles should be considered top/high/mid/low
         # Far from perfect but it's a start.
 
+        print("Calculating priority thresholds...")
         toppriority = unknownpriority.replace("Unknown-", "Top-")
         highpriority = unknownpriority.replace("Unknown-", "High-")
         midpriority = unknownpriority.replace("Unknown-", "Mid-")
@@ -136,9 +142,9 @@ class PriorityPredictor:
 
         total_assessed = toppriority_count + highpriority_count + midpriority_count + lowpriority_count
 
-        top_index = int((toppriority_count / total_assessed) * len(self.articles)) - 1
-        high_index = int((highpriority_count / total_assessed) * len(self.articles)) - 1
-        mid_index = int((midpriority_count / total_assessed) * len(self.articles)) - 1
+        top_index = int((toppriority_count / total_assessed) * len(self.articles) - 1)
+        high_index = int((highpriority_count / total_assessed) * len(self.articles) -1)
+        mid_index = int((midpriority_count / total_assessed) * len(self.articles) -1)
 
         self.threshold_top = self.score[top_index][1]
         self.threshold_high = self.score[high_index][1]
@@ -150,8 +156,8 @@ class PriorityPredictor:
         if pagetitle in self.articles:
             pagescore = self.score_unranked[pagetitle]
         else:
-            pageviews = getpageviews(pagetitle) / self.mostviews
-            linkcount = getlinkcount([pagetitle])[0][0] / self.mostlinks
+            pageviews = log(getpageviews(pagetitle)) / self.mostviews
+            linkcount = getlinkcount([pagetitle])[0][1] / self.mostlinks
             pagescore = (pageviews * 0.75) + (linkcount * 0.25)
 
         if pagescore >= self.threshold_top:
