@@ -39,6 +39,7 @@ def getviewdump(wptools, proj):
         validtitles = []
         for row in wptools.query('wiki', 'select page_title from page where page_namespace = 0 and page_is_redirect = 0;', None):
             validtitles.append(row[0].decode('utf-8'))
+        validtitles = set(validtitles)
     else:
         validtitles = None
 
