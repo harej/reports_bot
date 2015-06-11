@@ -42,13 +42,16 @@ def getviewdump(proj):
         print("Loading: " + filename)
         with gzip.open(filename, mode='rt', encoding='utf-8') as f:
             content = f.read()
-            content = [line.split(' ') for line in content.split('\n')]  # Each line an entry, each space a delimiter
-            for entry in content:
+
+            content = content.split('\n')  # Splitting up by line
+            for line in content:
+                entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
                     if entry[1] in output:
                          output[entry[1]] += entry[2]  # Append to existing record
                     else:
-                        output[entry[1]] = entry[2]  # Create new record
+                         output[entry[1]] = entry[2]  # Create new record
+        print("Output dictionary is now " + str(len(output)) + " entries long.")
 
     return ouput
 
