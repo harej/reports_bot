@@ -6,6 +6,8 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 
+import datetime
+import gzip
 import json
 import operator
 import pywikibot
@@ -15,20 +17,55 @@ from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
 
-def getpageviews(article):
+def getviewdump(proj):
     '''
-    Queries stats.grok.se for the number of page views in the last 30 days
-    Takes string *article* as input, returns view count.
+    Loads the page view dump for the past complete 30 days
+    Takes string input (project name/abbreviation as identified in the dump)
+    Returns a dict: title => pageviews
+    '''
+
+    # Create list of lists; each sub-list is a directory path
+    # e.g. ['2015', '2015-06', '20150610-000000']
+
+    filepaths = []
+    for i in range(1, 32):  # day -1 through day -31 (i.e., thirty days in the past, starting with yesterday)
+        time = datetime.datetime.now() + datetime.timedelta(-i)
+        for j in range(24):  # for each hour
+            hourminutesecond = '-' + str(j).zfill(2) + '0000'
+            filepaths.append([time.strftime('%Y'), time.strftime('%Y-%m'), time.strftime('%Y%m%d') + hourminutesecond])
+
+    # Read through each file, and if it matches with the project, append to output
+
+    output = {}
+    for file in filepaths:
+        filename = '/public/dumps/pagecounts-raw/{0}/{1}/pagecounts-{2}.gz'.format(file[0], file[1], file[2])
+        print("Loading: " + filename)
+        with gzip.open(filename) as f:
+            content = f.read()
+
+        content = content.split('\n')  # Splitting up by line
+        for line in content:
+            entry = line.split(' ')  # It's a space-delimited file, or something
+            if entry[0] == proj:
+                if entry[1] in output:
+                    output[entry[1]] += entry[2]  # Append to existing record
+                else:
+                    output[entry[1]] = entry[2]  # Create new record
+
+    return ouput
+
+
+def getpageviews(dump, article):
+    '''
+    Queries *dump* for the number of page views in the last 30 days
+    Takes dict *dump*, string *article* as input, returns view count.
     Does NOT take the logarithm of the view count.
     '''
 
-    grok = requests.get("http://stats.grok.se/json/en/latest30/{0}".format(article))
-    result = grok.json()
-    counter = 0
-    for dailyvalue in result['daily_views'].values():
-        counter += dailyvalue
-
-    return counter
+    if article in dump:
+        return dump[article]
+    else:
+        return 0
 
 def getlinkcount(wptools, package):
     '''
@@ -60,6 +97,10 @@ class PriorityPredictor:
         self.score = []  # Sorted list of tuples; allows for ranking
         self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
 
+        # Preparing page view dump
+        print("Loading pageview dump...")
+        dump = getviewdump('en')
+
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Getting list of articles in the WikiProject...")
         self.articles = []   # List of strings (article titles)
@@ -73,7 +114,7 @@ class PriorityPredictor:
                 # Page view count
                 # Unfortunately, there is no way to batch this.
                 print("Getting pageviews for: " + article)
-                pageviews.append((article, log(getpageviews(article))))
+                pageviews.append((article, log(getpageviews(dump, article))))
 
         # Inbound link count
         # This *is* batched, thus broken out of the loop
