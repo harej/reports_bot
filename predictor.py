@@ -42,10 +42,8 @@ def getviewdump(proj):
         print("Loading: " + filename)
         with gzip.open(filename, mode='rt', encoding='utf-8') as f:
             content = f.read()
-
-            content = content.split('\n')  # Splitting up by line
-            for line in content:
-                entry = line.split(' ')  # It's a space-delimited file, or something
+            content = [line.split(' ') for line in content.split('\n')]  # Each line an entry, each space a delimiter
+            for entry in content:
                 if entry[0] == proj:
                     if entry[1] in output:
                          output[entry[1]] += entry[2]  # Append to existing record
