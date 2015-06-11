@@ -17,7 +17,7 @@ from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
 
-def getviewdump(proj):
+def getviewdump(wptools, proj):
     '''
     Loads the page view dump for the past complete 30 days
     Takes string input (project name/abbreviation as identified in the dump)
@@ -34,6 +34,14 @@ def getviewdump(proj):
             hourminutesecond = '-' + str(j).zfill(2) + '0000'
             filepaths.append([time.strftime('%Y'), time.strftime('%Y-%m'), time.strftime('%Y%m%d') + hourminutesecond])
 
+    # Generate list of valid article titles (specifically for English Wikipedia) to filter out inane amounts of garbage
+    if proj == 'en':
+        validtitles = []
+        for row in wptools.query('wiki', 'select page_title from page where page_namespace = 0 and page_is_redirect = 0;', None):
+            validtitles.append(row[0].decode('utf-8'))
+    else:
+        validtitles = None
+
     # Read through each file, and if it matches with the project, append to output
 
     output = {}
@@ -44,10 +52,13 @@ def getviewdump(proj):
             for line in f:
                 entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
-                    if entry[1] in output:
-                         output[entry[1]] += entry[2]  # Append to existing record
+                    if proj == 'en' and entry[1] not in validtitles:  # English Wikipedia specific check
+                        continue
                     else:
-                         output[entry[1]] = entry[2]  # Create new record
+                        if entry[1] in output:
+                            output[entry[1]] += entry[2]  # Append to existing record
+                        else:
+                            output[entry[1]] = entry[2]  # Create new record
         print("Output dictionary is now " + str(len(output)) + " entries long.")
 
     return ouput
@@ -97,7 +108,7 @@ class PriorityPredictor:
 
         # Preparing page view dump
         print("Loading pageview dump...")
-        dump = getviewdump('en')
+        dump = getviewdump(self.wptools, 'en')
 
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Getting list of articles in the WikiProject...")
