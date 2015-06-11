@@ -40,7 +40,7 @@ def getviewdump(proj):
     for file in filepaths:
         filename = '/public/dumps/pagecounts-raw/{0}/{1}/pagecounts-{2}.gz'.format(file[0], file[1], file[2])
         print("Loading: " + filename)
-        with gzip.open(filename) as f:
+        with gzip.open(filename, mode='rt') as f:
             content = f.read()
 
         content = content.split('\n')  # Splitting up by line
