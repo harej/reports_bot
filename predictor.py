@@ -40,17 +40,17 @@ def getviewdump(proj):
     for file in filepaths:
         filename = '/public/dumps/pagecounts-raw/{0}/{1}/pagecounts-{2}.gz'.format(file[0], file[1], file[2])
         print("Loading: " + filename)
-        with gzip.open(filename, mode='rt') as f:
+        with gzip.open(filename, mode='rt', encoding='utf-8') as f:
             content = f.read()
 
-        content = content.split('\n')  # Splitting up by line
-        for line in content:
-            entry = line.split(' ')  # It's a space-delimited file, or something
-            if entry[0] == proj:
-                if entry[1] in output:
-                    output[entry[1]] += entry[2]  # Append to existing record
-                else:
-                    output[entry[1]] = entry[2]  # Create new record
+            content = content.split('\n')  # Splitting up by line
+            for line in content:
+                entry = line.split(' ')  # It's a space-delimited file, or something
+                if entry[0] == proj:
+                    if entry[1] in output:
+                         output[entry[1]] += entry[2]  # Append to existing record
+                    else:
+                        output[entry[1]] = entry[2]  # Create new record
 
     return ouput
 
