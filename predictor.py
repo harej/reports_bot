@@ -66,7 +66,7 @@ def getviewdump(wptools, proj):
                             output[entry[1]] = int(entry[2])  # Create new record
         print("Output dictionary is now " + str(len(output)) + " entries long.")
 
-    return ouput
+    return output
 
 
 def getpageviews(dump, article):
