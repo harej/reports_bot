@@ -56,7 +56,7 @@ def getviewdump(wptools, proj):
             for line in f:
                 entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
-                    entry[1] = html.unescape(entry[1])
+                    entry[1] = html.unescape(entry[1]).replace(' ', '_')
                     if proj == 'en' and entry[1] not in validtitles:  # English Wikipedia specific check
                         continue
                     else:
