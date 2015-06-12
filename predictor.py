@@ -125,14 +125,10 @@ class PriorityPredictor:
             if row[0].startswith("Talk:"):  # 
                 article = row[0][5:] # Stripping out "Talk:"
                 self.articles.append(article)
-
-                # Page view count
-                # Unfortunately, there is no way to batch this.
-                print("Getting pageviews for: " + article)
                 pageviews.append((article, log(getpageviews(self.dump, article) + 1)))
 
         # Inbound link count
-        # This *is* batched, thus broken out of the loop
+        # This is batched, thus broken out of the loop
         print("Getting inbound link count...")
         packages = []
         for i in range(0, len(self.articles), 10000):
@@ -170,7 +166,7 @@ class PriorityPredictor:
 
         for article in self.articles:
             weightedscore = (pageviews_relative[article] * 0.75) + (linkcount_relative[article] * 0.25)
-            self.score.append((article, weightscored))
+            self.score.append((article, weightedscore))
             self.score_unranked[article] = weightedscore
 
         self.score = sorted(self.score, key=operator.itemgetter(1), reverse=True)
