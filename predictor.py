@@ -61,9 +61,9 @@ def getviewdump(wptools, proj):
                         continue
                     else:
                         if entry[1] in output:
-                            output[entry[1]] += entry[2]  # Append to existing record
+                            output[entry[1]] += int(entry[2])  # Append to existing record
                         else:
-                            output[entry[1]] = entry[2]  # Create new record
+                            output[entry[1]] = int(entry[2])  # Create new record
         print("Output dictionary is now " + str(len(output)) + " entries long.")
 
     return ouput
@@ -185,21 +185,21 @@ class PriorityPredictor:
         # Far from perfect but it's a start.
 
         print("Calculating priority thresholds...")
-        toppriority = unknownpriority.replace("Unknown-", "Top-")
-        highpriority = unknownpriority.replace("Unknown-", "High-")
-        midpriority = unknownpriority.replace("Unknown-", "Mid-")
-        lowpriority = unknownpriority.replace("Unknown-", "Low-")  # Easy enough...
+        priorities = ['Top-', 'High-', 'Mid-', 'Low-']
+        prioritycount = {}
 
-        toppriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(toppriority), None)[0][0]
-        highpriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(highpriority), None)[0][0]
-        midpriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(midpriority), None)[0][0]
-        lowpriority_count = self.wptools.query('wiki', 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'.format(lowpriority), None)[0][0]
+        q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'
+        for priority in priorities:
+            prioritycategory = unknownpriority.replace("Unknown-", priority)
+            prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
 
-        total_assessed = toppriority_count + highpriority_count + midpriority_count + lowpriority_count
+        total_assessed = 0
+        for value in prioritycount:
+            total_assessed += value
 
-        top_index = int((toppriority_count / total_assessed) * len(self.articles) - 1)
-        high_index = int((highpriority_count / total_assessed) * len(self.articles) -1)
-        mid_index = int((midpriority_count / total_assessed) * len(self.articles) -1)
+        top_index = int((prioritycount['Top-'] / total_assessed) * len(self.articles) - 1)
+        high_index = int((prioritycount['High-'] / total_assessed) * len(self.articles) -1)
+        mid_index = int((prioritycount['Mid-'] / total_assessed) * len(self.articles) -1)
 
         self.threshold_top = self.score[top_index][1]
         self.threshold_high = self.score[high_index][1]
