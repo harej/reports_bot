@@ -97,7 +97,7 @@ def getlinkcount(wptools, package):
 
     output = []
     for row in wptools.query('wiki', query_builder, None):
-        output.append((row[0].decode('utf-8'), log(row[1])))
+        output.append((row[0].decode('utf-8'), log(row[1] + 1)))
 
     return output
 
@@ -115,7 +115,7 @@ class PriorityPredictor:
 
         # Preparing page view dump
         print("Loading pageview dump...")
-        dump = getviewdump(self.wptools, 'en')
+        self.dump = getviewdump(self.wptools, 'en')
 
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Getting list of articles in the WikiProject...")
@@ -130,7 +130,7 @@ class PriorityPredictor:
                 # Page view count
                 # Unfortunately, there is no way to batch this.
                 print("Getting pageviews for: " + article)
-                pageviews.append((article, log(getpageviews(dump, article))))
+                pageviews.append((article, log(getpageviews(self.dump, article) + 1)))
 
         # Inbound link count
         # This *is* batched, thus broken out of the loop
@@ -213,7 +213,7 @@ class PriorityPredictor:
         if pagetitle in self.articles:
             pagescore = self.score_unranked[pagetitle]
         else:
-            pageviews = log(getpageviews(pagetitle)) / self.mostviews
+            pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount([pagetitle])[0][1] / self.mostlinks
             pagescore = (pageviews * 0.75) + (linkcount * 0.25)
 
