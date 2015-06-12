@@ -34,12 +34,12 @@ def getviewdump(wptools, proj):
             filepaths.append([time.strftime('%Y'), time.strftime('%Y-%m'), time.strftime('%Y%m%d') + hourminutesecond])
 
     # Generate list of valid article titles (specifically for English Wikipedia) to filter out inane amounts of garbage
-    if proj == 'en':
-        validtitles = set()
-        for row in wptools.query('wiki', 'select page_title from page where page_namespace = 0 and page_is_redirect = 0;', None):
-            validtitles.add(row[0].decode('utf-8'))
-    else:
-        validtitles = None
+    #if proj == 'en':
+    #    validtitles = set()
+    #    for row in wptools.query('wiki', 'select page_title from page where page_namespace = 0 and page_is_redirect = 0;', None):
+    #        validtitles.add(row[0].decode('utf-8'))
+    #else:
+    #    validtitles = None
 
     # Read through each file, and if it matches with the project, append to output
 
@@ -58,13 +58,13 @@ def getviewdump(wptools, proj):
                 entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
                     entry[1] = html.unescape(entry[1]).replace(' ', '_')
-                    if proj == 'en' and entry[1] not in validtitles:  # English Wikipedia specific check
-                        continue
+                    #if proj == 'en' and entry[1] not in validtitles:  # English Wikipedia specific check
+                    #    continue
+                    #else:
+                    if entry[1] in output:
+                        output[entry[1]] += int(entry[2])  # Append to existing record
                     else:
-                        if entry[1] in output:
-                            output[entry[1]] += int(entry[2])  # Append to existing record
-                        else:
-                            output[entry[1]] = int(entry[2])  # Create new record
+                        output[entry[1]] = int(entry[2])  # Create new record
 
     print("\nProcessed stats for " + str(len(output)) + " articles.")
     return output
