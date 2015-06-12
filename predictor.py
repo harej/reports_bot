@@ -47,7 +47,7 @@ def getviewdump(wptools, proj):
     output = {}
     for file in filepaths:
         counter += 1
-        print("Processing dump file" + str(counter) + "/" + str(len(filepaths)), end="\r")
+        print("Processing dump file " + str(counter) + "/" + str(len(filepaths)), end="\r")
         filename = '/public/dumps/pagecounts-raw/{0}/{1}/pagecounts-{2}.gz'.format(file[0], file[1], file[2])
 
         if os.path.isfile(filename) == False:
