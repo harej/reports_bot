@@ -35,17 +35,19 @@ def getviewdump(wptools, proj):
 
     # Generate list of valid article titles (specifically for English Wikipedia) to filter out inane amounts of garbage
     if proj == 'en':
-        validtitles = []
+        validtitles = set()
         for row in wptools.query('wiki', 'select page_title from page where page_namespace = 0 and page_is_redirect = 0;', None):
-            validtitles.append(row[0].decode('utf-8'))
-        validtitles = set(validtitles)
+            validtitles.add(row[0].decode('utf-8'))
     else:
         validtitles = None
 
     # Read through each file, and if it matches with the project, append to output
 
+    counter = 0
     output = {}
     for file in filepaths:
+        counter += 1
+        print("Processing dump file" + str(counter) + "/" + str(len(filepaths)), end="\r")
         filename = '/public/dumps/pagecounts-raw/{0}/{1}/pagecounts-{2}.gz'.format(file[0], file[1], file[2])
 
         if os.path.isfile(filename) == False:
@@ -64,8 +66,8 @@ def getviewdump(wptools, proj):
                             output[entry[1]] += int(entry[2])  # Append to existing record
                         else:
                             output[entry[1]] = int(entry[2])  # Create new record
-        print("Output dictionary is now " + str(len(output)) + " entries long.")
 
+    print("\nProcessed stats for " + str(len(output)) + " articles.")
     return output
 
 
