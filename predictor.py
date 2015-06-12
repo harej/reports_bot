@@ -53,7 +53,6 @@ def getviewdump(wptools, proj):
         if os.path.isfile(filename) == False:
             continue
 
-        print("Loading: " + filename)
         with gzip.open(filename, mode='rt', encoding='utf-8') as f:
             for line in f:
                 entry = line.split(' ')  # It's a space-delimited file, or something
