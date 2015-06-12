@@ -8,11 +8,10 @@ Licensed under MIT License: http://mitlicense.org
 
 import datetime
 import gzip
-import json
+import html
 import operator
+import os
 import pywikibot
-import re
-import requests
 from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
@@ -48,11 +47,16 @@ def getviewdump(wptools, proj):
     output = {}
     for file in filepaths:
         filename = '/public/dumps/pagecounts-raw/{0}/{1}/pagecounts-{2}.gz'.format(file[0], file[1], file[2])
+
+        if os.path.isfile(filename) == False:
+            continue
+
         print("Loading: " + filename)
         with gzip.open(filename, mode='rt', encoding='utf-8') as f:
             for line in f:
                 entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
+                    entry[1] = html.unescape(entry[1])
                     if proj == 'en' and entry[1] not in validtitles:  # English Wikipedia specific check
                         continue
                     else:
