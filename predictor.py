@@ -27,7 +27,7 @@ def getviewdump(wptools, proj):
     # e.g. ['2015', '2015-06', '20150610-000000']
 
     filepaths = []
-    for i in range(1, 32):  # day -1 through day -31 (i.e., thirty days in the past, starting with yesterday)
+    for i in range(1, 31):  # day -1 through day -31 (i.e., thirty days in the past, starting with yesterday)
         time = datetime.datetime.now() + datetime.timedelta(-i)
         for j in range(24):  # for each hour
             hourminutesecond = '-' + str(j).zfill(2) + '0000'
@@ -54,9 +54,7 @@ def getviewdump(wptools, proj):
             continue
 
         with gzip.open(filename, mode='rt', encoding='utf-8') as f:
-            content = f.read()
-            content = content.split('\n')
-            for line in content:
+            for line in f:
                 entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
                     entry[1] = html.unescape(entry[1]).replace(' ', '_')
