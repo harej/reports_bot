@@ -22,9 +22,26 @@ class WikiProjectWatchers:
         for row in wptools.query('index', 'select distinct pi_project from projectindex;', None):
             projects.append(row[0])
 
-        packages = []
-        for i in range(0, len(projects), 250):
-            packages.append(projects[i:i+50])
+        q = ('select distinct page.page_title from page '
+             'join categorylinks on page.page_id = categorylinks.cl_from '
+             'left join redirect on page.page_id = redirect.rd_from '
+             'where page_namespace = 4 '
+             'and page_title not like "%/%" '
+             'and rd_title is null '
+             'and (cl_to in '
+             '(select page.page_title from page '
+             'where page_namespace = 14 and '
+             'page_title like "%\_WikiProjects" '
+             'and page_title not like "%\_for\_WikiProjects" '
+             'and page_title not like "%\_of\_WikiProjects") '
+             'or page_title like "WikiProject\_%");')
+        formaldefinition = wptools.query('wiki', q, None)  # http://quarry.wmflabs.org/query/3509
+        for row in formaldefinition:
+            row = row[0].decode('utf-8')
+            if row not in projects:
+                projects.append(row)
+
+        packages = [projects[i:i+50] for i in range(0, len(projects), 50)]
 
         report = {}
         for package in packages:
