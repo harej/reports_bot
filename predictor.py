@@ -16,7 +16,7 @@ from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
 
-def getviewdump(wptools, proj):
+def getviewdump(wptools, proj, days=30):
     '''
     Loads the page view dump for the past complete 30 days
     Takes string input (project name/abbreviation as identified in the dump)
@@ -27,7 +27,7 @@ def getviewdump(wptools, proj):
     # e.g. ['2015', '2015-06', '20150610-000000']
 
     filepaths = []
-    for i in range(1, 31):  # day -1 through day -31 (i.e., thirty days in the past, starting with yesterday)
+    for i in range(1, days+1):  # day -1 through day -31 (i.e., thirty days in the past, starting with yesterday)
         time = datetime.datetime.now() + datetime.timedelta(-i)
         for j in range(24):  # for each hour
             hourminutesecond = '-' + str(j).zfill(2) + '0000'
@@ -114,7 +114,7 @@ class PriorityPredictor:
         self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
 
         # Preparing page view dump
-        self.dump = getviewdump(self.wptools, 'en')
+        self.dump = getviewdump(self.wptools, 'en', days=1)
 
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Getting list of articles in the WikiProject...")
@@ -190,9 +190,7 @@ class PriorityPredictor:
             prioritycategory = unknownpriority.replace("Unknown-", priority)
             prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
 
-        total_assessed = 0
-        for value in prioritycount.values():
-            total_assessed += value
+        total_assessed = sum([x for x in prioritycount.values()])
 
         top_index = int((prioritycount['Top-'] / total_assessed) * len(self.articles) - 1)
         high_index = int((prioritycount['High-'] / total_assessed) * len(self.articles) -1)
