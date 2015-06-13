@@ -23,8 +23,8 @@ class WikiProjectWatchers:
             projects.append(row[0])
 
         packages = []
-        for i in range(0, len(self.projects), 250):
-            packages.append(self.articles[i:i+50])
+        for i in range(0, len(projects), 250):
+            packages.append(projects[i:i+50])
 
         report = {}
         for package in packages:
