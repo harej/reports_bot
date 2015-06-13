@@ -116,7 +116,7 @@ class PriorityPredictor:
         # Preparing page view dump
         self.dump = getviewdump(self.wptools, 'en', days=1)
 
-    def loadproject(self, wikiproject, unknownpriority)
+    def loadproject(self, wikiproject, unknownpriority):
         self.project = wikiproject
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Preparing Priority Predictor for: " + self.project)
