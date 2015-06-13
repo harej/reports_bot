@@ -107,8 +107,8 @@ class QualityPredictor:
         # chat it up with ORES
 
 class PriorityPredictor:
-    def __init__(self, wikiproject, unknownpriority):
-        print("Initializing the Priority Predictor for: " + wikiproject)
+    def __init__(self):
+        print("Initializing the Priority Predictor")
         self.wptools = WikiProjectTools()
         self.score = []  # Sorted list of tuples; allows for ranking
         self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
@@ -116,12 +116,14 @@ class PriorityPredictor:
         # Preparing page view dump
         self.dump = getviewdump(self.wptools, 'en', days=1)
 
+    def loadproject(self, wikiproject, unknownpriority)
+        self.project = wikiproject
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
-        print("Getting list of articles in the WikiProject...")
+        print("Preparing Priority Predictor for: " + self.project)
         self.articles = []   # List of strings (article titles)
         pageviews = []  # List of tuples (article title, log of view count)
         linkcount = []  # List of tuples (article title, log of link count)
-        for row in self.wptools.query('index', 'select pi_page from projectindex where pi_project = "Wikipedia:{0}";'.format(wikiproject), None):
+        for row in self.wptools.query('index', 'select pi_page from projectindex where pi_project = "Wikipedia:{0}";'.format(self.project), None):
             if row[0].startswith("Talk:"):  # 
                 article = row[0][5:] # Stripping out "Talk:"
                 self.articles.append(article)
