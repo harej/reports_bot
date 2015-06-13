@@ -33,6 +33,7 @@ class WikiProjectWatchers:
                 url += title + "|"
             url = url[:-1]  # Truncate trailing pipe
             apiquery = requests.get(url)
+            apiquery = apiquery.json()
             for pagedata in apiquery['query']['pages']:
                 if 'watchers' in pagedata:
                     report[pagedata['title']] = pagedata['watchers']
