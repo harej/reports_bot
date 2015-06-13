@@ -114,7 +114,7 @@ class PriorityPredictor:
         self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
 
         # Preparing page view dump
-        self.dump = getviewdump(self.wptools, 'en', days=1)
+        self.dump = getviewdump(self.wptools, 'en', days=30)
 
     def loadproject(self, wikiproject, unknownpriority):
         self.project = wikiproject
