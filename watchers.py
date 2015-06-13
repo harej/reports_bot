@@ -41,6 +41,7 @@ class WikiProjectWatchers:
             if row not in projects:
                 projects.append(row)
 
+        projects.sort()
         packages = [projects[i:i+50] for i in range(0, len(projects), 50)]
 
         report = {}
@@ -64,7 +65,7 @@ class WikiProjectWatchers:
         counter = 0
         for pair in report:
             counter += 1
-            contents += "|-\n| {0}\n| {1}\n| {2}\n".format(str(counter), pair[0], pair[1])
+            contents += "|-\n| {0}\n| [[{1}]]\n| {2}\n".format(str(counter), pair[0], pair[1])
 
         contents += "|}"
 
