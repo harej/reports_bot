@@ -51,7 +51,7 @@ class WikiProjectWatchers:
             url = url[:-1]  # Truncate trailing pipe
             apiquery = requests.get(url)
             apiquery = apiquery.json()
-            for pagedata in apiquery['query']['pages']:
+            for pagedata in apiquery['query']['pages'].values():
                 if 'watchers' in pagedata:
                     if pagedata['watchers'] > 29:  # Required part
                         report[pagedata['title']] = pagedata['watchers']
