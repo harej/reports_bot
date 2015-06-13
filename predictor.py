@@ -185,7 +185,7 @@ class PriorityPredictor:
         priorities = ['Top-', 'High-', 'Mid-', 'Low-']
         prioritycount = {}
 
-        q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = {0}'
+        q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = "{0}";'
         for priority in priorities:
             prioritycategory = unknownpriority.replace("Unknown-", priority)
             prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
@@ -202,7 +202,7 @@ class PriorityPredictor:
         self.threshold_high = self.score[high_index][1]
         self.threshold_mid = self.score[mid_index][1]
 
-    def prioritypredictor(self, pagetitle):
+    def predictpage(self, pagetitle):
         # Pull pagescore if already defined
         # Otherwise, compute it "de novo"
         if pagetitle in self.articles:
