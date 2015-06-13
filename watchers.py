@@ -53,7 +53,8 @@ class WikiProjectWatchers:
             apiquery = apiquery.json()
             for pagedata in apiquery['query']['pages']:
                 if 'watchers' in pagedata:
-                    report[pagedata['title']] = pagedata['watchers']
+                    if pagedata['watchers'] > 29:  # Required part
+                        report[pagedata['title']] = pagedata['watchers']
 
         report = sorted(report.items(), key=operator.itemgetter(1), reverse=True)
 
