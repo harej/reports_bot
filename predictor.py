@@ -35,6 +35,7 @@ def getviewdump(wptools, proj):
 
     # Generate list of valid article titles (specifically for English Wikipedia) to filter out inane amounts of garbage
     if proj == 'en':
+        print("Generating enwiki valid titles list...")
         validtitles = set()
         for row in wptools.query('wiki', 'select page_title from page where page_namespace = 0 and page_is_redirect = 0;', None):
             validtitles.add(row[0].decode('utf-8'))
@@ -113,7 +114,6 @@ class PriorityPredictor:
         self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
 
         # Preparing page view dump
-        print("Loading pageview dump...")
         self.dump = getviewdump(self.wptools, 'en')
 
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
@@ -191,7 +191,7 @@ class PriorityPredictor:
             prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
 
         total_assessed = 0
-        for value in prioritycount:
+        for value in prioritycount.values():
             total_assessed += value
 
         top_index = int((prioritycount['Top-'] / total_assessed) * len(self.articles) - 1)
