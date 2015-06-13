@@ -54,7 +54,9 @@ def getviewdump(wptools, proj):
             continue
 
         with gzip.open(filename, mode='rt', encoding='utf-8') as f:
-            for line in f:
+            content = f.read()
+            content = content.split('\n')
+            for line in content:
                 entry = line.split(' ')  # It's a space-delimited file, or something
                 if entry[0] == proj:
                     entry[1] = html.unescape(entry[1]).replace(' ', '_')
