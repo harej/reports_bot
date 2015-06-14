@@ -210,7 +210,7 @@ class PriorityPredictor:
             internalclout_relative[article] = count / self.mostinternal
 
         for article in self.articles:
-            weightedscore = (internalclout_relative[article] * 0.5) + (pageviews_relative[article] * 0.375) + (linkcount_relative[article] * 0.125)
+            weightedscore = (internalclout_relative[article] * 1.0) + (pageviews_relative[article] * 0) + (linkcount_relative[article] * 0)
             self.rank.append((article, weightedscore))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
@@ -260,7 +260,7 @@ class PriorityPredictor:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
             internalclout = getinternalclout(self.wptools, [pagetitle], self.articles)[0][1] / self.mostinternal
-            pagescore = ((internalclout * 0.5) + (pageviews * 0.375) + (linkcount * 0.125)) / self.highestscore
+            pagescore = ((internalclout * 1.0) + (pageviews * 0) + (linkcount * 0)) / self.highestscore
 
         if pagescore >= self.threshold_top:
             return "Top"
