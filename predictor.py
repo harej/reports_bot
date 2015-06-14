@@ -195,8 +195,8 @@ class PriorityPredictor:
         total_assessed = sum([x for x in prioritycount.values()])
 
         top_index = int((prioritycount['Top-'] / total_assessed) * len(self.articles) - 1)
-        high_index = int((prioritycount['High-'] / total_assessed) * len(self.articles) -1)
-        mid_index = int((prioritycount['Mid-'] / total_assessed) * len(self.articles) -1)
+        high_index = top_index + int((prioritycount['High-'] / total_assessed) * len(self.articles) -1)
+        mid_index = high_index + int((prioritycount['Mid-'] / total_assessed) * len(self.articles) -1)
 
         self.threshold_top = self.score[top_index][1]
         self.threshold_high = self.score[high_index][1]
@@ -209,7 +209,7 @@ class PriorityPredictor:
             pagescore = self.score_unranked[pagetitle]
         else:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
-            linkcount = getlinkcount([pagetitle])[0][1] / self.mostlinks
+            linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
             pagescore = (pageviews * 0.75) + (linkcount * 0.25)
 
         if pagescore >= self.threshold_top:
