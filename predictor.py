@@ -106,10 +106,15 @@ class QualityPredictor:
         # chat it up with ORES
 
 class PriorityPredictor:
-    def __init__(self):
+    def __init__(self, viewdump=None):
         print("Initializing the Priority Predictor")
         self.wptools = WikiProjectTools()
-        self.dump = getviewdump(self.wptools, 'en', days=30)
+
+        if viewdump == None:  # If a dumped JSON file of pageviews is not specified
+            self.dump = getviewdump(self.wptools, 'en', days=30)
+        else:
+            with open(viewdump, 'r') as f:
+                self.dump = json.load(f)  # Load pageviews from a dumped JSON file
 
     def loadproject(self, wikiproject, unknownpriority):
         self.project = wikiproject
