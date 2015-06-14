@@ -176,9 +176,16 @@ class PriorityPredictor:
         for article in self.articles:
             weightedscore = (pageviews_relative[article] * 0.75) + (linkcount_relative[article] * 0.25)
             self.rank.append((article, weightedscore))
-            self.score[article] = weightedscore
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
+
+        # Re-scaling scores, such that the highest ranked will always have a score of 1.00.
+        self.highestscore = self.rank[0][1]
+        self.rank = [(item[0], item[1] / self.highestscore) for item in self.rank]
+
+        # Defining unordered index of scores
+        for item in self.rank:
+            self.score[item[0]] = item[1]
 
         # Calculating minimum scores
         # The idea is that there is a minimum score for something to be top, high, or mid-priority
@@ -191,11 +198,10 @@ class PriorityPredictor:
         # Far from perfect but it's a start.
 
         print("Calculating priority thresholds...")
-        priorities = ['Top-', 'High-', 'Mid-', 'Low-']
         prioritycount = {}
 
         q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = "{0}";'
-        for priority in priorities:
+        for priority in ['Top-', 'High-', 'Mid-', 'Low-']:
             prioritycategory = priority + self.projectcat
             prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
 
@@ -217,7 +223,7 @@ class PriorityPredictor:
         else:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
-            pagescore = (pageviews * 0.75) + (linkcount * 0.25)
+            pagescore = ((pageviews * 0.75) + (linkcount * 0.25)) / self.highestscore
 
         if pagescore >= self.threshold_top:
             return "Top"
@@ -234,8 +240,8 @@ class PriorityPredictor:
     def audit(self):
         print("Auditing " + self.project)
 
-        for prefix in ['Top-', 'High-', 'Mid-', 'Low-']:
-            category = prefix + self.projectcat
+        for prefix in ['Top', 'High', 'Mid', 'Low']:
+            category = prefix + "-" + self.projectcat
             matrix = {'Top': 0, 'High': 0, 'Mid': 0, 'Low': 0}
 
             q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
@@ -245,7 +251,7 @@ class PriorityPredictor:
 
             total_assessed = sum([x for x in matrix.values()])
 
-            print("Human assessed " + prefix + "priority:")
+            print("Human assessed " + prefix + "-priority:")
             for item in matrix.keys():
                 print("Machine assessed " + item + "-priority: " + str(matrix[item]) + " (" + str((matrix[item] / total_assessed) * 100) + "%)")
             print("Total: " + str(total_assessed) + " articles")
