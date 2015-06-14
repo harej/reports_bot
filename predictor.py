@@ -195,9 +195,9 @@ class PriorityPredictor:
         high_index = top_index + int((prioritycount['High-'] / total_assessed) * len(self.articles) -1)
         mid_index = high_index + int((prioritycount['Mid-'] / total_assessed) * len(self.articles) -1)
 
-        self.threshold_top = self.score[top_index][1]
-        self.threshold_high = self.score[high_index][1]
-        self.threshold_mid = self.score[mid_index][1]
+        self.threshold_top = self.rank[top_index][1]
+        self.threshold_high = self.rank[high_index][1]
+        self.threshold_mid = self.rank[mid_index][1]
 
     def predictpage(self, pagetitle):
         # Pull pagescore if already defined
