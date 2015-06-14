@@ -93,7 +93,7 @@ def getlinkcount(wptools, package):
     if len(package) > 1:
         query_builder = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title in {0} group by pl_title;'.format(tuple(package))
     else:
-        query_builder = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title in {0} group by pl_title;'.format(package[0])
+        query_builder = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title = "{0}" group by pl_title;'.format(package[0])
 
     output = []
     for row in wptools.query('wiki', query_builder, None):
