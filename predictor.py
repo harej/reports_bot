@@ -238,7 +238,7 @@ class PriorityPredictor:
             q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
             for row in self.wptools.query('wiki', q.format(category), None):
                 title = row[0].decode('utf-8')
-                matrix[p.predictpage(title)] += 1
+                matrix[self.predictpage(title)] += 1
 
             total_assessed = sum([x for x in matrix.values()])
 
