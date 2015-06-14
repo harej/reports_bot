@@ -91,12 +91,12 @@ def getlinkcount(wptools, package):
     '''
 
     if len(package) > 1:
-        query_builder = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title in {0} group by pl_title;'.format(tuple(package))
+        q = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title in {0} group by pl_title;'.format(tuple(package))
     else:
-        query_builder = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title = "{0}" group by pl_title;'.format(package[0])
+        q = 'select pl_title, count(*) from pagelinks where pl_namespace = 0 and pl_title = "{0}" group by pl_title;'.format(package[0])
 
     output = []
-    for row in wptools.query('wiki', query_builder, None):
+    for row in wptools.query('wiki', q, None):
         output.append((row[0].decode('utf-8'), log(row[1] + 1)))
 
     if len(output) == 0:
@@ -107,12 +107,16 @@ def getlinkcount(wptools, package):
 def getinternalclout(wptools, destination, articlebatch):
     '''
     Gets a list of inbound links from *articlebatch* to *destination*
-    Takes lists *articlebatch* and *destination* as input, returns list of tuples (article, log of internalclout)
+    Takes lists *articlebatch* and *destination* as input, returns list of tuples (article, log of linkcount)
     Input MUST be a list. If there is just one article, enter it as such: [article]
     '''
 
+    if len(destination) > 1:
+        q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;"
+    else:
+        q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'
+
     output = []
-    q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;"
     for row in wptools.query('wiki', q.format(tuple(destination), tuple(articlebatch)), None):
         output.append((row[0].decode('utf-8'), log(row[1])))
 
