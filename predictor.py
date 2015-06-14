@@ -11,7 +11,6 @@ import gzip
 import html
 import operator
 import os
-import pywikibot
 from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
