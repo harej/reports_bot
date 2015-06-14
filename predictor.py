@@ -110,14 +110,12 @@ class PriorityPredictor:
     def __init__(self):
         print("Initializing the Priority Predictor")
         self.wptools = WikiProjectTools()
-        self.score = []  # Sorted list of tuples; allows for ranking
-        self.score_unranked = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
-
-        # Preparing page view dump
         self.dump = getviewdump(self.wptools, 'en', days=30)
 
     def loadproject(self, wikiproject, unknownpriority):
         self.project = wikiproject
+        self.rank = []  # Sorted list of tuples; allows for ranking
+        self.score = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Preparing Priority Predictor for: " + self.project)
         self.articles = []   # List of strings (article titles)
@@ -168,18 +166,18 @@ class PriorityPredictor:
 
         for article in self.articles:
             weightedscore = (pageviews_relative[article] * 0.75) + (linkcount_relative[article] * 0.25)
-            self.score.append((article, weightedscore))
-            self.score_unranked[article] = weightedscore
+            self.rank.append((article, weightedscore))
+            self.score[article] = weightedscore
 
-        self.score = sorted(self.score, key=operator.itemgetter(1), reverse=True)
+        self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
 
         # Calculating minimum scores
         # The idea is that there is a minimum score for something to be top, high, or mid-priority
         # The script is fed the category name for the unknown-importance/unknown-priority category
         # Based on this, derive category names for top/high/mid/low, add all the counts together...
         # ...then calculate ratio for top/high/mid as a ratio of the total...
-        # ...multiply that ratio by the count of self.score, convert to an integer
-        # ...and then threshold = self.score[that integer][1]
+        # ...multiply that ratio by the count of self.rank, convert to an integer
+        # ...and then threshold = self.rank[that integer][1]
         # This gives us a general sense of what proportion of articles should be considered top/high/mid/low
         # Far from perfect but it's a start.
 
@@ -206,7 +204,7 @@ class PriorityPredictor:
         # Pull pagescore if already defined
         # Otherwise, compute it "de novo"
         if pagetitle in self.articles:
-            pagescore = self.score_unranked[pagetitle]
+            pagescore = self.score[pagetitle]
         else:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
