@@ -118,6 +118,7 @@ class PriorityPredictor:
                 self.dump = json.load(f)  # Load pageviews from a dumped JSON file
 
     def loadproject(self, wikiproject, unknownpriority):
+        self.projectcat = unknownpriority.replace("Unknown-", "")
         self.project = wikiproject
         self.rank = []  # Sorted list of tuples; allows for ranking
         self.score = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
@@ -192,7 +193,7 @@ class PriorityPredictor:
 
         q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = "{0}";'
         for priority in priorities:
-            prioritycategory = unknownpriority.replace("Unknown-", priority)
+            prioritycategory = priority + self.projectcat
             prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
 
         total_assessed = sum([x for x in prioritycount.values()])
@@ -226,3 +227,22 @@ class PriorityPredictor:
 
         # If none of these...
         return "Low"
+
+    def audit(self):
+        print("Auditing " + self.project)
+
+        for prefix in ['Top-', 'High-', 'Mid-', 'Low-']:
+            category = prefix + self.projectcat
+            matrix = {'Top': 0, 'High': 0, 'Mid': 0, 'Low': 0}
+
+            q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
+            for row in self.wptools.query('wiki', q.format(category), None):
+                title = row[0].decode('utf-8')
+                matrix[p.predictpage(title)] += 1
+
+            total_assessed = sum([x for x in matrix.values()])
+
+            print("Human assessed " + prefix + "priority:")
+            for item in matrix.keys():
+                print("Machine assessed " + item + "-priority: " + str(matrix[item]) + " (" + str((matrix[item] / total_assessed) * 100) + "%)")
+            print("Total: " + str(total_assessed) + " articles")
