@@ -104,6 +104,20 @@ def getlinkcount(wptools, package):
 
     return output
 
+def getinternalclout(wptools, destination):
+    '''
+    Gets a list of inbound links from self.articles for a list of articles
+    Takes list *destination* as input, returns list of tuples (article, log of internalclout)
+    Input MUST be a list. If there is just one article, enter it as such: [article]
+    '''
+
+    output = []
+    q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;"
+    for row in wptools.query('wiki', q.format(tuple(destination), tuple(self.articles)), None):
+        output.append((row[0].decode('utf-8'), log(row[1])))
+
+    return output
+
 class QualityPredictor:
     def qualitypredictor(self, pagetitle):
         print("Argh! Not ready yet!")
@@ -148,20 +162,30 @@ class PriorityPredictor:
                 for item in toappend:
                     linkcount.append(item)
 
+        # "Internal Clout"
+        # This measures, within a group of articles, the number of links to each other
+        # Works amazingly well as a metric
+
+        print("Measuring internal clout...")
+        internalclout = getinternalclout(self.wptools, self.articles)
+
         # Sorting...
         pageviews = sorted(pageviews, key=operator.itemgetter(1), reverse=True)
         linkcount = sorted(linkcount, key=operator.itemgetter(1), reverse=True)
+        internalclout = sorted(internalclout, key=operator.itemgetter(1), reverse=True)
 
-        # Computing relative pageviews and linkcount
+        # Computing relative measurements
         # "Relative" means "as a ratio to the highest rank".
         # The most viewed article has a relative pageview score of 1.00. Goes lower from there.
 
-        print("Computing relative pageviews and linkcount...")
+        print("Computing relative measurements...")
         pageviews_relative = {}
         linkcount_relative = {}
+        internalclout_relative = {}
 
         self.mostviews = pageviews[0][1]
         self.mostlinks = linkcount[0][1]
+        self.mostinternal = internalclout[0][1]
 
         for pair in pageviews:
             article = pair[0]
@@ -173,8 +197,13 @@ class PriorityPredictor:
             count = pair[1]
             linkcount_relative[article] = count / self.mostlinks
 
+        for pair in internalclout:
+            article = pair[0]
+            count = pair[1]
+            internalclout_relative[article] = count / self.mostinternal
+
         for article in self.articles:
-            weightedscore = (pageviews_relative[article] * 0.75) + (linkcount_relative[article] * 0.25)
+            weightedscore = (internalclout_relative[article] * 0.5) + (pageviews_relative[article] * 0.375) + (linkcount_relative[article] * 0.125)
             self.rank.append((article, weightedscore))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
@@ -223,7 +252,8 @@ class PriorityPredictor:
         else:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
-            pagescore = ((pageviews * 0.75) + (linkcount * 0.25)) / self.highestscore
+            internalclout = getinternalclout(self.wptools, [pagetitle])[0][1] / self.mostinternal
+            pagescore = ((internalclout * 0.5) + (pageviews * 0.375) + (linkcount * 0.125)) / self.highestscore
 
         if pagescore >= self.threshold_top:
             return "Top"
