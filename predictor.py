@@ -120,6 +120,9 @@ def getinternalclout(wptools, destination, articlebatch):
     for row in wptools.query('wiki', q.format(tuple(destination), tuple(articlebatch)), None):
         output.append((row[0].decode('utf-8'), log(row[1])))
 
+    if len(output) == 0:
+        output = [('', 0)]  # Return a consistent result even if there is nothing
+
     return output
 
 class QualityPredictor:
