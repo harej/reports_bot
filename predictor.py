@@ -104,16 +104,16 @@ def getlinkcount(wptools, package):
 
     return output
 
-def getinternalclout(wptools, destination):
+def getinternalclout(wptools, destination, articlebatch):
     '''
-    Gets a list of inbound links from self.articles for a list of articles
-    Takes list *destination* as input, returns list of tuples (article, log of internalclout)
+    Gets a list of inbound links from *articlebatch* to *destination*
+    Takes lists *articlebatch* and *destination* as input, returns list of tuples (article, log of internalclout)
     Input MUST be a list. If there is just one article, enter it as such: [article]
     '''
 
     output = []
     q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;"
-    for row in wptools.query('wiki', q.format(tuple(destination), tuple(self.articles)), None):
+    for row in wptools.query('wiki', q.format(tuple(destination), tuple(articlebatch)), None):
         output.append((row[0].decode('utf-8'), log(row[1])))
 
     return output
@@ -167,7 +167,7 @@ class PriorityPredictor:
         # Works amazingly well as a metric
 
         print("Measuring internal clout...")
-        internalclout = getinternalclout(self.wptools, self.articles)
+        internalclout = getinternalclout(self.wptools, self.articles, self.articles)
 
         # Sorting...
         pageviews = sorted(pageviews, key=operator.itemgetter(1), reverse=True)
@@ -252,7 +252,7 @@ class PriorityPredictor:
         else:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
-            internalclout = getinternalclout(self.wptools, [pagetitle])[0][1] / self.mostinternal
+            internalclout = getinternalclout(self.wptools, [pagetitle], self.articles)[0][1] / self.mostinternal
             pagescore = ((internalclout * 0.5) + (pageviews * 0.375) + (linkcount * 0.125)) / self.highestscore
 
         if pagescore >= self.threshold_top:
