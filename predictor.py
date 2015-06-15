@@ -17,7 +17,7 @@ from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
 
-def is_outlier(points, thresh=0.2):
+def is_outlier(points, thresh=2):
     """
     Returns a boolean array with True if points are outliers and False 
     otherwise.
@@ -259,9 +259,10 @@ class PriorityPredictor:
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
 
-        # Re-scaling scores, such that the highest ranked will always have a score of 1.00.
+        # Re-scaling scores, multiplying by 1000, truncating decimal point. This is to get rid of insignificant digits.
+        # The highest scored article will always have a score of 1000.
         self.highestscore = self.rank[0][1]
-        self.rank = [(item[0], item[1] / self.highestscore) for item in self.rank]
+        self.rank = [(item[0], int((item[1] / self.highestscore) * 1000)) for item in self.rank]
 
         # Defining unordered index of scores
         for item in self.rank:
