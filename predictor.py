@@ -12,8 +12,46 @@ import html
 import json
 import operator
 import os
+import numpy as np
 from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
+
+
+def is_outlier(points, thresh=2):
+    """
+    Returns a boolean array with True if points are outliers and False 
+    otherwise.
+    Parameters:
+    -----------
+        points : An numobservations by numdimensions array of observations
+        thresh : The modified z-score to use as a threshold. Observations with
+            a modified z-score (based on the median absolute deviation) greater
+            than this value will be classified as outliers.
+    Returns:
+    --------
+        mask : A numobservations-length boolean array.
+    References:
+    ----------
+        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and
+        Handle Outliers", The ASQC Basic References in Quality Control:
+        Statistical Techniques, Edward F. Mykytka, Ph.D., Editor. 
+    """
+
+    # Code generously stolen from Joe Kington and adapted for the PriorityPredictor's purposes
+    # Source: https://github.com/joferkington/oost_paper_code/blob/master/utilities.py
+    # License: https://github.com/joferkington/oost_paper_code/blob/master/LICENSE
+
+    points = np.array(points)  # Converting from list to numpy array
+    if len(points.shape) == 1:
+        points = points[:,None]
+    median = np.median(points, axis=0)
+    diff = np.sum((points - median)**2, axis=-1)
+    diff = np.sqrt(diff)
+    med_abs_deviation = np.median(diff)
+
+    modified_z_score = 0.6745 * diff / med_abs_deviation
+
+    return modified_z_score > thresh
 
 
 def getviewdump(wptools, proj, days=30):
@@ -231,31 +269,24 @@ class PriorityPredictor:
 
         # Calculating minimum scores
         # The idea is that there is a minimum score for something to be top, high, or mid-priority
-        # The script is fed the category name for the unknown-importance/unknown-priority category
-        # Based on this, derive category names for top/high/mid/low, add all the counts together...
-        # ...then calculate ratio for top/high/mid as a ratio of the total...
-        # ...multiply that ratio by the count of self.rank, convert to an integer
-        # ...and then threshold = self.rank[that integer][1]
-        # This gives us a general sense of what proportion of articles should be considered top/high/mid/low
-        # Far from perfect but it's a start.
 
         print("Calculating priority thresholds...")
-        prioritycount = {}
-
+        threshold_index = {}
         q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = "{0}";'
         for priority in ['Top-', 'High-', 'Mid-', 'Low-']:
             prioritycategory = priority + self.projectcat
-            prioritycount[priority] = self.wptools.query('wiki', q.format(prioritycategory), None)[0][0]
+            scorelist = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
 
-        total_assessed = sum([x for x in prioritycount.values()])
+            # Find the lowest score that isn't an outlier
+            outliertest = is_outlier(scorelist)
+            for index, value in enumerate(outliertest):
+                if value == False:
+                    threshold_index[priority] = index
+                    break
 
-        top_index = int((prioritycount['Top-'] / total_assessed) * len(self.articles) - 1)
-        high_index = top_index + int((prioritycount['High-'] / total_assessed) * len(self.articles) -1)
-        mid_index = high_index + int((prioritycount['Mid-'] / total_assessed) * len(self.articles) -1)
-
-        self.threshold_top = self.rank[top_index][1]
-        self.threshold_high = self.rank[high_index][1]
-        self.threshold_mid = self.rank[mid_index][1]
+        self.threshold_top = self.rank[threshold_index['Top-']][1]
+        self.threshold_high = self.rank[threshold_index['High-']][1]
+        self.threshold_mid = self.rank[threshold_index['Mid-']][1]
 
     def predictpage(self, pagetitle):
         # Pull pagescore if already defined
