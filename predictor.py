@@ -215,8 +215,9 @@ class PriorityPredictor:
             internalclout_relative[article] = count / self.mostinternal
 
         for article in self.articles:
-            weightedscore = (internalclout_relative[article] * self.weight_internalclout) + (pageviews_relative[article] * self.weight_pageviews) + (linkcount_relative[article] * self.weight_linkcount)
-            self.rank.append((article, weightedscore))
+            if article in internalclout_relative and article in pageviews_relative and article in linkcount_relative:
+                weightedscore = (internalclout_relative[article] * self.weight_internalclout) + (pageviews_relative[article] * self.weight_pageviews) + (linkcount_relative[article] * self.weight_linkcount)
+                self.rank.append((article, weightedscore))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
 
