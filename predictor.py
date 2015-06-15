@@ -272,7 +272,7 @@ class PriorityPredictor:
 
         print("Calculating priority thresholds...")
         threshold_index = {}
-        q = 'select count(*) from categorylinks where cl_type = "page" and cl_to = "{0}";'
+        q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
         for priority in ['Top-', 'High-', 'Mid-', 'Low-']:
             prioritycategory = priority + self.projectcat
             scorelist = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
