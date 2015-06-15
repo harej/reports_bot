@@ -271,9 +271,9 @@ class PriorityPredictor:
         # The idea is that there is a minimum score for something to be top, high, or mid-priority
 
         print("Calculating priority thresholds...")
-        threshold_index = {}
+        self.threshold = {}
         q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
-        for priority in ['Top-', 'High-', 'Mid-', 'Low-']:
+        for priority in ['Top-', 'High-', 'Mid-']:
             prioritycategory = priority + self.projectcat
             scorelist = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
 
@@ -281,12 +281,9 @@ class PriorityPredictor:
             outliertest = is_outlier(scorelist)
             for index, value in enumerate(outliertest):
                 if value == False:
-                    threshold_index[priority] = index
+                    self.threshold[priority] = scorelist[index]
                     break
 
-        self.threshold_top = self.rank[threshold_index['Top-']][1]
-        self.threshold_high = self.rank[threshold_index['High-']][1]
-        self.threshold_mid = self.rank[threshold_index['Mid-']][1]
 
     def predictpage(self, pagetitle):
         # Pull pagescore if already defined
@@ -299,17 +296,18 @@ class PriorityPredictor:
             internalclout = getinternalclout(self.wptools, [pagetitle], self.articles)[0][1] / self.mostinternal
             pagescore = ((internalclout * self.weight_internalclout) + (pageviews * self.weight_pageviews) + (linkcount * self.weight_linkcount)) / self.highestscore
 
-        if pagescore >= self.threshold_top:
+        if pagescore >= self.threshold['Top-']:
             return "Top"
 
-        if pagescore >= self.threshold_high:
+        if pagescore >= self.threshold['High-']:
             return "High"
 
-        if pagescore >= self.threshold_mid:
+        if pagescore >= self.threshold['Mid-']:
             return "Mid"
 
         # If none of these...
         return "Low"
+
 
     def audit(self):
         print("Auditing " + self.project)
