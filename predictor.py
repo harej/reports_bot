@@ -233,9 +233,9 @@ class PriorityPredictor:
         self.mostinternal = internalclout[0][1]
 
         # Weights assigned to different factors. They need to add up to 1.0.
-        self.weight_internalclout = 0.70
-        self.weight_pageviews = 0.25
-        self.weight_linkcount = 0.05
+        self.weight_internalclout = 1
+        self.weight_pageviews = 0
+        self.weight_linkcount = 0
 
         for pair in pageviews:
             article = pair[0]
