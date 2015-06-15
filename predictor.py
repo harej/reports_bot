@@ -17,7 +17,7 @@ from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
 
 
-def is_outlier(points, thresh=3):
+def is_outlier(points, thresh=0.2):
     """
     Returns a boolean array with True if points are outliers and False 
     otherwise.
