@@ -200,7 +200,12 @@ def getsopv(wptools, dump, articles):
             else:
                 stats[to_title] = getpageviews(dump, from_title)  # create new record
 
-    return [(x, log(stats[x] + 1)) for x in stats.keys()]
+    output = [(x, log(stats[x] + 1)) for x in stats.keys()]
+
+    if len(output) == 0:
+        output = [('', 0)]  # Return a consistent result even if there is nothing
+
+    return output
 
 
 class QualityPredictor:
@@ -311,7 +316,7 @@ class PriorityPredictor:
             sopv_relative[article] = count / self.mostsopv
 
         for article in self.articles:
-            if article in internalclout_relative and article in pageviews_relative and article in linkcount_relative:
+            if article in internalclout_relative and article in pageviews_relative and article in linkcount_relative and article in sopv_relative:
                 weightedscore = (internalclout_relative[article] * self.weight_internalclout) + (pageviews_relative[article] * self.weight_pageviews) + (linkcount_relative[article] * self.weight_linkcount) + (sopv_relative[article] * self.weight_sopv)
                 self.rank.append((article, weightedscore))
 
