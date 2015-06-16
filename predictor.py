@@ -200,6 +200,10 @@ def getsopv(wptools, dump, articles):
             else:
                 stats[to_title] = getpageviews(dump, from_title)  # create new record
 
+    for article in articles:
+        if article not in stats:
+            stats[article] = 0  # womp
+
     output = [(x, log(stats[x] + 1)) for x in stats.keys()]
 
     if len(output) == 0:
