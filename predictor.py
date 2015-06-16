@@ -167,7 +167,7 @@ def getinternalclout(wptools, destination, articlebatch):
                 else:
                     stats[row[0].decode('utf-8')] = row[1]  # create new record
 
-    output = [(x, log(stats[x]) for x in stats.keys()]  # I love list comprehensions
+    output = [(x, log(stats[x])) for x in stats.keys()]  # I love list comprehensions
 
     if len(output) == 0:
         output = [('', 0)]  # Return a consistent result even if there is nothing
