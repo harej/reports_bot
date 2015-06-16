@@ -278,58 +278,46 @@ class PriorityPredictor:
         internalclout = sorted(internalclout, key=operator.itemgetter(1), reverse=True)
         sopv = sorted(sopv, key=operator.itemgetter(1), reverse=True)
 
-        # Computing relative measurements
-        # "Relative" means "as a ratio to the highest rank".
-        # The most viewed article has a relative pageview score of 1.00. Goes lower from there.
+        # Converting to dictionary to weight factors and add them all together
 
-        print("Computing relative measurements...")
-        pageviews_relative = {}
-        linkcount_relative = {}
-        internalclout_relative = {}
-        sopv_relative = {}
+        print("Prepared weighted scores...")
+        pageviews_weighted = {}
+        linkcount_weighted = {}
+        internalclout_weighted = {}
+        sopv_weighted = {}
 
-        self.mostviews = pageviews[0][1]
-        self.mostlinks = linkcount[0][1]
-        self.mostinternal = internalclout[0][1]
-        self.mostsopv = sopv[0][1]
-
-        # Weights assigned to different factors. They need to add up to 1.0.
-        self.weight_internalclout = 0.3
-        self.weight_pageviews = 0.2
-        self.weight_linkcount = 0.1
-        self.weight_sopv = 0.4
+        # Weights assigned to different factors.
+        self.weight_pageviews = 0.15
+        self.weight_linkcount = 0.10
+        self.weight_internalclout = 0.50
+        self.weight_sopv = 0.25
 
         for pair in pageviews:
             article = pair[0]
             count = pair[1]
-            pageviews_relative[article] = count / self.mostviews
+            pageviews_weighted[article] = count * self.weight_pageviews
 
         for pair in linkcount:
             article = pair[0]
             count = pair[1]
-            linkcount_relative[article] = count / self.mostlinks
+            linkcount_weighted[article] = count * self.weight_linkcount
 
         for pair in internalclout:
             article = pair[0]
             count = pair[1]
-            internalclout_relative[article] = count / self.mostinternal
+            internalclout_weighted[article] = count * self.weight_internalclout
 
         for pair in sopv:
             article = pair[0]
             count = pair[1]
-            sopv_relative[article] = count / self.mostsopv
+            sopv_weighted[article] = count * self.weight_sopv
 
         for article in self.articles:
-            if article in internalclout_relative and article in pageviews_relative and article in linkcount_relative and article in sopv_relative:
-                weightedscore = (internalclout_relative[article] * self.weight_internalclout) + (pageviews_relative[article] * self.weight_pageviews) + (linkcount_relative[article] * self.weight_linkcount) + (sopv_relative[article] * self.weight_sopv)
+            if article in internalclout_weighted and article in pageviews_weighted and article in linkcount_weighted and article in sopv_weighted:
+                weightedscore = internalclout_weighted[article] + pageviews_weighted[article] + linkcount_weighted[article] + sopv_weighted[article]
                 self.rank.append((article, weightedscore))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
-
-        # Re-scaling scores, multiplying by 1000, truncating decimal point. This is to get rid of insignificant digits.
-        # The highest scored article will always have a score of 1000.
-        self.highestscore = self.rank[0][1]
-        self.rank = [(item[0], int((item[1] / self.highestscore) * 1000)) for item in self.rank]
 
         # Defining unordered index of scores
         for item in self.rank:
