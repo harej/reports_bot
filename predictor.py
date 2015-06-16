@@ -287,10 +287,10 @@ class PriorityPredictor:
         sopv_weighted = {}
 
         # Weights assigned to different factors.
-        self.weight_pageviews = 0.2
-        self.weight_linkcount = 0.1
-        self.weight_internalclout = 0.3
-        self.weight_sopv = 0.4
+        self.weight_pageviews = 0.0
+        self.weight_linkcount = 0.0
+        self.weight_internalclout = 0.4
+        self.weight_sopv = 0.6
 
         for pair in pageviews:
             article = pair[0]
