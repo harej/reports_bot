@@ -336,10 +336,10 @@ class PriorityPredictor:
             self.scorelist[priority] = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
 
             # Find the lowest score that isn't an outlier
-            outliertest = is_outlier(scorelist)
+            outliertest = is_outlier(self.scorelist[priority])
             for index, value in enumerate(outliertest):
                 if value == False:
-                    self.threshold[priority] = scorelist[index]
+                    self.threshold[priority] = self.scorelist[priority][index]
                     break
 
 
