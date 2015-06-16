@@ -287,10 +287,10 @@ class PriorityPredictor:
         sopv_weighted = {}
 
         # Weights assigned to different factors.
-        self.weight_pageviews = 1
-        self.weight_linkcount = 1
-        self.weight_internalclout = 1
-        self.weight_sopv = 1
+        self.weight_pageviews = 0.2
+        self.weight_linkcount = 0.1
+        self.weight_internalclout = 0.3
+        self.weight_sopv = 0.4
 
         for pair in pageviews:
             article = pair[0]
@@ -315,7 +315,7 @@ class PriorityPredictor:
         for article in self.articles:
             if article in internalclout_weighted and article in pageviews_weighted and article in linkcount_weighted and article in sopv_weighted:
                 weightedscore = internalclout_weighted[article] + pageviews_weighted[article] + linkcount_weighted[article] + sopv_weighted[article]
-                weightedscore = int(weightedscore * 1000)
+                weightedscore = int(weightedscore * 100)
                 self.rank.append((article, weightedscore))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
@@ -353,7 +353,7 @@ class PriorityPredictor:
             internalclout = getinternalclout(self.wptools, [pagetitle], self.articles)[0][1]
             sopv = getsopv(self.wptools, self.dump, [pagetitle])[0][1]
             pagescore = ((internalclout * self.weight_internalclout) + (pageviews * self.weight_pageviews) + (linkcount * self.weight_linkcount) + (sopv * self.weight_sopv))
-            pagescore = int(pagescore * 1000)
+            pagescore = int(pagescore * 100)
 
         if pagescore >= self.threshold['Top-']:
             return "Top"
