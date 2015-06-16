@@ -185,7 +185,7 @@ def getsopv(wptools, dump, articles):
 
     stats = {}
 
-    packages = [articles[i:i+10000] for i in range(0, len(packages), 10000)]
+    packages = [articles[i:i+10000] for i in range(0, len(articles), 10000)]
     for package in packages:
         if len(articles) > 1:
             q = "select pl_title, page_title from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title in {0};".format(tuple(package))
