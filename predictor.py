@@ -149,24 +149,37 @@ def getinternalclout(wptools, destination, articlebatch):
     Input MUST be a list. If there is just one article, enter it as such: [article]
     '''
 
-    if len(destination) > 1:
-        q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;".format(tuple(destination), tuple(articlebatch))
-    else:
-        q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'.format(destination[0], tuple(articlebatch))
+    destination_packages = [destination[i:i+10000] for i in range(0, len(destination), 10000]
+    articlebatch_packages = [articlebatch[i:i+10000] for i in range(0, len(articlebatch), 10000]
 
-    output = []
-    for row in wptools.query('wiki', q, None):
-        output.append((row[0].decode('utf-8'), log(row[1])))
+    stats = {}  # destination --> count of links from articlebatch
+
+    for destination_package in destination_package:
+        for articlebatch_package in articlebatch_packages:
+            if len(destination_package) > 1:
+                q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;".format(tuple(destination_package), tuple(articlebatch_package))
+            else:
+                q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'.format(destination_package[0], tuple(articlebatch_package))
+        
+            for row in wptools.query('wiki', q, None):
+                if row[0].decode('utf-8') in stats:
+                    stats[row[0].decode('utf-8')] += row[1]  # append to existing record
+                else:
+                    stats[row[0].decode('utf-8')] = row[1]  # create new record
+
+    output = [(x, log(stats[x]) for x in stats.keys()]  # I love list comprehensions
 
     if len(output) == 0:
         output = [('', 0)]  # Return a consistent result even if there is nothing
 
     return output
 
+
 class QualityPredictor:
     def qualitypredictor(self, pagetitle):
         print("Argh! Not ready yet!")
         # chat it up with ORES
+
 
 class PriorityPredictor:
     def __init__(self, viewdump=None):
@@ -178,6 +191,7 @@ class PriorityPredictor:
         else:
             with open(viewdump, 'r') as f:
                 self.dump = json.load(f)  # Load pageviews from a dumped JSON file
+
 
     def loadproject(self, wikiproject, unknownpriority):
         self.projectcat = unknownpriority.replace("Unknown-", "")
