@@ -149,8 +149,8 @@ def getinternalclout(wptools, destination, articlebatch):
     Input MUST be a list. If there is just one article, enter it as such: [article]
     '''
 
-    destination_packages = [destination[i:i+10000] for i in range(0, len(destination), 10000]
-    articlebatch_packages = [articlebatch[i:i+10000] for i in range(0, len(articlebatch), 10000]
+    destination_packages = [destination[i:i+10000] for i in range(0, len(destination), 10000)]
+    articlebatch_packages = [articlebatch[i:i+10000] for i in range(0, len(articlebatch), 10000)]
 
     stats = {}  # destination --> count of links from articlebatch
 
