@@ -175,6 +175,34 @@ def getinternalclout(wptools, destination, articlebatch):
     return output
 
 
+def getsopv(wptools, dump, articles):
+    '''
+    Get "second-order page views"
+    SOPV refers to the page views not of the article but of pages linking *to* the article
+    Takes list *articles* title as input; returns list of tuples: (page title, log of SOPVs)
+    Input MUST be a list. If there is just one article, enter it as such: [article]
+    '''
+
+    stats = {}
+
+    packages = [articles[i:i+10000] for i in range(0, len(packages), 10000)]
+    for package in packages:
+        if len(articles) > 1:
+            q = "select pl_title, page_title from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title in {0};".format(tuple(package))
+        else:
+            q = 'select pl_title, page_title from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title = "{0}";'.format(package[0])
+    
+        for row in wptools.query('wiki', q, None):
+            to_title = row[0].decode('utf-8')
+            from_title = row[1].decode('utf-8')
+            if to_title in stats:
+                stats[to_title] += getpageviews(dump, from_title)  # append to existing record
+            else:
+                stats[to_title] = getpageviews(dump, from_title)  # create new record
+
+    return [(x, log(stats[x])) for x in stats.keys()]
+
+
 class QualityPredictor:
     def qualitypredictor(self, pagetitle):
         print("Argh! Not ready yet!")
@@ -228,10 +256,18 @@ class PriorityPredictor:
         print("Measuring internal clout...")
         internalclout = getinternalclout(self.wptools, self.articles, self.articles)
 
+
+        # SOPV, Second-Order Page Views
+        # Calculates the page views of the articles linking to the article being assessed
+
+        print("Measuring second-order page views...")
+        sopv = getsopv(self.wptools, self.dump, self.articles)
+
         # Sorting...
         pageviews = sorted(pageviews, key=operator.itemgetter(1), reverse=True)
         linkcount = sorted(linkcount, key=operator.itemgetter(1), reverse=True)
         internalclout = sorted(internalclout, key=operator.itemgetter(1), reverse=True)
+        sopv = sorted(sopv, key=operator.itemgetter(1), reverse=True)
 
         # Computing relative measurements
         # "Relative" means "as a ratio to the highest rank".
@@ -241,15 +277,18 @@ class PriorityPredictor:
         pageviews_relative = {}
         linkcount_relative = {}
         internalclout_relative = {}
+        sopv_relative = {}
 
         self.mostviews = pageviews[0][1]
         self.mostlinks = linkcount[0][1]
         self.mostinternal = internalclout[0][1]
+        self.mostsopv = sopv[0][1]
 
         # Weights assigned to different factors. They need to add up to 1.0.
         self.weight_internalclout = 0.3
-        self.weight_pageviews = 0.6
+        self.weight_pageviews = 0.2
         self.weight_linkcount = 0.1
+        self.weight_sopv = 0.4
 
         for pair in pageviews:
             article = pair[0]
@@ -266,9 +305,14 @@ class PriorityPredictor:
             count = pair[1]
             internalclout_relative[article] = count / self.mostinternal
 
+        for pair in sopv:
+            article = pair[0]
+            count = pair[1]
+            sopv_relative[article] = count / self.mostsopv
+
         for article in self.articles:
             if article in internalclout_relative and article in pageviews_relative and article in linkcount_relative:
-                weightedscore = (internalclout_relative[article] * self.weight_internalclout) + (pageviews_relative[article] * self.weight_pageviews) + (linkcount_relative[article] * self.weight_linkcount)
+                weightedscore = (internalclout_relative[article] * self.weight_internalclout) + (pageviews_relative[article] * self.weight_pageviews) + (linkcount_relative[article] * self.weight_linkcount) + (sopv_relative[article] * self.weight_sopv)
                 self.rank.append((article, weightedscore))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
@@ -309,7 +353,8 @@ class PriorityPredictor:
             pageviews = log(getpageviews(self.dump, pagetitle) + 1) / self.mostviews
             linkcount = getlinkcount(self.wptools, [pagetitle])[0][1] / self.mostlinks
             internalclout = getinternalclout(self.wptools, [pagetitle], self.articles)[0][1] / self.mostinternal
-            pagescore = ((internalclout * self.weight_internalclout) + (pageviews * self.weight_pageviews) + (linkcount * self.weight_linkcount)) / self.highestscore
+            sopv = getsopv(self.wptools, self.dump, [pagetitle])[0][1] / self.mostsopv
+            pagescore = ((internalclout * self.weight_internalclout) + (pageviews * self.weight_pageviews) + (linkcount * self.weight_linkcount) + (sopv * self.weight_sopv)) / self.highestscore
 
         if pagescore >= self.threshold['Top-']:
             return "Top"
