@@ -329,10 +329,11 @@ class PriorityPredictor:
 
         print("Calculating priority thresholds...")
         self.threshold = {}
+        self.scorelist = {}
         q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
         for priority in ['Top-', 'High-', 'Mid-']:
             prioritycategory = priority + self.projectcat
-            scorelist = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
+            self.scorelist[priority] = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
 
             # Find the lowest score that isn't an outlier
             outliertest = is_outlier(scorelist)
