@@ -167,7 +167,7 @@ def getinternalclout(wptools, destination, articlebatch):
                 else:
                     stats[row[0].decode('utf-8')] = row[1]  # create new record
 
-    output = [(x, log(stats[x])) for x in stats.keys()]  # I love list comprehensions
+    output = [(x, log(stats[x] + 1)) for x in stats.keys()]  # I love list comprehensions
 
     if len(output) == 0:
         output = [('', 0)]  # Return a consistent result even if there is nothing
@@ -200,7 +200,7 @@ def getsopv(wptools, dump, articles):
             else:
                 stats[to_title] = getpageviews(dump, from_title)  # create new record
 
-    return [(x, log(stats[x])) for x in stats.keys()]
+    return [(x, log(stats[x] + 1)) for x in stats.keys()]
 
 
 class QualityPredictor:
