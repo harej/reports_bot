@@ -150,12 +150,12 @@ def getinternalclout(wptools, destination, articlebatch):
     '''
 
     if len(destination) > 1:
-        q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;"
+        q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;".format(tuple(destination), tuple(articlebatch))
     else:
-        q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'
+        q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'.format(destination[0], tuple(articlebatch))
 
     output = []
-    for row in wptools.query('wiki', q.format(tuple(destination), tuple(articlebatch)), None):
+    for row in wptools.query('wiki', q, None):
         output.append((row[0].decode('utf-8'), log(row[1])))
 
     if len(output) == 0:
