@@ -157,9 +157,9 @@ def getinternalclout(wptools, destination, articlebatch):
     for destination_package in destination_packages:
         for articlebatch_package in articlebatch_packages:
             if len(destination_package) > 1:
-                q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;".format(tuple(destination_package), tuple(articlebatch_package))
+                q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;".format(tuple(destination_package), tuple(articlebatch_package))
             else:
-                q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'.format(destination_package[0], tuple(articlebatch_package))
+                q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'.format(destination_package[0], tuple(articlebatch_package))
         
             for row in wptools.query('wiki', q, None):
                 if row[0].decode('utf-8') in stats:
