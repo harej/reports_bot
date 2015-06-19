@@ -6,6 +6,7 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 
+import datetime
 import operator
 import pywikibot
 import requests
@@ -22,6 +23,7 @@ class WikiProjectWatchers:
         for row in wptools.query('index', 'select distinct pi_project from projectindex;', None):
             projects.append(row[0])
 
+        runtime = datetime.datetime.utcnow().strftime('%H:%M, %d %B %Y (UTC)')
         q = ('select distinct page.page_title from page '
              'join categorylinks on page.page_id = categorylinks.cl_from '
              'left join redirect on page.page_id = redirect.rd_from '
@@ -59,7 +61,7 @@ class WikiProjectWatchers:
 
         report = sorted(report.items(), key=operator.itemgetter(1), reverse=True)
 
-        contents = 'List of WikiProjects by number of watchers of its main page and talk page. A WikiProject not appearing on this list has fewer than 30 watchers.'
+        contents = 'List of WikiProjects by number of watchers of its main page and talk page. A WikiProject not appearing on this list has fewer than 30 watchers. Data as of <onlyinclude>' + runtime + '</onlyinclude>'
         contents += '\n\n{| class="wikitable sortable plainlinks"\n|-\n! No.\n! WikiProject\n! Watchers\n'
 
         counter = 0
