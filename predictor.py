@@ -287,10 +287,10 @@ class PriorityPredictor:
         sopv_weighted = {}
 
         # Weights assigned to different factors.
-        self.weight_pageviews = 0.0
-        self.weight_linkcount = 0.0
-        self.weight_internalclout = 0.4
-        self.weight_sopv = 0.6
+        self.weight_pageviews = 0.25
+        self.weight_linkcount = 0.25
+        self.weight_internalclout = 0.25
+        self.weight_sopv = 0.25
 
         for pair in pageviews:
             article = pair[0]
@@ -333,13 +333,13 @@ class PriorityPredictor:
         q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
         for priority in ['Top-', 'High-', 'Mid-']:
             prioritycategory = priority + self.projectcat
-            self.scorelist[priority] = [self.score[row[0].decode('utf-8')] for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
+            self.scorelist[priority] = [(row[0].decode('utf-8'), self.score[row[0].decode('utf-8')]) for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
 
             # Find the lowest score that isn't an outlier
-            outliertest = is_outlier(self.scorelist[priority])
+            outliertest = is_outlier([x[1] for x in self.scorelist[priority]])
             for index, value in enumerate(outliertest):
                 if value == False:
-                    self.threshold[priority] = self.scorelist[priority][index]
+                    self.threshold[priority] = self.scorelist[priority][index][1]
                     break
 
 
