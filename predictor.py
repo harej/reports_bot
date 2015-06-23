@@ -316,7 +316,7 @@ class PriorityPredictor:
             if article in internalclout_weighted and article in pageviews_weighted and article in linkcount_weighted and article in sopv_weighted:
                 weightedscore = internalclout_weighted[article] + pageviews_weighted[article] + linkcount_weighted[article] + sopv_weighted[article]
                 weightedscore = int(weightedscore * 100)
-                scorearray = [[internalclout_weighted[article], pageviews_weighted[article], linkcount_weighted[article], sopv_weighted[article]]
+                scorearray = [internalclout_weighted[article], pageviews_weighted[article], linkcount_weighted[article], sopv_weighted[article]]
                 self.rank.append((article, weightedscore, scorearray))
 
         self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
