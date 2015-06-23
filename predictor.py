@@ -233,7 +233,6 @@ class PriorityPredictor:
     def loadproject(self, wikiproject, unknownpriority):
         self.projectcat = unknownpriority.replace("Unknown-", "")
         self.project = wikiproject
-        self.rank = []  # Sorted list of tuples; allows for ranking
         self.score = {}  # Unsorted dictionary "article: value"; allows for easily looking up scores later
         # We need all the articles for a WikiProject, since the system works by comparing stats for an article to the others.
         print("Preparing Priority Predictor for: " + self.project)
@@ -314,16 +313,8 @@ class PriorityPredictor:
 
         for article in self.articles:
             if article in internalclout_weighted and article in pageviews_weighted and article in linkcount_weighted and article in sopv_weighted:
-                weightedscore = internalclout_weighted[article] + pageviews_weighted[article] + linkcount_weighted[article] + sopv_weighted[article]
-                weightedscore = int(weightedscore * 100)
                 scorearray = [internalclout_weighted[article], pageviews_weighted[article], linkcount_weighted[article], sopv_weighted[article]]
-                self.rank.append((article, weightedscore, scorearray))
-
-        self.rank = sorted(self.rank, key=operator.itemgetter(1), reverse=True)
-
-        # Defining unordered index of scores
-        for item in self.rank:
-            self.score[item[0]] = item[1]
+                self.score[article] = scorearray
 
         # Calculating minimum scores
         # The idea is that there is a minimum score for something to be top, high, or mid-priority
@@ -335,56 +326,3 @@ class PriorityPredictor:
         for priority in ['Top-', 'High-', 'Mid-', 'Low-']:
             prioritycategory = priority + self.projectcat
             self.scorelist[priority] = [(row[0].decode('utf-8'), self.score[row[0].decode('utf-8')]) for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
-
-            # Find the lowest score that isn't an outlier
-            outliertest = is_outlier([x[1] for x in self.scorelist[priority]])
-            for index, value in enumerate(outliertest):
-                if value == False:
-                    self.threshold[priority] = self.scorelist[priority][index][1]
-                    break
-
-
-    def predictpage(self, pagetitle):
-        # Pull pagescore if already defined
-        # Otherwise, compute it "de novo"
-        if pagetitle in self.articles:
-            pagescore = self.score[pagetitle]
-        else:
-            pageviews = log(getpageviews(self.dump, pagetitle) + 1)
-            linkcount = getlinkcount(self.wptools, [pagetitle])[0][1]
-            internalclout = getinternalclout(self.wptools, [pagetitle], self.articles)[0][1]
-            sopv = getsopv(self.wptools, self.dump, [pagetitle])[0][1]
-            pagescore = ((internalclout * self.weight_internalclout) + (pageviews * self.weight_pageviews) + (linkcount * self.weight_linkcount) + (sopv * self.weight_sopv))
-            pagescore = int(pagescore * 100)
-
-        if pagescore >= self.threshold['Top-']:
-            return "Top"
-
-        if pagescore >= self.threshold['High-']:
-            return "High"
-
-        if pagescore >= self.threshold['Mid-']:
-            return "Mid"
-
-        # If none of these...
-        return "Low"
-
-
-    def audit(self):
-        print("Auditing " + self.project)
-
-        for prefix in ['Top', 'High', 'Mid', 'Low']:
-            category = prefix + "-" + self.projectcat
-            matrix = {'Top': 0, 'High': 0, 'Mid': 0, 'Low': 0}
-
-            q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
-            for row in self.wptools.query('wiki', q.format(category), None):
-                title = row[0].decode('utf-8')
-                matrix[self.predictpage(title)] += 1
-
-            total_assessed = sum([x for x in matrix.values()])
-
-            print("Human assessed " + prefix + "-priority:")
-            for item in matrix.keys():
-                print("Machine assessed " + item + "-priority: " + str(matrix[item]) + " (" + str((matrix[item] / total_assessed) * 100) + "%)")
-            print("Total: " + str(total_assessed) + " articles")
