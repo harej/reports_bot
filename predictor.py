@@ -297,5 +297,5 @@ class PriorityPredictor:
 
         model = OneVsRestClassifier(LinearSVC(random_state=0)).fit(X, y)
 
-        print(list(model.predict(X))
+        print(list(model.predict(X)))
         print(model.score(X, y))
