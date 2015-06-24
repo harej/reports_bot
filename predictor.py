@@ -13,45 +13,10 @@ import json
 import operator
 import os
 import numpy as np
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import LinearSVC
 from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 from project_index import WikiProjectTools
-
-
-def is_outlier(points, thresh=1):
-    """
-    Returns a boolean array with True if points are outliers and False 
-    otherwise.
-    Parameters:
-    -----------
-        points : An numobservations by numdimensions array of observations
-        thresh : The modified z-score to use as a threshold. Observations with
-            a modified z-score (based on the median absolute deviation) greater
-            than this value will be classified as outliers.
-    Returns:
-    --------
-        mask : A numobservations-length boolean array.
-    References:
-    ----------
-        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and
-        Handle Outliers", The ASQC Basic References in Quality Control:
-        Statistical Techniques, Edward F. Mykytka, Ph.D., Editor. 
-    """
-
-    # Code generously stolen from Joe Kington and adapted for the PriorityPredictor's purposes
-    # Source: https://github.com/joferkington/oost_paper_code/blob/master/utilities.py
-    # License: https://github.com/joferkington/oost_paper_code/blob/master/LICENSE
-
-    points = np.array(points)  # Converting from list to numpy array
-    if len(points.shape) == 1:
-        points = points[:,None]
-    median = np.median(points, axis=0)
-    diff = np.sum((points - median)**2, axis=-1)
-    diff = np.sqrt(diff)
-    med_abs_deviation = np.median(diff)
-
-    modified_z_score = 0.6745 * diff / med_abs_deviation
-
-    return modified_z_score > thresh
 
 
 def getviewdump(wptools, proj, days=30):
@@ -286,10 +251,10 @@ class PriorityPredictor:
         sopv_weighted = {}
 
         # Weights assigned to different factors.
-        self.weight_pageviews = 0.25
-        self.weight_linkcount = 0.25
-        self.weight_internalclout = 0.25
-        self.weight_sopv = 0.25
+        self.weight_pageviews = 1
+        self.weight_linkcount = 1
+        self.weight_internalclout = 1
+        self.weight_sopv = 1
 
         for pair in pageviews:
             article = pair[0]
@@ -316,13 +281,21 @@ class PriorityPredictor:
                 scorearray = [internalclout_weighted[article], pageviews_weighted[article], linkcount_weighted[article], sopv_weighted[article]]
                 self.score[article] = scorearray
 
-        # Calculating minimum scores
-        # The idea is that there is a minimum score for something to be top, high, or mid-priority
+        # Multiclass classification
 
-        print("Calculating priority thresholds...")
+        print("Making calculations...")
         self.threshold = {}
         self.scorelist = {}
         q = 'select page_title from categorylinks join page on cl_from = page_id where cl_type = "page" and cl_to = "{0}";'
         for priority in ['Top-', 'High-', 'Mid-', 'Low-']:
             prioritycategory = priority + self.projectcat
             self.scorelist[priority] = [(row[0].decode('utf-8'), self.score[row[0].decode('utf-8')]) for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
+
+        X = np.array([(x[1]) for x in p.scorelist['Top-']] + [(x[1]) for x in p.scorelist['High-']] + [(x[1]) for x in p.scorelist['Mid-']] + [(x[1]) for x in p.scorelist['Low-']])
+
+        y = np.array([0 for x in p.scorelist['Top-']] + [1 for x in p.scorelist['High-']] + [2 for x in p.scorelist['Mid-']] + [3 for x in p.scorelist['Low-']])
+
+        model = OneVsRestClassifier(LinearSVC(random_state=0)).fit(X, y)
+
+        print(list(model.predict(X))
+        print(model.score(X, y))
