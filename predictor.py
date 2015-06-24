@@ -278,7 +278,7 @@ class PriorityPredictor:
 
         for article in self.articles:
             if article in internalclout_weighted and article in pageviews_weighted and article in linkcount_weighted and article in sopv_weighted:
-                scorearray = [internalclout_weighted[article], pageviews_weighted[article], linkcount_weighted[article], sopv_weighted[article]]
+                scorearray = [internalclout_weighted[article], sopv_weighted[article]]
                 self.score[article] = scorearray
 
         # Multiclass classification
