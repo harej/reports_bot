@@ -291,9 +291,9 @@ class PriorityPredictor:
             prioritycategory = priority + self.projectcat
             self.scorelist[priority] = [(row[0].decode('utf-8'), self.score[row[0].decode('utf-8')]) for row in self.wptools.query('wiki', q.format(prioritycategory), None) if row[0].decode('utf-8') in self.score]
 
-        X = np.array([(x[1]) for x in p.scorelist['Top-']] + [(x[1]) for x in p.scorelist['High-']] + [(x[1]) for x in p.scorelist['Mid-']] + [(x[1]) for x in p.scorelist['Low-']])
+        X = np.array([(x[1]) for x in self.scorelist['Top-']] + [(x[1]) for x in self.scorelist['High-']] + [(x[1]) for x in self.scorelist['Mid-']] + [(x[1]) for x in self.scorelist['Low-']])
 
-        y = np.array([0 for x in p.scorelist['Top-']] + [1 for x in p.scorelist['High-']] + [2 for x in p.scorelist['Mid-']] + [3 for x in p.scorelist['Low-']])
+        y = np.array([0 for x in self.scorelist['Top-']] + [1 for x in self.scorelist['High-']] + [2 for x in self.scorelist['Mid-']] + [3 for x in self.scorelist['Low-']])
 
         model = OneVsRestClassifier(LinearSVC(random_state=0)).fit(X, y)
 
