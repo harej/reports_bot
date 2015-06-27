@@ -14,11 +14,13 @@ class WikiProjectTools:
     def query(self, switch, sqlquery, values):
         """Carries out MySQL queries"""
         if switch == 'wiki':  # Queries to the English Wikipedia database
-            conn = pymysql.connect(host='enwiki.labsdb', port=3306, db='enwiki_p', read_default_file='~/.my.cnf', charset='utf8')
+            host, db = 'enwiki.labsdb', 'enwiki_p'
         elif switch == 'index':  # Queries to our article-WikiProject pair index
-            conn = pymysql.connect(host='tools-db', port=3306, db='s52475__wpx', read_default_file='~/.my.cnf', charset='utf8')
+            host, db = 'tools-db', 's52475__wpx'
         else:
-            raise
+            raise ValueError
+
+        conn = pymysql.connect(host=host, port=3306, db=db, read_default_file='~/.my.cnf', charset='utf8')
         cur = conn.cursor()
         cur.execute(sqlquery, values)
         data = []
