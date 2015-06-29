@@ -22,7 +22,7 @@ class WikiProjectNotifications:
              'n_content TEXT character set utf8 collate utf8_unicode_ci, '
              'primary key (n_id)) '
              'engine=innodb character set=utf8;')
-        self.wptools.query('index', q, None)
+        #self.wptools.query('index', q, None)
         self.bot = pywikibot.Site('en', 'wikipedia')
 
         # Recognized notification variants
@@ -93,7 +93,7 @@ class WikiProjectNotifications:
         '''
 
         subscribers = self.findsubscribers()
-        reports = {}  # a dictionary of dictionaries. e.g. {'WikiProject_Biology': {'newmembers': blahblahreport, 'newdiscussions': blahblahreport}}
+        reports = {}  # a dictionary of dictionaries. e.g. {'WikiProject_Biology': {'newmember': blahblahreport, 'newdiscussion': blahblahreport}}
     
         # Take database, turn into Python stuff
         id_to_delete = []
@@ -110,6 +110,8 @@ class WikiProjectNotifications:
             # Appending content item to the report accordingly
             reports[wikiproject][variant] += content + '\n'
     
+        print(reports)  # debug
+
         # Appending each subscriber name to the report to tag them
         # And then saving report
         for wikiproject in subscribers:
@@ -130,7 +132,7 @@ class WikiProjectNotifications:
                 page.save("New notification", minor=False, async=True)
     
         # Deleting old records now that notifications have been sent out
-        self.wptools.query('index', 'delete from notifications where n_id in {0};'.format(tuple(n_id)), None)
+        self.wptools.query('index', 'delete from notifications where n_id in {0};'.format(tuple(id_to_delete)), None)
 
 
 if __name__ == "__main__":
