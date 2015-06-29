@@ -80,7 +80,7 @@ class WikiProjectNotifications:
                 output[wikiproject] = {key:[] for key in self.recognizedvariants.keys()}
 
             for key, param in self.recognizedvariants.items():
-                if config.get(param).value in [1, '1']:  # Can't remember if mwparserfromhell treats everything like a string or...
+                if param + '=1' in config.params:  # Can't remember if mwparserfromhell treats everything like a string or...
                     output[wikiproject][key].append(username)
 
         return output
