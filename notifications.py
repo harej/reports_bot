@@ -41,9 +41,9 @@ class WikiProjectNotifications:
 
 
     def post(self, project, variant, content):
-    '''
-    Adds an item to the WikiProject Notification Center, to be included in the next update
-    '''
+        '''
+        Adds an item to the WikiProject Notification Center, to be included in the next update
+        '''
 
         if variant in self.recognizedvariants:
             q = 'insert into notifications (n_project, n_variant, n_content) values ("{0}", "{1}", "{2}");'
@@ -54,9 +54,9 @@ class WikiProjectNotifications:
 
 
     def findsubscribers(self):
-    '''
-    Generates a dictionary of WikiProjects with notification centers and corresponding report subscribers
-    '''
+        '''
+        Generates a dictionary of WikiProjects with notification centers and corresponding report subscribers
+        '''
 
         q = ('select page_title from templatelinks '
              'join page on page_id = tl_from and page_namespace = tl_from_namespace '
@@ -87,9 +87,9 @@ class WikiProjectNotifications:
 
 
     def update(self):
-    '''
-    Posts notifications to relevant WikiProject notification pages
-    '''
+        '''
+        Posts notifications to relevant WikiProject notification pages
+        '''
 
     subscribers = self.findsubscribers()
     reports = {}  # a dictionary of dictionaries. e.g. {'WikiProject_Biology': {'newmembers': blahblahreport, 'newdiscussions': blahblahreport}}
