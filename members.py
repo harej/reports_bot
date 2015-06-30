@@ -15,30 +15,15 @@ from notifications import WikiProjectNotifications
 class WikiProjectMembers:
     def __init__(self):
         self.wptools = WikiProjectTools()
-
-
-    def active_user(self, username):
-        '''
-        Determines if a username meets a basic threshold of activity
-        Takes string *username*, returns boolean
-        Threshold is one edit in the recent changes tables (i.e. in the past 30 days)
-        '''
-
-        q = 'select count(*) from recentchanges_userindex where rc_user_text = "{0}"'.format(username)
-        if self.wptools.query('wiki', q, None)[0][0] > 0:
-            return True
-        else:
-            return False
-
+        self.wpn = WikiProjectNotifications()
 
     def queue_notification(self, project, username):
         '''
         Queue new member notification
         '''
-
-        wpn = WikiProjectNotifications()
+        
         content = "* [[User:" + username + "|" + username + "]]"
-        wpn.post(project, "newmember", content)
+        self.wpn.post(project, "newmember", content)
 
 
     def run(self):
@@ -74,7 +59,7 @@ class WikiProjectMembers:
 
             for member in members[wikiproject]:
                 addition = "{{User:" + member + "/WikiProjectCards/" + wikiproject + "<includeonly>|mode=compact</includeonly>}}|"
-                if self.active_user(member):
+                if self.wpn.active_user(member):
                     active += addition
                 else:
                     inactive += addition

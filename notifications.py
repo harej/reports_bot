@@ -41,6 +41,20 @@ class WikiProjectNotifications:
                             '==New discussion report for ' + date + '==\n' + self.contentwrapper + 'New discussions that are of interest to the WikiProject:\n'}
 
 
+    def active_user(self, username):
+        '''
+        Determines if a username meets a basic threshold of activity
+        Takes string *username*, returns boolean
+        Threshold is one edit in the recent changes tables (i.e. in the past 30 days)
+        '''
+
+        q = 'select count(*) from recentchanges_userindex where rc_user_text = "{0}"'.format(username)
+        if self.wptools.query('wiki', q, None)[0][0] > 0:
+            return True
+        else:
+            return False
+
+
     def post(self, project, variant, content):
         '''
         Adds an item to the WikiProject Notification Center, to be included in the next update
@@ -68,9 +82,14 @@ class WikiProjectNotifications:
         for row in self.wptools.query('wiki', q, None):
             title = row[0].decode('utf-8')
             components = title.split('/')  # e.g. ['Harej', 'WikiProjectCards', 'WikiProject_Women_in_Technology']
-
-            title = "User: " + title
             username = components[0]
+
+            # No notifications for inactive users
+            if self.active_user(username) == False:
+                continue
+
+            # Carrying on...
+            title = "User: " + title
             wikiproject = '/'.join(components[2:])  # In case the WikiProject name somehow has a slash in it
 
             page = pywikibot.Page(self.bot, title)
@@ -110,8 +129,6 @@ class WikiProjectNotifications:
     
             # Appending content item to the report accordingly
             reports[wikiproject][variant] += content + '\n'
-    
-        print(reports)  # debug
 
         # Appending each subscriber name to the report to tag them
         # And then saving report
