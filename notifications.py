@@ -105,7 +105,7 @@ class WikiProjectNotifications:
     
             # Initializing entry in `reports` just in case
             if wikiproject not in reports:
-                reports[wikiproject] = {key:self.varianttext[key] for key in self.recognizedvariants.keys()}
+                reports[wikiproject] = {key:'' for key in self.recognizedvariants.keys()}
     
             # Appending content item to the report accordingly
             reports[wikiproject][variant] += content + '\n'
@@ -116,24 +116,28 @@ class WikiProjectNotifications:
         # And then saving report
         for wikiproject in reports:
             for reportkey in reports[wikiproject]:
-                optout = ('You have received this notification because you signed up to receive it. '
-                          'If you wish to no longer receive this notification, '
-                          '[https://en.wikipedia.org/wiki/Special:MyPage/WikiProjectCards/' + wikiproject + '?action=edit '
-                          'edit your WikiProjectCard] and remove the line that says <tt>|' + self.recognizedvariants[reportkey] + '=1</tt>.'
-                          ' ~~~~')
-                reports[wikiproject][reportkey] += '\n'
-                for subscriber in subscribers[wikiproject][reportkey]:
-                    reports[wikiproject][reportkey] += '[[User:' + subscriber + '| ]]'
-                reports[wikiproject][reportkey] += optout
-    
-                # Saving report
-                page = pywikibot.Page(self.bot, 'Wikipedia:' + wikiproject + '/Notifications')
-                page.text = page.text + '\n' + reports[wikiproject][reportkey]
-                page.save("New notification", minor=False, async=True)
+                if reports[wikiproject][reportkey] != '':  # i.e. if there is anything to report
+                    optout = ('You have received this notification because you signed up to receive it. '
+                              'If you wish to no longer receive this notification, '
+                              '[https://en.wikipedia.org/wiki/Special:MyPage/WikiProjectCards/' + wikiproject + '?action=edit '
+                              'edit your WikiProjectCard] and remove the line that says <tt>|' + self.recognizedvariants[reportkey] + '=1</tt>.'
+                              ' ~~~~')
+                    reports[wikiproject][reportkey] = self.varianttext[reportkey] + '\n'
+                    for subscriber in subscribers[wikiproject][reportkey]:
+                        reports[wikiproject][reportkey] += '[[User:' + subscriber + '| ]]'
+                    reports[wikiproject][reportkey] += optout
+        
+                    # Saving report
+                    page = pywikibot.Page(self.bot, 'Wikipedia:' + wikiproject + '/Notifications')
+                    page.text = page.text + '\n' + reports[wikiproject][reportkey]
+                    page.save("New notification", minor=False, async=True)
     
         # Deleting old records now that notifications have been sent out
         if len(id_to_delete) > 0:
-            self.wptools.query('index', 'delete from notifications where n_id in {0};'.format(tuple(id_to_delete)), None)
+            if len(id_to_delete) == 1:
+                self.wptools.query('index', 'delete from notifications where n_id = {0};'.format(id_to_delete[0]), None)
+            else:
+                self.wptools.query('index', 'delete from notifications where n_id in {0};'.format(tuple(id_to_delete)), None)
 
 
 if __name__ == "__main__":
