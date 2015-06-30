@@ -122,7 +122,7 @@ class WikiProjectNotifications:
                               '[https://en.wikipedia.org/wiki/Special:MyPage/WikiProjectCards/' + wikiproject + '?action=edit '
                               'edit your WikiProjectCard] and remove the line that says <tt>|' + self.recognizedvariants[reportkey] + '=1</tt>.'
                               ' ~~~~')
-                    reports[wikiproject][reportkey] = self.varianttext[reportkey] + '\n'
+                    reports[wikiproject][reportkey] = self.varianttext[reportkey] + reports[wikiproject][reportkey]
                     for subscriber in subscribers[wikiproject][reportkey]:
                         reports[wikiproject][reportkey] += '[[User:' + subscriber + '| ]]'
                     reports[wikiproject][reportkey] += optout
