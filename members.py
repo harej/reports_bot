@@ -69,8 +69,8 @@ class WikiProjectMembers:
             # Generate active member and inactive member lists
             return_to_wikiproject = "{{{{Clickable button 2|Wikipedia:{0}|Return to WikiProject|class=mw-ui-neutral}}}}<span class='wp-formsGadget mw-ui-button mw-ui-constructive' data-mode='create' data-type='Join'>Join WikiProject</span>".format(wikiproject)
             lua_garbage = "{{#invoke:<includeonly>random|list|limit=2</includeonly><noinclude>list|unbulleted</noinclude>|"
-            active = return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[Wikipedia:{0}/Members/Inactive|inactive members list]].</div>\n\n".format(wikiproject) + lua_garbage
-            inactive = return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[Wikipedia:{0}/Members|active members list]].</div>\n\n".format(wikiproject) + lua_garbage
+            active = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[Wikipedia:{0}/Members/Inactive|inactive members list]].</div>\n\n</noinclude>".format(wikiproject) + lua_garbage
+            inactive = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[Wikipedia:{0}/Members|active members list]].</div>\n\n</noinclude>".format(wikiproject) + lua_garbage
 
             for member in members[wikiproject]:
                 addition = "{{User:" + member + "/WikiProjectCards/" + wikiproject + "}}|"
