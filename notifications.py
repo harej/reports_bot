@@ -132,7 +132,8 @@ class WikiProjectNotifications:
                 page.save("New notification", minor=False, async=True)
     
         # Deleting old records now that notifications have been sent out
-        self.wptools.query('index', 'delete from notifications where n_id in {0};'.format(tuple(id_to_delete)), None)
+        if len(id_to_delete) > 0:
+            self.wptools.query('index', 'delete from notifications where n_id in {0};'.format(tuple(id_to_delete)), None)
 
 
 if __name__ == "__main__":
