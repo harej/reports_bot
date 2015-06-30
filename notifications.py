@@ -114,8 +114,8 @@ class WikiProjectNotifications:
 
         # Appending each subscriber name to the report to tag them
         # And then saving report
-        for wikiproject in subscribers:
-            for reportkey in subscribers[wikiproject]:
+        for wikiproject in reports:
+            for reportkey in reports[wikiproject]:
                 optout = ('You have received this notification because you signed up to receive it. '
                           'If you wish to no longer receive this notification, '
                           '[https://en.wikipedia.org/wiki/Special:MyPage/WikiProjectCards/' + wikiproject + '?action=edit '
