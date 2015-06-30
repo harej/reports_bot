@@ -30,14 +30,15 @@ class WikiProjectNotifications:
         # variantname --> template parameter name
 
         date = datetime.datetime.utcnow().strftime('%d %B %Y')
+        self.contentwrapper = '<div style="max-width:500px; padding-bottom:2.5em;">'
         self.recognizedvariants = {'newmember': \
                                    'notification_when_a_new_member_joins', \
                                    'newdiscussion': \
                                    'notification_when_a_new_discussion_topic_is_posted'}
         self.varianttext = {'newmember': \
-                            '==New member report for ' + date + '==\nThe following users joined the WikiProject in the past day:\n', \
+                            '==New member report for ' + date + '==\n' + self.contentwrapper + 'The following users joined the WikiProject in the past day:\n', \
                             'newdiscussion': \
-                            '==New discussion report for ' + date + '==\nNew discussions that are of interest to the WikiProject:\n'}
+                            '==New discussion report for ' + date + '==\n' + self.contentwrapper + 'New discussions that are of interest to the WikiProject:\n'}
 
 
     def post(self, project, variant, content):
@@ -117,15 +118,15 @@ class WikiProjectNotifications:
         for wikiproject in reports:
             for reportkey in reports[wikiproject]:
                 if reports[wikiproject][reportkey] != '':  # i.e. if there is anything to report
-                    optout = ('You have received this notification because you signed up to receive it. '
+                    closer = ('You have received this notification because you signed up to receive it. '
                               'If you wish to no longer receive this notification, '
                               '[https://en.wikipedia.org/wiki/Special:MyPage/WikiProjectCards/' + wikiproject + '?action=edit '
                               'edit your WikiProjectCard] and remove the line that says <tt>|' + self.recognizedvariants[reportkey] + '=1</tt>.'
-                              ' ~~~~')
+                              ' ~~~~\n</div>')
                     reports[wikiproject][reportkey] = self.varianttext[reportkey] + reports[wikiproject][reportkey]
                     for subscriber in subscribers[wikiproject][reportkey]:
                         reports[wikiproject][reportkey] += '[[User:' + subscriber + '| ]]'
-                    reports[wikiproject][reportkey] += optout
+                    reports[wikiproject][reportkey] += closer
         
                     # Saving report
                     page = pywikibot.Page(self.bot, 'Wikipedia:' + wikiproject + '/Notifications')
