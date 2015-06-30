@@ -15,6 +15,7 @@ import pywikibot
 import mwparserfromhell
 from mw import api
 from mw.lib import reverts
+from notifications import WikiProjectNotifications
 from project_index import WikiProjectTools
 
 
@@ -100,7 +101,7 @@ def main():
             saveto = wikiproject + '/New discussions'
             page = pywikibot.Page(bot, saveto)
             draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>===New discussions===\n{{{{WPX last updated|{1}}}}}\n\n'.format(wikiproject, saveto)
-            submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
+            submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
             templatelist = []
@@ -113,7 +114,7 @@ def main():
                 templatelist[2] += "<noinclude>"  # Anything after the third item will not be transcluded
                 templatelist[len(templatelist) - 1] += "</noinclude>"
             for i in templatelist:
-                page.text += i + "\n\n"
+                page.text += i + "\n"
             page.text += "{{{{WPX block|largetext='''[//en.wikipedia.org/w/index.php?title={0}&action=watch Add this feed to your Watchlist]'''}}}}".format(saveto.replace(' ', '_'))
             page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
 
