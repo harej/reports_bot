@@ -72,7 +72,7 @@ class WikiProjectMembers:
             active = return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[Wikipedia:{0}/Members/Inactive|inactive members list]].</div>\n\n".format(wikiproject) + lua_garbage
             inactive = return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[Wikipedia:{0}/Members|active members list]].</div>\n\n".format(wikiproject) + lua_garbage
 
-            for member in wikiproject:
+            for member in members[wikiproject]:
                 addition = "{{User:" + member + "/WikiProjectCards/" + wikiproject + "}}|"
                 if self.active_user(member):
                     active += addition
