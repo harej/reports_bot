@@ -25,7 +25,7 @@ class WikiProjectMembers:
         '''
 
         q = 'select count(*) from recentchanges_userindex where rc_user_text = "{0}"'.format(username)
-        if self.wptools.query('wiki', q, None)[0] > 0:
+        if self.wptools.query('wiki', q, None)[0][0] > 0:
             return True
         else:
             return False
