@@ -94,7 +94,7 @@ class WikiProjectMembers:
                     if t.name[:5] == "User:":  # differentiating between {{Clickable button 2}} et. al. and the WikiProjectCards
                         oldnames.append(t.name.split("/")[0][5:])  # i.e. grab username from template
 
-            newnames = list(set(members) - set(oldnames))
+            newnames = list(set(members[wikiproject]) - set(oldnames))
             newnames.sort()
             print(newnames)
 
