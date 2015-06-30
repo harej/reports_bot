@@ -23,7 +23,7 @@ class WikiProjectNotifications:
              'primary key (n_id)) '
              'engine=innodb character set=utf8;')
         #self.wptools.query('index', q, None)
-        self.bot = pywikibot.Site('en', 'wikipedia')
+        self.bot = pywikibot.Site('en', 'wikipedia', user='WikiProject Notification Service')
 
         # Recognized notification variants
         # A variant that is not any of these kinds will cause an error
