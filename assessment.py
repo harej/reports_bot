@@ -152,14 +152,14 @@ class WikiProjectAssess:
             contents = ("====Not tagged by the WikiProject====\n"
                         "The WikiProject has not tagged these pages. If you "
                         "believe they should be tagged, add the WikiProject "
-                        "banner to the talk pages of these articles. Automated"
+                        "banner to the talk pages of these articles. Automated "
                         "class predictions are provided to help you.\n\n"
                         "{{#invoke:<includeonly>random|bulleted_list|limit=5"
                         "</includeonly><noinclude>list|bulleted</noinclude>|")
             for recommendation in recommendations:
                 contents += "<b>[[" + recommendation.replace('_', ' ') \
                             + "]]</b> ([[Talk:" + recommendation \
-                            + "|talk]])<br />Predicted class:" \
+                            + "|talk]])<br />Predicted class: " \
                             + predicted_class[recommendation] + "|"
             contents = contents.replace("Talk::Category:", "Category talk:")
             contents = contents[:-1] + "}}<includeonly>\n\n[[" + save_to + "|View more]]</includeonly>"
