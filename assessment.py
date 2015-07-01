@@ -16,11 +16,13 @@ class WikiProjectAssess:
     def __init__(self):
         self.bot = pywikibot.Site('en', 'wikipedia')
         self.wptools = WikiProjectTools()
-        self.config = json.loads(self.wptools.query('index', 'select json from config;', None)[0][0])
         self.projects = []
         self.predictorseed = {}
         self.unknownquality = {}
         self.unknownpriority = {}
+
+        self.config = self.wptools.query('index', 'select json from config;', None)
+        self.config = json.loads(self.config[0][0])
 
         for project in self.config['projects']:
             if 'assessment_tools' in project \
@@ -86,34 +88,87 @@ class WikiProjectAssess:
                 article = pair[0].replace("_", " ")
                 prediction = pair[1]
                 contents += "<b>[[" + article + "]]</b> ([[Talk:" + article + \
-                            "|talk]])<br />Predicted quality: " + \
+                            "|talk]])<br />Predicted class: " + \
                             prediction + "|"
-            contents = contents[:-1] + "}}"
+            contents = contents[:-1] + "}}<includeonly>\n\n[[" + save_to + "|View more]]</includeonly>"
 
             page = pywikibot.Page(self.bot, save_to)
             page.text = contents
             page.save("Updating listing", minor=False, async=True)
-                
-
-    def prioritylist(self):
-        print("Agh! Not ready yet!")
 
 
     def scopepredictor(self):
-        # This query produces a list of pages that belong to categories that
-        # have been tagged by the WikiProject
-        q = ('select distinct page_namespace, page_title from page '
-             'join categorylinks on categorylinks.cl_from = page.page_id '
-             'where page_namespace in (0, 14) '
-             'and cl_to in ( '
-             'select page.page_title from page '
-             'join categorylinks on categorylinks.cl_from = page.page_id '
-             'where page_namespace = 15 '
-             'and cl_to = "{0}");')
+        for wikiproject, category in self.predictorseed.items():
+            category_recs = []
+            article_recs = []
+
+            # This query produces a list of pages that belong to categories that
+            # have been tagged by the WikiProject
+            q = ('select page_namespace, page_title from page '
+                 'join categorylinks on categorylinks.cl_from = page.page_id '
+                 'where page_namespace in (0, 14) '
+                 'and cl_to in ( '
+                 'select page.page_title from page '
+                 'join categorylinks on categorylinks.cl_from = page.page_id '
+                 'where page_namespace = 15 '
+                 'and cl_to = "{0}");').format(category)
+
+            for row in self.wptools.query('wiki', q, None):
+                ns = row[0]
+                page = row[1].decode('utf-8')
+                if ns = 0:
+                    article_recs.append(page)
+                elif ns = 14:
+                    category_recs.append(page)
+
+            # Filter against these lists:
+            q = 'select pi_page from project_index where pi_project = "{0}";'
+            q = q.format(wikiproject.replace(' ', '_'))
+            article_filter = [row[0].replace('Talk:', '') for row in self.wptools.query('index', q, None) if row[0].startswith('Talk')]
+
+            q = ('select page_title from page '
+                 'join categorylinks on cl_from = page_id '
+                 'where page_namespace = 15 '
+                 'and cl_to = "{0}";').format(category)
+            category_filter = [row[0].decode('utf-8') for row in self.wptools.query('wiki', q, None)]
+
+            # Now do the filtering...
+            category_recs = list(set(category_recs) - set(category_filter))
+            article_recs = list(set(article_recs) - set(article_filter))
+
+            # Unite them together...
+            recommendations = [':Category:' + name for name in category_recs] \
+                              + [name for name in article_recs]
+
+            # And lop it off at 100!
+            recommendations = recommendations[:100]
+
+            # Class prediction
+            predicted_class = self.qualitypredictor([page for page in recommendations if page.startswith(':Category:') == False]) + \
+                              [(page, 'Category') for page in recommendations if page.startswith(':Category:') == True]
+            predicted_class = {pair[0]:pair[1] for pair in predicted_class}
+
+            save_to = "User:Reports bot/" + wikiproject + "/Assessment/Not tagged"
+            contents = ("====Not tagged by the WikiProject====\n"
+                        "The WikiProject has not tagged these pages. If you "
+                        "believe they should be tagged, add the WikiProject "
+                        "banner to the talk pages of these articles. Automated"
+                        "class predictions are provided to help you.\n\n"
+                        "{{#invoke:<includeonly>random|bulleted_list|limit=5"
+                        "</includeonly><noinclude>list|bulleted</noinclude>|")
+            for recommendation in recommendations:
+                contents += "<b>[[" + recommendation.replace('_', ' ') \
+                            + "]]</b> ([[Talk:" + recommendation \
+                            + "|talk]])<br />Predicted class:" \
+                            predicted_class[recommendation] + "|"
+            contents = contents.replace("Talk::Category:", "Category talk:")
+            contents = contents[:-1] + "}}<includeonly>\n\n[[" + save_to + "|View more]]</includeonly>"
+            page = pywikibot.Page(self.bot, save_to)
+            page.text = contents
+            page.save("Updating listing", minor=False, async=True)
 
 
 if __name__ == "__main__":
     run = WikiProjectAssess()
     run.qualitylist()
-    #run.prioritylist()
-    #run.scopepredictor()
+    run.scopepredictor()
