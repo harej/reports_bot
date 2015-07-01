@@ -122,7 +122,7 @@ class WikiProjectAssess:
                     category_recs.append(page)
 
             # Filter against these lists:
-            q = 'select pi_page from project_index where pi_project = "{0}";'
+            q = 'select pi_page from projectindex where pi_project = "{0}";'
             q = q.format(wikiproject.replace(' ', '_'))
             article_filter = [row[0].replace('Talk:', '') for row in self.wptools.query('index', q, None) if row[0].startswith('Talk')]
 
