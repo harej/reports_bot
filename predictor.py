@@ -177,12 +177,6 @@ def getsopv(wptools, dump, articles):
     return output
 
 
-class QualityPredictor:
-    def qualitypredictor(self, pagetitle):
-        print("Argh! Not ready yet!")
-        # chat it up with ORES
-
-
 class PriorityPredictor:
     def __init__(self, viewdump=None):
         print("Initializing the Priority Predictor")
