@@ -9,7 +9,6 @@ Licensed under MIT License: http://mitlicense.org
 import requests
 import pywikibot
 from project_index import WikiProjectTools
-import predictor
 
 
 def qualitypredictor(self, pagetitles):
