@@ -8,6 +8,7 @@ Licensed under MIT License: http://mitlicense.org
 
 import requests
 import pywikibot
+import json
 from project_index import WikiProjectTools
 
 
