@@ -83,7 +83,7 @@ class WikiProjectAssess:
                         "{{#invoke:<includeonly>random|bulleted_list|limit=5"
                         "</includeonly><noinclude>list|bulleted</noinclude>|")
             for pair in to_process:
-                article = pair[0]
+                article = pair[0].replace("_", " ")
                 prediction = pair[1]
                 contents += "<b>[[" + article + "]]</b> ([[Talk:" + article + \
                             "|talk]])<br />Predicted quality: " + \
