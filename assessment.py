@@ -116,9 +116,9 @@ class WikiProjectAssess:
             for row in self.wptools.query('wiki', q, None):
                 ns = row[0]
                 page = row[1].decode('utf-8')
-                if ns = 0:
+                if ns == 0:
                     article_recs.append(page)
-                elif ns = 14:
+                elif ns == 14:
                     category_recs.append(page)
 
             # Filter against these lists:
