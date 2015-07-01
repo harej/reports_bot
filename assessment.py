@@ -160,7 +160,7 @@ class WikiProjectAssess:
                 contents += "<b>[[" + recommendation.replace('_', ' ') \
                             + "]]</b> ([[Talk:" + recommendation \
                             + "|talk]])<br />Predicted class:" \
-                            predicted_class[recommendation] + "|"
+                            + predicted_class[recommendation] + "|"
             contents = contents.replace("Talk::Category:", "Category talk:")
             contents = contents[:-1] + "}}<includeonly>\n\n[[" + save_to + "|View more]]</includeonly>"
             page = pywikibot.Page(self.bot, save_to)
