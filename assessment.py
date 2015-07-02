@@ -87,21 +87,19 @@ class WikiProjectAssess:
             to_process = [row[0].decode('utf-8') \
                          for row in self.wptools.query('wiki', q, None)]
             to_process = self.qualitypredictor(to_process)
-            contents = ("====Assess for quality====\n"
-                        "Determine the quality of each article, then go to the "
-                        "article's talk page and update the quality assessment "
-                        "in the WikiProject's banner. Automated predictions are"
-                        " provided to help you.\n\n"
-                        "{{#invoke:<includeonly>random|bulleted_list|limit=5"
-                        "</includeonly><noinclude>list|bulleted</noinclude>|")
+            contents = ("{{WPX list start|title=Assess for quality|intro="
+                        "Determine the quality of these articles<br />"
+                        "{{WPX last updated|" + save_to + "}}}}.\n\n"
+                        "{{#invoke:<includeonly>random|list|limit=5"
+                        "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for pair in to_process:
                 article = pair[0].replace("_", " ")
                 prediction = pair[1]
-                contents += "<b>[[" + article + "]]</b> ([[Talk:" + article + \
-                            "|talk]])<br />Predicted class: " + \
-                            prediction + "|"
-            contents = contents[:-1] + "}}<includeonly>\n\n[[" \
-                       + save_to + "|View more]]</includeonly>"
+                contents += "{{WPX block|largetext=<b>[[" + article + "]]</b> "\
+                            + "([[Talk:" + article + "|talk]])|smalltext="\
+                            + "Predicted class: " + prediction + "}}|"
+            contents = contents[:-1] + "}}\n{{WPX list end|more=" + save_to \
+                       + "}}"
 
             page = pywikibot.Page(self.bot, save_to)
             page.text = contents
@@ -166,21 +164,20 @@ class WikiProjectAssess:
             predicted_class = {pair[0]:pair[1] for pair in predicted_class}
 
             save_to = "User:Reports bot/" + wikiproject + "/Assessment/Not tagged"
-            contents = ("====Not tagged by the WikiProject====\n"
-                        "The WikiProject has not tagged these pages. If you "
-                        "believe they should be tagged, add the WikiProject "
-                        "banner to the talk pages of these articles. Automated "
-                        "class predictions are provided to help you.\n\n"
-                        "{{#invoke:<includeonly>random|bulleted_list|limit=5"
-                        "</includeonly><noinclude>list|bulleted</noinclude>|")
+            contents = ("{{WPX list start|title=Not tagged by the WikiProject=|"
+                        "intro=Add the WikiProject banner to relevant pages.<br />"
+                        "{{WPX last updated|" + save_to + "}}}}\n\n"
+                        "{{#invoke:<includeonly>random|list|limit=5"
+                        "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for recommendation in recommendations:
-                contents += "<b>[[" + recommendation.replace('_', ' ') \
+                contents += "{{WPX block|largetext=<b>[[" \
+                            + recommendation.replace('_', ' ') \
                             + "]]</b> ([[Talk:" + recommendation \
-                            + "|talk]])<br />Predicted class: " \
-                            + predicted_class[recommendation] + "|"
+                            + "|talk]])|smalltext=Predicted class: " \
+                            + predicted_class[recommendation] + "}}|"
             contents = contents.replace("Talk::Category:", "Category talk:")
-            contents = contents[:-1] + "}}<includeonly>\n\n[[" + save_to \
-                       + "|View more]]</includeonly>"
+            contents = contents[:-1] + "}}\n{{WPX list end|more=" + save_to \
+                       + "}}"
             page = pywikibot.Page(self.bot, save_to)
             page.text = contents
             page.save("Updating listing", minor=False, async=True)
