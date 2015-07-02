@@ -89,7 +89,7 @@ class WikiProjectAssess:
             to_process = self.qualitypredictor(to_process)
             contents = ("{{WPX list start|title=Assess for quality|intro="
                         "Determine the quality of these articles<br />"
-                        "{{WPX last updated|" + save_to + "}}}}.\n\n"
+                        "{{WPX last updated|" + save_to + "}}}}<br />\n\n"
                         "{{#invoke:<includeonly>random|list|limit=5"
                         "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for pair in to_process:
@@ -164,9 +164,9 @@ class WikiProjectAssess:
             predicted_class = {pair[0]:pair[1] for pair in predicted_class}
 
             save_to = "User:Reports bot/" + wikiproject + "/Assessment/Not tagged"
-            contents = ("{{WPX list start|title=Not tagged by the WikiProject=|"
+            contents = ("{{WPX list start|title=Not tagged by the WikiProject|"
                         "intro=Add the WikiProject banner to relevant pages.<br />"
-                        "{{WPX last updated|" + save_to + "}}}}\n\n"
+                        "{{WPX last updated|" + save_to + "}}}}<br />\n\n"
                         "{{#invoke:<includeonly>random|list|limit=5"
                         "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for recommendation in recommendations:
