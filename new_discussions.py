@@ -98,9 +98,12 @@ def main():
             if (whitelist is None) or (wikiproject in whitelist):
                 thread['wikiprojects'].append(wikiproject)
         for wikiproject in thread['wikiprojects']:
-            saveto = wikiproject + '/New discussions'
+            saveto = wikiproject + '/Discussions'
             page = pywikibot.Page(bot, saveto)
-            draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>{{{{WPX list start|title=New discussions from throughout Wikipedia|intro={{{{WPX last updated|{1}}}}}}}}}\n\n'.format(wikiproject, saveto)
+            intro_garbage = '{{{{WPX header|Discussions|color={{{{{{1|#37f}}}}}}}}}}\n'
+            intro_garbage += '{{{{WPX action box|color={{{{{{2|#086}}}}}}|title=Have a question?|content={{{{Clickable button 2|url=//en.wikipedia.org/wiki/Wikipedia_talk:{0}?action=edit&section=new|Ask the WikiProject|class=mw-ui-progressive mw-ui-block}}}}\n\n{{{{Clickable button 2|Wikipedia talk:{0}|View Other Discussions|class=mw-ui-block}}}}}}}}\n'.format(wikiproject.replace(' ', '_'))
+            intro_garbage += '{{{{WPX list start|intro={{{{WPX last updated|{1}}}}}}}}}\n\n'.format(saveto)
+            draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>'.format(wikiproject) + intro_garbage
             submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()

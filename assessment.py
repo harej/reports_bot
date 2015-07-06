@@ -87,15 +87,15 @@ class WikiProjectAssess:
             to_process = [row[0].decode('utf-8') \
                          for row in self.wptools.query('wiki', q, None)]
             to_process = self.qualitypredictor(to_process)
-            contents = ("{{WPX list start|title=Assess for quality|intro="
-                        "Determine the quality of these articles<br />"
+            contents = ("{{WPX list start|color={{{1|#37f}}}|title=Assess for quality"
+                        "|intro=Determine the quality of these articles<br />"
                         "{{WPX last updated|" + save_to + "}}}}<br />\n\n"
                         "{{#invoke:<includeonly>random|list|limit=5"
                         "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for pair in to_process:
                 article = pair[0].replace("_", " ")
                 prediction = pair[1]
-                contents += "{{WPX block|largetext=<b>[[" + article + "]]</b> "\
+                contents += "{{WPX block|color={{{1|#37f}}}|largetext=<b>[[" + article + "]]</b> "\
                             + "([[Talk:" + article + "|talk]])|smalltext="\
                             + "Predicted class: " + prediction + "}}|"
             contents = contents[:-1] + "}}\n{{WPX list end|more=" + save_to \
@@ -165,10 +165,9 @@ class WikiProjectAssess:
 
             save_to = "User:Reports bot/" + wikiproject + "/Assessment/Not tagged"
             contents = ("{{WPX list start|title=Not tagged by the WikiProject|"
-                        "intro=Add the WikiProject banner to relevant pages.<br />"
-                        "{{WPX last updated|" + save_to + "}}}}<br />\n\n"
-                        "{{#invoke:<includeonly>random|list|limit=5"
-                        "</includeonly><noinclude>list|unbulleted</noinclude>|")
+                        "intro=These pages are potentially in the WikiProject's"
+                        " scope.<br />{{WPX last updated|" + save_to + "}}}}"
+                        "<br />\n\n ")
             for recommendation in recommendations:
                 contents += "{{WPX block|largetext=<b>[[" \
                             + recommendation.replace('_', ' ') \
