@@ -87,10 +87,10 @@ class WikiProjectAssess:
             to_process = [row[0].decode('utf-8') \
                          for row in self.wptools.query('wiki', q, None)]
             to_process = self.qualitypredictor(to_process)
-            contents = ("{{WPX list start|constrained=yes|color={{{2|#086}}}|title=Assess for quality"
+            contents = ("{{WPX list start|constrained=yes|color={{{2|#086}}}<includeonly>|constrained=yes</includeonly>|title=Assess for quality"
                         "|intro=Determine the quality of these articles<br />"
                         "{{WPX last updated|" + save_to + "}}}}<br />\n\n"
-                        "{{#invoke:<includeonly>random|list|limit=5"
+                        "{{#invoke:<includeonly>random|list|limit=3"
                         "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for pair in to_process:
                 article = pair[0].replace("_", " ")
@@ -164,11 +164,11 @@ class WikiProjectAssess:
             predicted_class = {pair[0]:pair[1] for pair in predicted_class}
 
             save_to = "User:Reports bot/" + wikiproject + "/Assessment/Not tagged"
-            contents = ("{{WPX list start|constrained=yes|color={{{2|#086}}}|title=Not tagged by the WikiProject|"
+            contents = ("{{WPX list start|constrained=yes|color={{{2|#086}}}<includeonly>|constrained=yes</includeonly>|title=Not tagged by the WikiProject|"
                         "intro=These pages are potentially in the WikiProject's"
                         " scope.<br />{{WPX last updated|" + save_to + "}}}}"
                         "<br />\n\n"
-                        "{{#invoke:<includeonly>random|list|limit=5"
+                        "{{#invoke:<includeonly>random|list|limit=3"
                         "</includeonly><noinclude>list|unbulleted</noinclude>|")
             for recommendation in recommendations:
                 contents += "{{WPX block|color={{{1|#37f}}}|largetext=<b>[[" \
