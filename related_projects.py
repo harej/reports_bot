@@ -55,13 +55,13 @@ def main():
         saveto = 'Wikipedia:Related_WikiProjects/' + project[10:]
         page = pywikibot.Page(bot, saveto)
         draft = '{{WPX header|color={{{1|#37f}}}|Related WikiProjects<noinclude>: [[' \
-                + project + '|]]</noinclude>}}\n'
+                + project.replace('_', ' ') + '|]]</noinclude>}}\n'
         draft += '{{WPX list start|intro={{WPX last updated|' + saveto + '}}}}\n'
         for x in range(0, 10):
             if ordered[x][1] > 0:
-                draft += "{{{{WPX block|color={{{{{{1|#37f}}}}}}|" \
-                         + "largetext='''[[{0}|{1}]]'''|" \
-                         + "smalltext={2} articles in common}}}}\n".format(ordered[x][0], ordered[x][0][10:].replace('_', ' '), str(ordered[x][1]))
+                draft += "{{WPX block|color={{{1|#37f}}}|" \
+                         + "largetext='''[[{0}|]]'''|".format(ordered[x][0].replace('_', ' ')) \
+                         + "smalltext={0} articles in common}}}}\n".format(str(ordered[x][1]))
         draft += '{{WPX list end|more=' + saveto + '}}'
         if page.text != draft:
             page.text = draft
