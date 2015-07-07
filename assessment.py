@@ -164,7 +164,7 @@ class WikiProjectAssess:
             predicted_class = {pair[0]:pair[1] for pair in predicted_class}
 
             save_to = "User:Reports bot/" + wikiproject + "/Assessment/Not tagged"
-            contents = ("{{WPX list start|constrained=yes|color={{{2|#086}}}<includeonly>|constrained=yes</includeonly>|title=Not tagged by the WikiProject|"
+            contents = ("{{WPX list start|color={{{2|#086}}}<includeonly>|constrained=yes</includeonly>|title=Not tagged by the WikiProject|"
                         "intro=These pages are potentially in the WikiProject's"
                         " scope.<br />{{WPX last updated|" + save_to + "}}}}"
                         "<br />\n\n"
