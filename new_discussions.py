@@ -104,7 +104,7 @@ def main():
             intro_garbage += '{{{{WPX action box|color={{{{{{2|#086}}}}}}|title=Have a question?|content={{{{Clickable button 2|url=//en.wikipedia.org/wiki/Wikipedia_talk:{0}?action=edit&section=new|Ask the WikiProject|class=mw-ui-progressive mw-ui-block}}}}\n\n{{{{Clickable button 2|Wikipedia talk:{0}|View Other Discussions|class=mw-ui-block}}}}}}}}\n'.format(wikiproject[10:].replace(' ', '_'))
             intro_garbage += '{{{{WPX list start|intro={{{{WPX last updated|{0}}}}}}}}}\n\n'.format(saveto)
             draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>'.format(wikiproject) + intro_garbage
-            submission = '{{{{WPX new discussion|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
+            submission = '{{{{WPX new discussion|color={{{{{{1|#37f}}}}}}}}}|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
             templatelist = []
