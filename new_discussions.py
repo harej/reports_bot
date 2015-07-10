@@ -19,6 +19,14 @@ from notifications import WikiProjectNotifications
 from project_index import WikiProjectTools
 
 
+def queue_notification(project, notification):
+    '''
+    Queue new discussion notification
+    '''
+    wpn = WikiProjectNotifications()
+    wpn.post(project, "newdiscussion", notification)
+
+
 def main():
     # This is used for Aaron Halfaker's API wrapper...
     loginfile = configparser.ConfigParser()
@@ -102,6 +110,10 @@ def main():
             intro_garbage += '{{{{WPX list start|intro={{{{WPX last updated|{0}}}}}}}}}\n\n'.format(saveto)
             draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>'.format(wikiproject) + intro_garbage
             submission = '{{{{WPX new discussion|color={{{{{{1|#37f}}}}}}|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
+
+            notification = "* '''[[{0}#{1}|{1}]] on {0}".format(thread['title'].replace('_', ' '), thread['section'])
+            queue_notification(wikiproject.replace(' ', '_'), notification)
+
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
             templatelist = []
