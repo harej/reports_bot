@@ -22,7 +22,7 @@ class WikiProjectMembers:
         Queue new member notification
         '''
         
-        content = "* [[User:" + username + "|" + username + "]]"
+        content = "* User:" + username
         self.wpn.post(project, "newmember", content)
 
 
