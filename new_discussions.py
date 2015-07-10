@@ -41,9 +41,6 @@ def main():
     # Polling for newest talk page posts in the last thirty minutes
     query = wptools.query('wiki', 'select distinct recentchanges.rc_this_oldid, page.page_id, recentchanges.rc_title, recentchanges.rc_comment, recentchanges.rc_timestamp, page.page_namespace from recentchanges join page on recentchanges.rc_namespace = page.page_namespace and recentchanges.rc_title = page.page_title join categorylinks on page.page_id=categorylinks.cl_from where rc_timestamp >= {0} and rc_timestamp < {1} and rc_comment like "% new section" and rc_deleted = 0 and cl_to like "%_articles" and page_namespace not in (0, 2, 6, 8, 10, 12, 14, 100, 108, 118) order by rc_timestamp asc;'.format(lastupdated, now), None)
 
-    # Update the Last Updated field with new timestamp
-    wptools.query('index', 'update lastupdated set lu_timestamp = {0} where lu_key = "new_discussions";'.format(now), None)
-
     # Cleaning up output
     namespace = {1: 'Talk:', 3: 'User_talk:', 4: 'Wikipedia:', 5: 'Wikipedia_talk:', 7: 'File_talk:', 9: 'MediaWiki_talk:', 11: 'Template_talk:', 13: 'Help_talk:', 15: 'Category_talk:', 101: 'Portal_talk:', 109: 'Book_talk:', 119: 'Draft_talk:', 447: 'Education_Program_talk:', 711: 'TimedText_talk:', 829: 'Module_talk:', 2600: 'Topic:'}
 
@@ -104,7 +101,7 @@ def main():
             intro_garbage += '{{{{WPX action box|color={{{{{{2|#086}}}}}}|title=Have a question?|content={{{{Clickable button 2|url=//en.wikipedia.org/wiki/Wikipedia_talk:{0}?action=edit&section=new|Ask the WikiProject|class=mw-ui-progressive mw-ui-block}}}}\n\n{{{{Clickable button 2|Wikipedia talk:{0}|View Other Discussions|class=mw-ui-block}}}}}}}}\n'.format(wikiproject[10:].replace(' ', '_'))
             intro_garbage += '{{{{WPX list start|intro={{{{WPX last updated|{0}}}}}}}}}\n\n'.format(saveto)
             draft = '<noinclude><div style="padding-bottom:1em;">{{{{Clickable button 2|{0}|Return to WikiProject|class=mw-ui-neutral}}}}</div>\n</noinclude>'.format(wikiproject) + intro_garbage
-            submission = '{{{{WPX new discussion|color={{{{{{1|#37f}}}}}}}}}|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
+            submission = '{{{{WPX new discussion|color={{{{{{1|#37f}}}}}}}}}}|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
             templatelist = []
@@ -120,6 +117,9 @@ def main():
                 page.text += i + "\n"
             page.text += "{{{{WPX list end|more={0}}}}}".format(saveto.replace(' ', '_'))
             page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
+
+    # Update the Last Updated field with new timestamp
+    wptools.query('index', 'update lastupdated set lu_timestamp = {0} where lu_key = "new_discussions";'.format(now), None)
 
 if __name__ == "__main__":
     main()
