@@ -112,7 +112,7 @@ def main():
             submission = '{{{{WPX new discussion|color={{{{{{1|#37f}}}}}}|title={0}|section={1}|timestamp={2}}}}}\n'.format(thread['title'].replace('_', ' '), thread['section'], thread['timestamp'])
 
             notification = "* '''[[{0}#{1}|{1}]] on {0}".format(thread['title'].replace('_', ' '), thread['section'])
-            queue_notification(wikiproject.replace(' ', '_'), notification)
+            queue_notification(wikiproject[10:].replace(' ', '_'), notification)
 
             index = mwparserfromhell.parse(page.text)
             index = index.filter_templates()
