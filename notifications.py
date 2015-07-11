@@ -147,6 +147,7 @@ class WikiProjectNotifications:
         
                     # Saving report
                     page = pywikibot.Page(self.bot, 'Wikipedia:' + wikiproject + '/Notifications')
+                    page.text = page.get(True)  # Forces a reload of the page
                     page.text = page.text + '\n' + reports[wikiproject][reportkey]
                     page.save("New notification", minor=False, async=True)
     
