@@ -46,7 +46,6 @@ class WikiProjectDirectory:
         bot = pywikibot.Site('en', 'wikipedia')
         wptools = WikiProjectTools()
         config = json.loads(wptools.query('index', 'select json from config;', None)[0][0])
-        print("Let's get this show on the road!")
 
         # Get list of people who opted out
         optout = pywikibot.Page(bot, 'User:Reports bot/Opt-out')
@@ -55,20 +54,16 @@ class WikiProjectDirectory:
         for results in regexes:
             for user in results:
                 blacklist.append(user)
-        print(str(len(blacklist)) + ' users opting out')
         # Bots are to be excluded
         for result in wptools.query('wiki', "select user_name from user_groups left join user on user_id = ug_user where ug_group = 'bot';", None):
             blacklist.append(result[0].decode('utf-8'))
-        print('With bots, there are ' + str(len(blacklist)) + ' usernames on the blacklist.')
 
         # List of projects we are working on
         # Methodology: List from Project Index + List from Formal Definition, minus duplicates
         # This will cover all of our bases.
-        print("Loading the Project Index...")
         articles = {}
         counter = 0
         while True:  # I am a bad man for doing this
-            print("Query for IDs " + str(counter + 1) + " through " + str(counter+ 1000000))
             query = wptools.query('index', 'select pi_page, pi_project from projectindex where pi_id > {0} and pi_id <= {1};'.format(counter, counter+1000000), None)
             if len(query) == 0:
                 break
@@ -86,7 +81,6 @@ class WikiProjectDirectory:
 
         projects = [project for project in articles.keys()]
 
-        print("Preparing the Formal Definition index...")
         q = ('select distinct page.page_title from page '
              'join categorylinks on page.page_id = categorylinks.cl_from '
              'left join redirect on page.page_id = redirect.rd_from '
@@ -106,14 +100,12 @@ class WikiProjectDirectory:
             if row not in projects:
                 projects.append(row)
         projects.sort()
-        print('There are ' + str(len(projects)) + ' total WikiProjects and task forces.')
 
         directories = {'All': ''}  # All projects, plus subdirectories to be defined below.
         directoryrow = {}
 
         # Alright! Let's run some reports!
         for project in projects:
-            print("Working on: " + project)
 
             # Seeding directory row and profile page
             if project not in articles:
@@ -145,7 +137,6 @@ class WikiProjectDirectory:
                 counter = 0
                 for package in packages:
                     counter += 1
-                    print('Executing batch query no. ' + str(counter))
                     if len(package) > 1:
                         query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(tuple(package), start_date, end_date)
                     else:
@@ -191,7 +182,6 @@ class WikiProjectDirectory:
             directoryrow[project] = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
 
         # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
-        print("Populating directory pages...")
         for entry in sorted(directoryrow.items(), key=operator.itemgetter(1)):  # Sorting into alphabetical order
             directories['All'] += entry[1]
         directories['All'] = "{{WikiProject directory top}}\n" + directories['All'] + "|}"
