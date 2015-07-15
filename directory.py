@@ -193,7 +193,7 @@ class WikiProjectDirectory:
         # Assign directory entry to relevant directory pages ("All entries" and relevant subdirectory pages)
         print("Populating directory pages...")
         for entry in sorted(directoryrow.items(), key=operator.itemgetter(1)):  # Sorting into alphabetical order
-            directories['All'] += entry[1].replace('WikiProject directory entry', 'WikiProject directory entry small')
+            directories['All'] += entry[1]
         directories['All'] = "{{WikiProject directory top}}\n" + directories['All'] + "|}"
 
         wpcats = WikiProjectCategories()
@@ -235,7 +235,7 @@ class WikiProjectDirectory:
                     oldcontents = oldcontents.filter_templates()
                     oldprojectlist = []
                     for t in oldcontents:
-                        if t.name.strip() == "WikiProject directory entry small":
+                        if t.name.strip() == "WikiProject directory entry":
                             oldprojectlist.append(str(t.get('project').value))
                     for oldproject in oldprojectlist:
                         oldproject = oldproject.strip().replace(' ', '_')  # Normalizing

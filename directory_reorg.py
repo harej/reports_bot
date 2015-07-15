@@ -28,10 +28,10 @@ def main(rootpage):
     contents = mwph.parse(page.text)
     contents = contents.filter_templates()
     for t in contents:
-        if t.name.strip() == "WikiProject directory entry small":
+        if t.name.strip() == "WikiProject directory entry":
             name = str(t.get('project').value).strip().replace(' ', '_')
             projects.append(name)
-            directoryrow[name] = str(t).replace('entry small', 'entry') + "\n"
+            directoryrow[name] = str(t) + "\n"
 
     # The rest of this stuff is copied from directory.py
     index_primary = sorted([key for key in tree.keys()])
