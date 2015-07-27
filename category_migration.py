@@ -30,7 +30,7 @@ def main():
         # Preserve only categories that aren't in the style "X WikiProjects"
         preserve  = [c for c in pwb.textlib.getCategoryLinks(project_page.text) \
                      if str(c)[-15:] != ' WikiProjects]]']
-        project_page.text = pywikibot.textlib.replaceCategoryLinks(project_page.text, preserve)
+        project_page.text = pwb.textlib.replaceCategoryLinks(project_page.text, preserve)
 
         # List categories to add to project category
         page_cats = [c for c in pwb.textlib.getCategoryLinks(project_page.text) \
@@ -39,7 +39,7 @@ def main():
                      if str(c)[-15:] == ' WikiProjects]]']
 
         to_add = list(set(page_cats) - set(cat_cats))
-        project_cat.text = pywikibot.textlib.replaceCategoryLinks(project_cat.text, to_add, addOnly=True)
+        project_cat.text = pwb.textlib.replaceCategoryLinks(project_cat.text, to_add, addOnly=True)
 
         # Saving pages
         summary = "WikiProject category migration. See [[User:Harej bot/WikiProject category migration]]."
