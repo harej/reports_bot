@@ -32,7 +32,6 @@ def main():
 
         # Check for presence of removable categories; otherwise, don't bother
         if preserve != pwb.textlib.getCategoryLinks(project_page.text):
-            project_page.text = pwb.textlib.replaceCategoryLinks(project_page.text, preserve)
 
             # Load WikiProject category
             project_cat = pwb.Page(bot, 'Category:' + pair)
@@ -42,11 +41,11 @@ def main():
                          if str(c)[-15:] == ' WikiProjects]]']
             cat_cats  = [c for c in pwb.textlib.getCategoryLinks(project_cat.text) \
                          if str(c)[-15:] == ' WikiProjects]]']
-    
             to_add = list(set(page_cats) - set(cat_cats))
+
+            # Make changes and save page
             project_cat.text = pwb.textlib.replaceCategoryLinks(project_cat.text, to_add, addOnly=True)
-    
-            # Saving pages
+            project_page.text = pwb.textlib.replaceCategoryLinks(project_page.text, preserve)
             summary = "WikiProject category migration. See [[User:Harej bot/WikiProject category migration]]."
             project_page.save(summary, minor=False)
             project_cat.save(summary, minor=False)
