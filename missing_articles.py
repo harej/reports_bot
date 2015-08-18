@@ -93,7 +93,7 @@ class WikidataMagic:
                 content += "}}\n{{WPX list end|more=" + save_to + "}}"
 
                 page = pywikibot.Page(self.bot, save_to)
-                save_to.text = content
+                page.text = content
                 page.save("Updating task list", minor=False, async=True)
 
 
