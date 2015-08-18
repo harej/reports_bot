@@ -43,7 +43,7 @@ class WikidataMagic:
 
     def missing_articles_report(self):
         config = self.wptools.query('index', 'select json from config;', None)
-        config = json.loads(self.config[0][0])
+        config = json.loads(config[0][0])
         for entry in config['projects']:
             if 'wikidata_missing_articles' in entry:
                 wikiproject = entry['name']  # e.g. "Wikipedia:WikiProject Something"
