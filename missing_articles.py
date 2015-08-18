@@ -59,7 +59,7 @@ class WikidataMagic:
                 content = ("{{WPX list start|title=From Wikidata|"
                            "intro=Automatically generated list of missing articles"
                            "<br />{{WPX last updated|" + save_to + "}}}}\n"
-                           "{{#invoke:<includeonly>random|list|limit=5"
+                           "{{#invoke:<includeonly>random|list|limit=3"
                            "</includeonly><noinclude>list|unbulleted</noinclude>\n")
 
                 for item in items_for_report:
@@ -82,8 +82,8 @@ class WikidataMagic:
                     else:
                         description = "No English Description available"
                     
-                    content += "| {{WPX block|largetext=" + label + \
-                               "|smalltext=" + description + \
+                    content += "| {{WPX block|largetext='''" + label + \
+                               "'''|smalltext=" + description + \
                                "<br />([[d:" + item + \
                                "|More information on Wikidata]])" + \
                                "|color={{{1|#37f}}}}}\n"
