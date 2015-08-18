@@ -8,7 +8,7 @@ Licensed under MIT License: http://mitlicense.org
 
 import pywikibot
 import requests
-from project_index import WikiProjectScripts
+from project_index import WikiProjectTools
 
 
 class WikidataMagic:
