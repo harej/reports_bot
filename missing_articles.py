@@ -6,6 +6,7 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 
+import json
 import pywikibot
 import requests
 from project_index import WikiProjectTools
