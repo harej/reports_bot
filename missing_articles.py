@@ -85,7 +85,7 @@ class WikidataMagic:
                                "|smalltext=" + description + \
                                "<br />([[d:" + item + \
                                "|More information on Wikidata]])" + \
-                               "|color={{{1|#37f}}}}}\n")
+                               "|color={{{1|#37f}}}}}\n"
 
                 # Wrap up report and save
 
