@@ -30,8 +30,8 @@ def main():
 
     content = "'''Total Articles Missing From Wikidata:''' " + str(total_count) + "\n\n"
     for title in no_wikidata:
-        content += "* [[" + title + \
-                   "]] ([https://www.wikidata.org/w/index.php?search=]" + \
+        content += "* [[" + title.replace('_', ' ') + \
+                   "]] ([https://www.wikidata.org/w/index.php?search=" + \
                    quote(title) + \
                    "&title=Special%3ASearch&fulltext=1 Search on Wikidata])\n"
 
