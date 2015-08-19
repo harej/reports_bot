@@ -23,11 +23,12 @@ def main():
                             for x in wptools.query('wiki', q, None)]
 
     no_wikidata = list(set(all_articles) - set(articles_on_wikidata))
+    total_count = len(no_wikidata)  # Capturing this before truncating list
     no_wikidata = no_wikidata[:100]
 
     page = pywikibot.Page(bot, 'User:Reports_bot/No_Wikidata_item')
 
-    content = ''
+    content = "'''Total Articles Missing From Wikidata:''' " + str(total_count) + "\n\n"
     for title in no_wikidata:
         content += "* [[" + title + \
                    "]] ([https://www.wikidata.org/w/index.php?search=]" + \
