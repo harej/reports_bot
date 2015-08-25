@@ -163,12 +163,12 @@ class WikiProjectDirectory:
             subject_editors_formatted = ""
             if len(wp_editors) > 0:
                 for editor in wp_editors:
-                    wp_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
+                    wp_editors_formatted += "\n* [[User:{0}|{0}]] ([[User talk:{0}|talk]])".format(editor)
             else:
                     wp_editors_formatted = ""
             if len(subject_editors) > 0:
                 for editor in subject_editors:
-                    subject_editors_formatted += "\n* {{{{user|1={0}}}}}".format(editor)
+                    subject_editors_formatted += "\n* [[User:{0}|{0}]] ([[User talk:{0}|talk]])".format(editor)
             else:
                     subject_editors_formatted = ""
     
