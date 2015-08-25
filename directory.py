@@ -165,12 +165,12 @@ class WikiProjectDirectory:
                 for editor in wp_editors:
                     wp_editors_formatted += "\n* [[User:{0}|{0}]] ([[User talk:{0}|talk]])".format(editor)
             else:
-                    wp_editors_formatted = ""
-            if len(subject_editors) > 0:
+                wp_editors_formatted = ""
+            if len(subject_editors) > 0 and len(subject_editors) < 3200:
                 for editor in subject_editors:
                     subject_editors_formatted += "\n* [[User:{0}|{0}]] ([[User talk:{0}|talk]])".format(editor)
             else:
-                    subject_editors_formatted = ""
+                subject_editors_formatted = ""
     
             profilepage = "{{{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
             page = pywikibot.Page(bot, rootpage + '/Description/' + project_normalized)
