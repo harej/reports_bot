@@ -60,7 +60,7 @@ def main():
         for x in range(0, 10):
             if ordered[x][1] > 0:
                 draft += "{{WPX block|color={{{1|#37f}}}|" \
-                         + "largetext='''[[{0}|]]''' ([[Wikipedia:Related WikiProjects/{0}|view related]])|".format(ordered[x][0].replace('_', ' ')) \
+                         + "largetext='''[[{0}|]]''' ([[Wikipedia:Related WikiProjects/{1}|view related]])|".format(ordered[x][0].replace('_', ' '), ordered[x][0].replace('_', ' ')[10:]) \
                          + "smalltext={0} articles in common}}}}\n".format(str(ordered[x][1]))
         draft += '{{WPX list end|more=' + saveto + '}}'
         if page.text != draft:
