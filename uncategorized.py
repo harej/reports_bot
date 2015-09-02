@@ -35,7 +35,7 @@ def main(rootpage, saveto):
     contents = mwph.parse(page.text)
     contents = contents.filter_templates()
     for t in contents:
-        if t.name.strip() == "WikiProject directory entry small":
+        if t.name.strip() == "WikiProject directory entry":
             project = str(t.get('project').value).strip().replace(' ', '_')
 
             # Give me a list of all the categories, as long as it's on the whitelist
