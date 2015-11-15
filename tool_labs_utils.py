@@ -5,6 +5,8 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
+import pymysql
+
 class ToolLabsQuery:
     def raw_query(self, host, db, sqlquery, values):
         """Generic wrapper for carrying out MySQL queries"""
