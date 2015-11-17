@@ -7,8 +7,8 @@ Licensed under MIT License: http://mitlicense.org
 
 import pymysql
 
-class ToolLabsQuery:
-    def raw_query(self, host, db, sqlquery, values):
+class ToolLabs:
+    def query(self, host, db, sqlquery, values):
         """Generic wrapper for carrying out MySQL queries"""
 
         conn = pymysql.connect(host=host, port=3306, db=db, read_default_file='~/.my.cnf', charset='utf8')
@@ -20,10 +20,12 @@ class ToolLabsQuery:
         conn.commit()
         return data
 
-    def wmf(self, db, sqlquery, values):
+class WMFReplica:
+    def query(self, db, sqlquery, values):
         """Queries for WMF wiki database replicas on Labs (e.g. enwiki)"""
-        return self.raw_query(db + '.labsdb', db + '_p', sqlquery, values)
+        return ToolLabs.query(db + '.labsdb', db + '_p', sqlquery, values)
 
-    def toolsdb(self, db, sqlquery, values):
+class ToolsDB:
+    def query(self, db, sqlquery, values):
         """Queries a Tool Labs database"""
-        return self.raw_query('tools-db', db, sqlquery, values)
+        return ToolLabs.query('tools-db', db, sqlquery, values)
