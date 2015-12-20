@@ -54,8 +54,8 @@ def main():
         ordered = sorted(intersect_counts[project].items(), key=operator.itemgetter(1), reverse=True)
         saveto = 'Wikipedia:Related_WikiProjects/' + project[10:]
         page = pywikibot.Page(bot, saveto)
-        draft = '{{WPX header|color={{{1|#37f}}}|Related WikiProjects<noinclude>: [[' \
-                + project.replace('_', ' ') + '|]]</noinclude>}}\n'
+        draft = '<noinclude>\n===Related to [[' \
+                + project.replace('_', ' ') + '|]]===\n</noinclude>}}'
         draft += '{{WPX list start|intro={{WPX last updated|' + saveto + '}}}}\n'
         for x in range(0, 10):
             if ordered[x][1] > 0:
