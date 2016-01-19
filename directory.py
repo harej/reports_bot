@@ -176,7 +176,7 @@ class WikiProjectDirectory:
             page = pywikibot.Page(bot, rootpage + '/Description/' + project_normalized)
             if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries
                 page.text = profilepage
-                page.save('Updating', minor=False, async=True)
+                page.save('Updating', minor=False, async=True, quiet=True)
 
             # Construct directory entry
             directoryrow[project] = "{{{{WikiProject directory entry | project = {0} | number_of_articles = {1} | wp_editors = {2} | scope_editors = {3}}}}}\n".format(project_normalized, len(articles[project]), len(wp_editors), len(subject_editors))
@@ -209,7 +209,7 @@ class WikiProjectDirectory:
             indextext += "\n\n"
         saveindex = pywikibot.Page(bot, 'Template:WikiProject directory index')
         saveindex.text = indextext
-        saveindex.save('Updating', minor=False, async=True)
+        saveindex.save('Updating', minor=False, async=True, quiet=True)
 
         # Generate directories and save!
         for directory in directories.keys():
@@ -218,7 +218,7 @@ class WikiProjectDirectory:
             if contents != page.text:  # Checking to see if a change was made to cut down on API save queries
                 oldcontents = page.text
                 page.text = contents
-                page.save('Updating', minor=False, async=True)
+                page.save('Updating', minor=False, async=True, quiet=True)
                 # Cleanup of obsolete description pages and "Related WikiProjects" pages
                 if directory == 'All':
                     oldcontents = mwph.parse(oldcontents)
@@ -232,11 +232,11 @@ class WikiProjectDirectory:
                         if oldproject not in projects:
                             deletethis = pywikibot.Page(bot, rootpage + '/Description/' + oldproject)
                             deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect}}\n"
-                            deletethis.save('Nominating page for deletion', minor=False, async=True)
+                            deletethis.save('Nominating page for deletion', minor=False, async=True, quiet=True)
                             deletethis = pywikibot.Page(bot, 'Wikipedia:Related WikiProjects/' + oldproject)
                             if deletethis.text != "":
                                 deletethis.text = "{{db-g6|rationale=A bot has automatically tagged this page as obsolete. This means that the WikiProject described on this page has been deleted or made into a redirect}}\n"
-                                deletethis.save('Nominating page for deletion', minor=False, async=True)
+                                deletethis.save('Nominating page for deletion', minor=False, async=True, quiet=True)
 
 
 if __name__ == "__main__":

@@ -47,8 +47,8 @@ def main():
             project_cat.text = pwb.textlib.replaceCategoryLinks(project_cat.text, to_add, addOnly=True)
             project_page.text = pwb.textlib.replaceCategoryLinks(project_page.text, preserve)
             summary = "WikiProject category migration. See [[User:Harej bot/WikiProject category migration]]."
-            project_page.save(summary, minor=False)
-            project_cat.save(summary, minor=False)
+            project_page.save(summary, minor=False, quiet=True)
+            project_cat.save(summary, minor=False, quiet=True)
 
 
 if __name__ == "__main__":

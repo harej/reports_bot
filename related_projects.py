@@ -65,7 +65,7 @@ def main():
         draft += '{{WPX list end|more=' + saveto + '}}'
         if page.text != draft:
             page.text = draft
-            page.save('Updating', minor=False, async=True)
+            page.save('Updating', minor=False, async=True, quiet=True)
 
 if __name__ == "__main__":
     main()

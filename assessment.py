@@ -103,7 +103,7 @@ class WikiProjectAssess:
 
             page = pywikibot.Page(self.bot, save_to)
             page.text = contents
-            page.save("Updating listing", minor=False, async=True)
+            page.save("Updating listing", minor=False, async=True, quiet=True)
 
 
     def scopepredictor(self):
@@ -181,7 +181,7 @@ class WikiProjectAssess:
                        + "}}"
             page = pywikibot.Page(self.bot, save_to)
             page.text = contents
-            page.save("Updating listing", minor=False, async=True)
+            page.save("Updating listing", minor=False, async=True, quiet=True)
 
 
 if __name__ == "__main__":

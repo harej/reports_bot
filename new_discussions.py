@@ -128,7 +128,7 @@ def main():
             for i in templatelist:
                 page.text += i + "\n"
             page.text += "{{{{WPX list end|more={0}}}}}".format(saveto.replace(' ', '_'))
-            page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False)
+            page.save('New discussion on [[{0}]]'.format(thread['title'].replace('_', ' ')), minor=False, quiet=True)
 
     # Update the Last Updated field with new timestamp
     wptools.query('index', 'update lastupdated set lu_timestamp = {0} where lu_key = "new_discussions";'.format(now), None)

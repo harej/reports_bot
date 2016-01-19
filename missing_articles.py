@@ -94,7 +94,7 @@ class WikidataMagic:
 
                 page = pywikibot.Page(self.bot, save_to)
                 page.text = content
-                page.save("Updating task list", minor=False, async=True)
+                page.save("Updating task list", minor=False, async=True, quiet=True)
 
 
 if __name__ == "__main__":

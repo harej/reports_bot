@@ -68,4 +68,4 @@ if __name__ == "__main__":
     bot = pywikibot.Site('en', 'wikipedia')
     page = pywikibot.Page(bot, 'User:Reports bot/WikiProject category audit')
     page.text = report
-    page.save('Updating report', minor=False)
+    page.save('Updating report', minor=False, quiet=True)

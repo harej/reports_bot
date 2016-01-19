@@ -55,7 +55,7 @@ def main(rootpage):
         indextext += "\n\n"
     saveindex = pywikibot.Page(bot, 'Template:WikiProject directory index')
     saveindex.text = indextext
-    saveindex.save('Updating', minor=False, async=True)
+    saveindex.save('Updating', minor=False, async=True, quiet=True)
 
     # Generate directories and save!
     for directory in directories.keys():
@@ -64,7 +64,7 @@ def main(rootpage):
         if contents != page.text:  # Checking to see if a change was made to cut down on API save queries
             oldcontents = page.text
             page.text = contents
-            page.save('Updating', minor=False, async=True)
+            page.save('Updating', minor=False, async=True, quiet=True)
 
 
 if __name__ == "__main__":

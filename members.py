@@ -89,9 +89,9 @@ class WikiProjectMembers:
 
             # Now, save pages.
             page_active.text = active
-            page_active.save("Updating member list", minor=False, async=True)
+            page_active.save("Updating member list", minor=False, async=True, quiet=True)
             page_inactive.text = inactive
-            page_inactive.save("Updating member list", minor=False, async=True)
+            page_inactive.save("Updating member list", minor=False, async=True, quiet=True)
 
 
 if __name__ == "__main__":

@@ -73,7 +73,7 @@ class WikiProjectWatchers:
 
         page = pywikibot.Page(bot, saveto)
         page.text = contents
-        page.save("Updating report", minor=False)
+        page.save("Updating report", minor=False, quiet=True)
 
 
 if __name__ == "__main__":

@@ -45,7 +45,7 @@ def main(rootpage, saveto):
 
     page = pywikibot.Page(bot, saveto)
     page.text = output
-    page.save('Updating', minor=False)
+    page.save('Updating', minor=False, quiet=True)
     
 
 if __name__ == "__main__":

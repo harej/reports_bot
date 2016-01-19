@@ -149,7 +149,7 @@ class WikiProjectNotifications:
                     page = pywikibot.Page(self.bot, 'Wikipedia:' + wikiproject + '/Notifications')
                     page.text = page.get(True)  # Forces a reload of the page
                     page.text = page.text + '\n' + reports[wikiproject][reportkey]
-                    page.save("New notification", minor=False, async=True)
+                    page.save("New notification", minor=False, async=True, quiet=True)
     
         # Deleting old records now that notifications have been sent out
         if len(id_to_delete) > 0:
