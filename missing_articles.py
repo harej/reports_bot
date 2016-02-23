@@ -56,7 +56,7 @@ class WikidataMagic:
 
                 # Generate the report itself!
                 save_to = wikiproject + "/Tasks/Wikidata Missing Article Report"
-                content = ("{{WPX list start|title=From Wikidata|"
+                content = ("{{WPX list start|title={{{customtitle|From Wikidata}}}|"
                            "intro=Automatically generated list of missing articles"
                            "<br />{{WPX last updated|" + save_to + "}}}}\n"
                            "{{#invoke:<includeonly>random|list|limit=3"
