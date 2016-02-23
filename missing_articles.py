@@ -22,7 +22,7 @@ class WikidataMagic:
         url = 'https://www.wikidata.org/wiki/Special:EntityData/' + item + \
               '.json'
         r = requests.get(url)
-        return r.json()
+        return r.json() or {}
 
 
     def wikidataquery(self, query):
