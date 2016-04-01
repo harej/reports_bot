@@ -16,7 +16,7 @@ class WikiProjectTools:
         if switch == 'wiki':  # Queries to the English Wikipedia database
             host, db = 'enwiki.labsdb', 'enwiki_p'
         elif switch == 'index':  # Queries to our article-WikiProject pair index
-            host, db = 'tools-db', 's52475__wpx'
+            host, db = 'tools-db', 's52475__wpx_p'
         else:
             raise ValueError
 
