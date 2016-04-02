@@ -191,6 +191,7 @@ class WikiProjectTools:
 
         self.query('index', 'drop table if exists projectindex', None)
         self.query('index', 'rename table projectindex_draft to projectindex', None)  # Moving draft table over to live table
+        self.query('index', 'create index projectindex_pageindex on projectindex (pi_page)', None)  # Creating index
 
 if __name__ == "__main__":
     wptools = WikiProjectTools()
