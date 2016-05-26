@@ -5,9 +5,9 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import pywikibot
 import mwparserfromhell
+
 from project_index import WikiProjectTools
 from notifications import WikiProjectNotifications
 
@@ -21,7 +21,7 @@ class WikiProjectMembers:
         '''
         Queue new member notification
         '''
-        
+
         content = "* User:" + username
         self.wpn.post(project, "newmember", content)
 

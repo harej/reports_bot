@@ -5,11 +5,14 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-import sys
-import json
-import pywikibot
 import datetime
+import json
+import sys
+
+import pywikibot
+
 from project_index import WikiProjectTools
+
 
 class WPXConfig:
     def stopthepresses(self, bot, message):
@@ -18,21 +21,21 @@ class WPXConfig:
         page = pywikibot.Page(bot, 'Wikipedia talk:WikiProject X/wikiproject.json/Errors')
         page.text = str(wikitime) + ': ' + message
         page.save('Error while loading configuration', minor=False)
-        sys.exit()     
-    
+        sys.exit()
+
     def now(self):
         bot = pywikibot.Site('en', 'wikipedia')
-    
+
         # Exports the contents of the wikiproject.json page.
         page = pywikibot.Page(bot, 'Wikipedia:WikiProject X/wikiproject.json')
         output = page.text
-    
+
         # We now have the JSON blob, in string format.
         try:
             output = json.loads(output)
         except ValueError as ack:  # If JSON is invalid
             self.stopthepresses(bot, str(ack))
-    
+
         # At this point, we have valid JSON at our disposal. But does it comply with the schema?
         schema = list(output['schema'].keys())
         for setting in output['defaults']:
@@ -42,7 +45,7 @@ class WPXConfig:
             for setting in entry:
                 if setting not in schema:
                     self.stopthepresses(bot, 'Invalid setting {0} in project entry {1}'.format(setting, entry))
-    
+
         # If the script hasn't been killed yet, save to database.
         output = json.dumps(output)
         wptools = WikiProjectTools()
@@ -50,6 +53,7 @@ class WPXConfig:
         wptools.query('index', 'insert into config_draft (json) values (%s);', (str(output),))
         wptools.query('index', 'drop table if exists config', None)
         wptools.query('index', 'rename table config_draft to config', None)
+
 
 if __name__ == "__main__":
     run = WPXConfig()

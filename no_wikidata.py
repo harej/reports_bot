@@ -5,10 +5,11 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-import pywikibot
-from project_index import WikiProjectTools
 from urllib.parse import quote
 
+import pywikibot
+
+from project_index import WikiProjectTools
 
 def main():
     wptools = WikiProjectTools()
@@ -35,7 +36,6 @@ def main():
 
     page.text = content
     page.save("Updating list", minor=False, quiet=True)
-
 
 if __name__ == "__main__":
     main()

@@ -5,10 +5,11 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
+import json
 
 import requests
 import pywikibot
-import json
+
 from project_index import WikiProjectTools
 
 

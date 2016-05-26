@@ -5,11 +5,12 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import datetime
 import operator
+
 import pywikibot
 import requests
+
 from project_index import WikiProjectTools
 
 

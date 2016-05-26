@@ -5,12 +5,11 @@ Copyright (C) 2015 James Hare, Legoktm
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import mwparserfromhell as mwph
 import pywikibot
-from project_index import WikiProjectTools
-from category_tree import WikiProjectCategories
 
+from category_tree import WikiProjectCategories
+from project_index import WikiProjectTools
 
 def treegen(tree):
     for key, value in tree.items():
@@ -46,7 +45,6 @@ def main(rootpage, saveto):
     page = pywikibot.Page(bot, saveto)
     page.text = output
     page.save('Updating', minor=False, quiet=True)
-    
 
 if __name__ == "__main__":
     main('Wikipedia:WikiProject Directory', 'User:Reports bot/Uncategorized WikiProjects')

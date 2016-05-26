@@ -5,10 +5,11 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
-import pywikibot
-import mwparserfromhell
 import datetime
+
+import mwparserfromhell
+import pywikibot
+
 from project_index import WikiProjectTools
 
 
@@ -114,7 +115,7 @@ class WikiProjectNotifications:
 
         subscribers = self.findsubscribers()
         reports = {}  # a dictionary of dictionaries. e.g. {'WikiProject_Biology': {'newmember': blahblahreport, 'newdiscussion': blahblahreport}}
-    
+
         # Take database, turn into Python stuff
         id_to_delete = []
         for row in self.wptools.query('index', 'select n_id, n_project, n_variant, n_content from notifications;', None):
@@ -122,11 +123,11 @@ class WikiProjectNotifications:
             wikiproject = row[1]
             variant = row[2]
             content = row[3]
-    
+
             # Initializing entry in `reports` just in case
             if wikiproject not in reports:
                 reports[wikiproject] = {key:'' for key in self.recognizedvariants.keys()}
-    
+
             # Appending content item to the report accordingly
             reports[wikiproject][variant] += content + '\n'
 
@@ -144,13 +145,13 @@ class WikiProjectNotifications:
                     for subscriber in subscribers[wikiproject][reportkey]:
                         reports[wikiproject][reportkey] += '[[User:' + subscriber + '| ]]'
                     reports[wikiproject][reportkey] += closer
-        
+
                     # Saving report
                     page = pywikibot.Page(self.bot, 'Wikipedia:' + wikiproject + '/Notifications')
                     page.text = page.get(True)  # Forces a reload of the page
                     page.text = page.text + '\n' + reports[wikiproject][reportkey]
                     page.save("New notification", minor=False, async=True, quiet=True)
-    
+
         # Deleting old records now that notifications have been sent out
         if len(id_to_delete) > 0:
             if len(id_to_delete) == 1:

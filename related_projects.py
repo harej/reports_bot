@@ -5,13 +5,13 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
-# import mw_lego # https://github.com/legoktm/supersimplemediawiki
 import re
 import operator
-import pywikibot
-from project_index import WikiProjectTools
 
+# import mw_lego # https://github.com/legoktm/supersimplemediawiki
+import pywikibot
+
+from project_index import WikiProjectTools
 
 def main():
 

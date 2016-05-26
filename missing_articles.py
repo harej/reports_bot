@@ -5,10 +5,11 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import json
+
 import pywikibot
 import requests
+
 from project_index import WikiProjectTools
 
 
@@ -81,7 +82,7 @@ class WikidataMagic:
                             description = "No English description available"
                     else:
                         description = "No English Description available"
-                    
+
                     content += "| {{WPX block|largetext='''" + label + \
                                "'''|smalltext=" + description + \
                                "<br />([[d:" + item + \

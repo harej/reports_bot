@@ -5,10 +5,9 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import pywikibot as pwb
-from project_index import WikiProjectTools
 
+from project_index import WikiProjectTools
 
 def main():
     wptools = WikiProjectTools()
@@ -35,7 +34,7 @@ def main():
 
             # Load WikiProject category
             project_cat = pwb.Page(bot, 'Category:' + pair)
-    
+
             # List categories to add to project category
             page_cats = [c for c in pwb.textlib.getCategoryLinks(project_page.text) \
                          if str(c)[-15:] == ' WikiProjects]]']
@@ -49,7 +48,6 @@ def main():
             summary = "WikiProject category migration. See [[User:Harej bot/WikiProject category migration]]."
             project_page.save(summary, minor=False, quiet=True)
             project_cat.save(summary, minor=False, quiet=True)
-
 
 if __name__ == "__main__":
     main()

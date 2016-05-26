@@ -5,19 +5,19 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
-import os
 import configparser
-import json
-import time
 import datetime
-import pywikibot
-import mwparserfromhell
+import json
+import os
+import time
+
 from mw import api
 from mw.lib import reverts
+import mwparserfromhell
+import pywikibot
+
 from notifications import WikiProjectNotifications
 from project_index import WikiProjectTools
-
 
 def queue_notification(project, notification):
     '''
@@ -30,7 +30,7 @@ def queue_notification(project, notification):
 def main():
     # This is used for Aaron Halfaker's API wrapper...
     loginfile = configparser.ConfigParser()
-    loginfile.read([os.path.expanduser('~/.wiki.ini')])
+    loginfile.read([os.path.expanduser('~/.wiki.ini')])  # TODO: use pywiki's config, or just replace mw.lib with pywiki api calls
     username = loginfile.get('wiki', 'username')
     password = loginfile.get('wiki', 'password')
 
@@ -45,7 +45,7 @@ def main():
     # Pulling timestamp of the last time the script was run
     query = wptools.query('index', 'select lu_timestamp from lastupdated where lu_key = "new_discussions";', None)
     lastupdated = query[0][0]
-    
+
     # Polling for newest talk page posts in the last thirty minutes
     query = wptools.query('wiki', 'select distinct recentchanges.rc_this_oldid, page.page_id, recentchanges.rc_title, recentchanges.rc_comment, recentchanges.rc_timestamp, page.page_namespace from recentchanges join page on recentchanges.rc_namespace = page.page_namespace and recentchanges.rc_title = page.page_title join categorylinks on page.page_id=categorylinks.cl_from where rc_timestamp >= {0} and rc_timestamp < {1} and rc_comment like "% new section" and rc_deleted = 0 and cl_to like "%_articles" and page_namespace not in (0, 2, 6, 8, 10, 12, 14, 100, 108, 118) order by rc_timestamp asc;'.format(lastupdated, now), None)
 
@@ -77,7 +77,7 @@ def main():
 
     # Loading list of WikiProjects signed up to get lists of new discussions
     config = json.loads(wptools.query('index', 'select json from config;', None)[0][0])
-    
+
     if config['defaults']['new_discussions'] == False:  # i.e. if New Discussions is an opt-in system
         whitelist = []  # Whitelisted WikiProjects for new discussion lists
         for project in config['projects']:

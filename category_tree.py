@@ -6,8 +6,8 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 from pprint import pprint
-from project_index import WikiProjectTools
 
+from project_index import WikiProjectTools
 
 def build_cat_tree(cat_name, max_depth=5):
     if max_depth == 0:
@@ -36,9 +36,7 @@ class WikiProjectCategories:
         if production == True:
             return tree
 
+
 if __name__ == "__main__":
     wpc = WikiProjectCategories()
     wpc.generate(audit=True, production=False)  # If the script is invoked directly, run in audit mode
-
-
-
