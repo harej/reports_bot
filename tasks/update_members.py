@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Updates membership lists for WikiProjects using the WikiProjectCard infrastructure
 Copyright (C) 2015 James Hare
@@ -8,50 +9,57 @@ Licensed under MIT License: http://mitlicense.org
 import pywikibot
 import mwparserfromhell
 
-from project_index import WikiProjectTools
-from notifications import WikiProjectNotifications
+from reportsbot.task import Task
 
+__all__ = ["UpdateMembers"]
 
-class WikiProjectMembers:
-    def __init__(self):
-        self.wptools = WikiProjectTools()
-        self.wpn = WikiProjectNotifications()
+class UpdateMembers(Task):
+    """
+    Updates WikiProject member lists based on WikiProjectCard transclusions.
+    """
+    MEMBER_TEMPLATE = "WikiProjectCard"
 
-    def queue_notification(self, project, username):
-        '''
-        Queue new member notification
-        '''
+    def _queue_notification(self, project, username):
+        """Queue new member notification."""
+        return  # TODO
+        # content = "* User:" + username
+        # self.wpn.post(project, "newmember", content)
 
-        content = "* User:" + username
-        self.wpn.post(project, "newmember", content)
+    def _get_all_members(self):
+        """Return a dict mapping projects to lists of members (usernames)."""
+        query = """SELECT page_title FROM templatelinks
+            JOIN page ON page_id = tl_from
+            WHERE page_namespace = 2 AND tl_namespace = 10
+            AND tl_title = %s"""
 
+        members = {}
+        with self._bot.wikidb as cursor:
+            cursor.execute(query, (self.MEMBER_TEMPLATE,))
+            for row in cursor.fetchall():
+                title = row[0].decode('utf-8')
+                if title.count("/") < 2:
+                    continue
+
+                # 'Users:Harej/WikiProjectCards/WikiProject_Women_in_Technology' ->
+                # ['Harej', 'WikiProjectCards', 'WikiProject_Women_in_Technology']
+                components = title.split("/", 2)
+                if components[1] != "WikiProjectCards":
+                    continue
+
+                username = components[0]
+                wikiproject = components[2]
+                if wikiproject in members:
+                    members[wikiproject].append(username)
+                else:
+                    members[wikiproject] = [username]
+
+        return {project: sorted(users) for project, users in members.items()}
 
     def run(self):
-        bot = pywikibot.Site('en', 'wikipedia')
-
-        q = ('select page_title from templatelinks '
-             'join page on page_id = tl_from and page_namespace = tl_from_namespace '
-             'where page_namespace = 2 and tl_namespace = 10 '
-             'and tl_title = "WikiProjectCard";')
-
-        # Generate list of WikiProjects and members through the WikiProjectCard system
-        members = {}
-        for row in self.wptools.query('wiki', q, None):
-            title = row[0].decode('utf-8')
-            components = title.split('/')  # e.g. ['Harej', 'WikiProjectCards', 'WikiProject_Women_in_Technology']
-            title = "User: " + title
-            username = components[0]
-            wikiproject = '/'.join(components[2:])  # In case the WikiProject name somehow has a slash in it
-
-            if wikiproject in members:
-                members[wikiproject].append(username)
-            else:
-                members[wikiproject] = [username]
-
-        members = {wikiproject:sorted(memberlist) for wikiproject, memberlist in members.items()}
+        members = self._get_all_members()
 
         for wikiproject in members:
-            # Generate active member and inactive member lists
+            # Generate active member and inactive member lists:
             return_to_wikiproject = "{{{{Clickable button 2|Wikipedia:{0}|Return to WikiProject|class=mw-ui-neutral}}}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>".format(wikiproject)
             lua_garbage = "{{#invoke:<includeonly>random|list|limit=3</includeonly><noinclude>list|unbulleted</noinclude>|"
             active = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[Wikipedia:{0}/Members/Inactive|inactive members list]].</div>\n\n</noinclude>".format(wikiproject) + lua_garbage
@@ -68,8 +76,8 @@ class WikiProjectMembers:
             inactive += "}}"
 
             # Generate old list to prepare a diff
-            page_active = pywikibot.Page(bot, "Wikipedia:" + wikiproject + "/Members")
-            page_inactive = pywikibot.Page(bot, "Wikipedia:" + wikiproject + "/Members/Inactive")
+            page_active = pywikibot.Page(self._bot, "Wikipedia:" + wikiproject + "/Members")
+            page_inactive = pywikibot.Page(self._bot, "Wikipedia:" + wikiproject + "/Members/Inactive")
 
             oldnames = []
             for text in [page_active.text, page_inactive.text]:
@@ -85,15 +93,10 @@ class WikiProjectMembers:
 
             # Anyone in the *newnames* set is a new user. Queue the notification!
             for member in newnames:
-                self.queue_notification(wikiproject, member)
+                self._queue_notification(wikiproject, member)
 
             # Now, save pages.
             page_active.text = active
             page_active.save("Updating member list", minor=False, async=True, quiet=True)
             page_inactive.text = inactive
             page_inactive.save("Updating member list", minor=False, async=True, quiet=True)
-
-
-if __name__ == "__main__":
-    go = WikiProjectMembers()
-    go.run()
