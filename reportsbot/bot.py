@@ -26,8 +26,8 @@ class Bot:
             return self._lang + "wiki"
         return self._lang + self._project
 
-    def _sql_connect(self, host, database, **kwargs):
-        """Return a new SQL connection to the given host and database."""
+    def _sql_connect(self, **kwargs):
+        """Return a new SQL connection using the given arguments."""
         args = self._sql_args.copy()
         args.update(kwargs)
 
@@ -40,7 +40,7 @@ class Bot:
         if "autocommit" not in args:
             args["autocommit"] = False
 
-        return pymysql.connect(host=host, database=database, **args)
+        return pymysql.connect(**args)
 
     @property
     def site(self):
@@ -63,7 +63,5 @@ class Bot:
     def localdb(self):
         """Return a connection to the local Reports bot/WPX database."""
         if not self._localdb:
-            self._localdb = self._sql_connect(
-                host="tools-db",
-                database="s52475__wpx_p")  # TODO: in config
+            self._localdb = self._sql_connect(**self._config.local_sql)
         return self._localdb

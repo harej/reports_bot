@@ -35,3 +35,8 @@ class Config:
     def default_lang(self):
         """Return the default site language, like 'en'."""
         return self._data.get("defaults", {}).get("lang", "en")
+
+    @property
+    def local_sql(self):
+        """Return SQL connection info for the Reports bot/WPX database."""
+        return self._data.get("localsql", {})
