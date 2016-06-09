@@ -67,7 +67,7 @@ class UpdateMembers(Task):
 
             for member in members[wikiproject]:
                 addition = "{{User:" + member + "/WikiProjectCards/" + wikiproject + "<includeonly>|mode=compact</includeonly>}}|"
-                if self.wpn.active_user(member):
+                if self._bot.get_user(member).is_active():
                     active += addition
                 else:
                     inactive += addition
