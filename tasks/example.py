@@ -8,5 +8,5 @@ class ExampleTask(Task):
     """Example task that does nothing."""
 
     def run(self):
-        """Do nothing."""
-        pass
+        """Do nothing useful."""
+        print("Hello, world!")

@@ -15,7 +15,8 @@ Next, install these dependencies:
     pip install pywikibot requests PyMySQL mwparserfromhell \
     mediawiki-utilities numpy scikit-learn
 
-You'll need to create a `user-config.py` file for Pywikibot. [TODO: instructions]
+You'll need to create a `config/user-config.py` file for Pywikibot.
+[TODO: instructions]
 
 # Usage
 

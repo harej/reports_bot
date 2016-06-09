@@ -13,12 +13,16 @@ For detailed command-line arguments:
     ./run --help
 """
 
-from os import path
+from os import environ, path
+
+root = path.dirname(__file__)
+
+task_dir = path.join(root, "tasks")
+config_dir = path.join(root, "config")
+log_dir = path.join(root, "logs")
+
+environ["PYWIKIBOT2_DIR"] = config_dir
 
 from reportsbot.cli import run
 
-root = path.dirname(__file__)
-task_dir = path.join(root, "tasks")
-log_dir = path.join(root, "logs")
-
-run(task_dir, log_dir)
+run(task_dir, config_dir, log_dir)

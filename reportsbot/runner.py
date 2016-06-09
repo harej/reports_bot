@@ -7,6 +7,7 @@ This module contains Reports bot's task runner.
 from importlib.machinery import SourceFileLoader
 import os.path
 
+from .bot import Bot
 from .exceptions import TaskLoaderError
 from .logging import get_logger
 from .task import Task
@@ -92,4 +93,5 @@ def run_task(task):
     """Execute the given Task object."""
     _logger.info("Running task: %s", task.__name__)
 
-    ...
+    bot = Bot()
+    task(bot).run()

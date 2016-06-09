@@ -53,15 +53,16 @@ def _setup_file_logging(log_dir):
         datefmt=_DATE_FORMAT)
 
     logpath = path.join(log_dir, "bot.log")
-    handler = TimedRotatingFileHandler(logpath, "midnight", 1, 7)
+    handler = TimedRotatingFileHandler(logpath, "midnight", 1, 30)
     handler.setLevel("INFO")
     handler.setFormatter(formatter)
     _root.addHandler(handler)
 
-def setup_logging(log_dir=None):
+def setup_logging(log_dir=None, quiet=False):
     """Set up the logging infrastructure.
 
-    If an argument is given, logs will be written to that directory.
+    If *log_dir* is given, logs will be written to that directory. If *quiet*
+    is True, logs below ERROR level will not be written to standard out.
     """
     global _setup_done
 
@@ -73,7 +74,7 @@ def setup_logging(log_dir=None):
     _root.setLevel("DEBUG")
 
     stream = StreamHandler()
-    stream.setLevel("DEBUG")
+    stream.setLevel("ERROR" if quiet else "DEBUG")
     stream.setFormatter(_ColorFormatter())
     _root.addHandler(stream)
 
