@@ -1,4 +1,4 @@
-__Reports bot___ maintains reports and other useful things for
+__Reports bot__ maintains reports and other useful things for
 [WikiProjects](https://en.wikipedia.org/wiki/Wikipedia:WikiProject).
 
 # Setup
@@ -40,4 +40,7 @@ arguments as `./run`:
 
 # Tasks
 
-[TODO: task list]
+* `update_members`: Updates WikiProject membership lists based on
+  WikiProjectCard transclusions.
+
+[TODO: other tasks]

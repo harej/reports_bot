@@ -5,6 +5,8 @@ from os.path import expanduser
 import pymysql
 import pywikibot
 
+from .user import User
+
 __all__ = ["Bot"]
 
 class Bot:
@@ -65,3 +67,7 @@ class Bot:
         if not self._localdb:
             self._localdb = self._sql_connect(**self._config.local_sql)
         return self._localdb
+
+    def get_user(self, name):
+        """Return a User object corresponding to the given username."""
+        return User(self, name)
