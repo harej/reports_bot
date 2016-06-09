@@ -89,9 +89,17 @@ def find_task(name, base_dir="."):
 
     return task
 
-def run_task(task):
-    """Execute the given Task object."""
-    _logger.info("Running task: %s", task.__name__)
+def run_task(task, config, project=None, lang=None):
+    """Execute the given Task object.
 
-    bot = Bot()
+    A Config object must also be provided. If a project or language is not
+    given, then we'll use the config's defaults.
+    """
+    if not project:
+        project = config.default_project
+    if not lang:
+        lang = config.default_lang
+
+    _logger.info("Running task (%s.%s): %s", lang, project, task.__name__)
+    bot = Bot(config, project, lang)
     task(bot).run()

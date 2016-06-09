@@ -10,7 +10,8 @@ __all__ = ["Bot"]
 class Bot:
     """Represents an instance of the Reports bot on a particular wiki."""
 
-    def __init__(self, project="wikipedia", lang="en"):
+    def __init__(self, config, project, lang):
+        self._config = config
         self._project = project
         self._lang = lang
 

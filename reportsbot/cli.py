@@ -6,7 +6,7 @@ This module contains the command-line interface wrapper around the task runner.
 
 from argparse import ArgumentParser
 
-# from .config import Config
+from .config import Config
 from .exceptions import TaskLoaderError
 from .logging import setup_logging
 from .runner import find_task, run_task
@@ -30,10 +30,11 @@ def run(task_dir=".", config_dir="config", log_dir=None):
     g_task.add_argument("task_names", nargs="+", metavar="<task>",
                         help="name of task to run")
     g_task.add_argument("-p", "--project", metavar="<project>",
-                        default="wikipedia",
-                        help="project to run the bot on (default: wikipedia)")
-    g_task.add_argument("-l", "--lang", metavar="<lang>", default="en",
-                        help="language to run the bot on (default: en)")
+                        help="""project to run the bot on (default: wikipedia,
+                        unless overridden in config)""")
+    g_task.add_argument("-l", "--lang", metavar="<lang>",
+                        help="""language to run the bot on (default: en, unless
+                        overridden in config)""")
 
     g_logs = parser.add_argument_group("logging")
     g_logs.add_argument("-q", "--quiet", action="store_true",
@@ -44,7 +45,7 @@ def run(task_dir=".", config_dir="config", log_dir=None):
                         help="use a custom log directory")
 
     g_misc = parser.add_argument_group("miscellaneous")
-    g_misc.add_argument("-c", "--config", metavar="<path>",
+    g_misc.add_argument("-c", "--config", metavar="<path>", default=config_dir,
                         help="use a custom config directory")
     g_misc.add_argument("-h", "--help", action="help",
                         help="show this help message and exit")
@@ -52,7 +53,7 @@ def run(task_dir=".", config_dir="config", log_dir=None):
     args = parser.parse_args()
     setup_logging(log_dir=None if args.traceless else args.log_dir,
                   quiet=args.quiet)
-    # config = Config(config_dir)
+    config = Config(args.config)
 
     try:
         tasks = [find_task(name, task_dir) for name in args.task_names]
@@ -60,7 +61,7 @@ def run(task_dir=".", config_dir="config", log_dir=None):
         exit(1)
 
     for task in tasks:
-        run_task(task)  # XXX
+        run_task(task, config, project=args.project, lang=args.lang)
 
 if __name__ == "__main__":
     run()

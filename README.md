@@ -1,4 +1,5 @@
-[TODO: introduction goes here!]
+__Reports bot___ maintains reports and other useful things for
+[WikiProjects](https://en.wikipedia.org/wiki/Wikipedia:WikiProject).
 
 # Setup
 
@@ -12,11 +13,13 @@ directory. The following workaround may be necessary on Debian systems:
 
 Next, install these dependencies:
 
-    pip install pywikibot requests PyMySQL mwparserfromhell \
+    pip install pywikibot requests PyYAML PyMySQL mwparserfromhell \
     mediawiki-utilities numpy scikit-learn
 
+## Configuring
+
 You'll need to create a `config/user-config.py` file for Pywikibot.
-[TODO: instructions]
+[TODO: instructions for this and `config/config.yml`]
 
 # Usage
 
