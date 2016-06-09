@@ -5,6 +5,8 @@ from os.path import expanduser
 import pymysql
 import pywikibot
 
+__all__ = ["Bot"]
+
 class Bot:
     """Represents an instance of the Reports bot on a particular wiki."""
 

@@ -1,0 +1,24 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Simple wrapper script around the Reports bot task runner.
+
+To run a task located at 'tasks/foobar.py':
+
+    ./run foobar
+
+For detailed command-line arguments:
+
+    ./run --help
+"""
+
+from os import path
+
+from reportsbot.cli import run
+
+root = path.dirname(__file__)
+task_dir = path.join(root, "tasks")
+log_dir = path.join(root, "logs")
+
+run(task_dir, log_dir)

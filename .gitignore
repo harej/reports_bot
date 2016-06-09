@@ -1,8 +1,11 @@
 # Python
 __pycache__/
 *.pyc
-venv/
 
 # Pywikibot
 user-config.py
 apicache/
+
+# Reports bot
+logs/
+venv/
