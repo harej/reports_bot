@@ -58,7 +58,8 @@ class Bot:
             wikiid = self._get_wikiid()
             self._wikidb = self._sql_connect(
                 host="{}.labsdb".format(wikiid),
-                database="{}_p".format(wikiid))
+                database="{}_p".format(wikiid),
+                **self._config.wiki_sql)
         return self._wikidb
 
     @property

@@ -4,9 +4,9 @@ import pdb
 
 from reportsbot.task import Task
 
-__all__ = ["Debug"]
+__all__ = ["Debugger"]
 
-class Debug(Task):
+class Debugger(Task):
     """Example task for demonstration and debugging purposes."""
 
     def run(self):

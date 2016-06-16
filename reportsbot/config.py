@@ -37,6 +37,11 @@ class Config:
         return self._data.get("defaults", {}).get("lang", "en")
 
     @property
+    def wiki_sql(self):
+        """Return SQL connection info for the wiki's database."""
+        return self._data.get("sql", {}).get("wiki", {})
+
+    @property
     def local_sql(self):
         """Return SQL connection info for the Reports bot/WPX database."""
-        return self._data.get("local_sql", {})
+        return self._data.get("sql", {}).get("local", {})

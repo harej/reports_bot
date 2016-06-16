@@ -33,6 +33,8 @@ the bot's user.
 
 [TODO: instructions for both]
 
+[config.yml: read_default_file, remark on unpriv user]
+
 [TODO: setup database]
 
 # Usage
