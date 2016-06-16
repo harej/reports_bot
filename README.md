@@ -18,8 +18,22 @@ Next, install these dependencies:
 
 ## Configuring
 
-You'll need to create a `config/user-config.py` file for Pywikibot.
-[TODO: instructions for this and `config/config.yml`]
+Depending on your setup, you may wish to create a separate user for Reports
+bot. The recommended method is:
+
+    sudo adduser --system --home /path/to/reportsbot reportsbot
+
+Create a `config` directory and ensure that it is owned by Reports bot's user:
+
+    mkdir config && sudo chown reportsbot config
+
+You'll need to create a `config/config.yml` file for Reports bot and a
+`config/user-config.py` file for Pywikibot. Ensure that these are readable by
+the bot's user.
+
+[TODO: instructions for both]
+
+[TODO: setup database]
 
 # Usage
 
@@ -32,11 +46,15 @@ For a full description of the command-line interface:
 
     ./run --help
 
-If you prefer to use `reportsbot` as a regular Python package and execute task
-files at arbitrary locations, you can use this command, which supports the same
-arguments as `./run`:
+The `./run` script ensures that it is running under the user that owns the
+`config` directory, and tries to set its user ID if not. This allows you to add
+tasks to `reportsbot`'s crontab as well as run one-off jobs with `sudo ./run`,
+while keeping everything clean. If you prefer to use `reportsbot` as a regular
+Python package and execute task files at arbitrary locations, you can use this
+syntax, which supports the same arguments as `./run`:
 
     python3 -m reportsbot.cli full/path/to/task.py
+    python3 -m reportsbot.cli --help
 
 # Tasks
 
