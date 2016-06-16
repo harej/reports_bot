@@ -38,7 +38,7 @@ class Bot:
             args["read_default_file"] = expanduser("~/.my.cnf")
 
         if "charset" not in args:
-            args["charset"] = "utf8"
+            args["charset"] = "utf8mb4"
         if "autocommit" not in args:
             args["autocommit"] = False
 

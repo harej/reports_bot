@@ -39,4 +39,4 @@ class Config:
     @property
     def local_sql(self):
         """Return SQL connection info for the Reports bot/WPX database."""
-        return self._data.get("localsql", {})
+        return self._data.get("local_sql", {})
