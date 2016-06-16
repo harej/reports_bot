@@ -19,12 +19,6 @@ class UpdateMembers(Task):
     """
     MEMBER_TEMPLATE = "WikiProjectCard"
 
-    def _queue_notification(self, project, username):
-        """Queue new member notification."""
-        return  # TODO
-        # content = "* User:" + username
-        # self.wpn.post(project, "newmember", content)
-
     def _get_all_members(self):
         """Return a dict mapping projects to lists of members (usernames)."""
         query = """SELECT page_title FROM templatelinks
@@ -76,8 +70,8 @@ class UpdateMembers(Task):
             inactive += "}}"
 
             # Generate old list to prepare a diff
-            page_active = pywikibot.Page(self._bot, "Wikipedia:" + wikiproject + "/Members")
-            page_inactive = pywikibot.Page(self._bot, "Wikipedia:" + wikiproject + "/Members/Inactive")
+            page_active = pywikibot.Page(self._bot.site, "Wikipedia:" + wikiproject + "/Members")
+            page_inactive = pywikibot.Page(self._bot.site, "Wikipedia:" + wikiproject + "/Members/Inactive")
 
             oldnames = []
             for text in [page_active.text, page_inactive.text]:
@@ -91,12 +85,8 @@ class UpdateMembers(Task):
             newnames.sort()
             print(newnames)
 
-            # Anyone in the *newnames* set is a new user. Queue the notification!
-            for member in newnames:
-                self._queue_notification(wikiproject, member)
-
             # Now, save pages.
             page_active.text = active
-            page_active.save("Updating member list", minor=False, async=True, quiet=True)
+            page_active.save("Updating member list", minor=False)
             page_inactive.text = inactive
-            page_inactive.save("Updating member list", minor=False, async=True, quiet=True)
+            page_inactive.save("Updating member list", minor=False)
