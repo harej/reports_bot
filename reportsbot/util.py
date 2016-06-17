@@ -51,6 +51,6 @@ def ensure_ownership(path):
         # TODO: should really set group ID here with os.setregid()
         os.setreuid(owner, owner)
     except OSError as exc:
-        err = "Can't set uid as owner ({}) of path ({}):\n{}"
+        err = "Can't become bot user ({}), are you root?\n{}"
         owner_name = pwd.getpwuid(owner).pw_name
-        raise ConfigError(err.format(owner_name, path, exc)) from None
+        raise ConfigError(err.format(owner_name, exc)) from None

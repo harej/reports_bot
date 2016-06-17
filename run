@@ -11,6 +11,9 @@ To run a task located at 'tasks/foobar.py':
 For detailed command-line arguments:
 
     ./run --help
+
+If the bot uses a separate (unprivileged) user, you should run this with sudo
+to allow it to switch to that user and ensure permissions are correct.
 """
 
 import os
