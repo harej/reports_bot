@@ -50,9 +50,11 @@ the bot's user.
 
 ## Database
 
-Create a database from `schema.sql`.
+Reports bot uses an SQL database to store its on-wiki config, the WikiProject
+page indices, and some other information. Create this database using the schema
+described in `schema.sql` .
 
-[TODO: setup database]
+Make sure `config.yml` includes the appropriate connection info.
 
 # Usage
 
