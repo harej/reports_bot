@@ -26,6 +26,13 @@ class Config:
             err = "Couldn't read config file ({}):\n{}"
             raise ConfigError(err.format(filename, exc)) from None
 
+    def _get_sql_info(self, which):
+        """Get some SQL connection info."""
+        sql = self._data.get("sql", {})
+        info = sql.get("all", {})
+        info.update(sql.get(which, {}))
+        return info
+
     @property
     def default_project(self):
         """Return the default site project, like 'wikipedia'."""
@@ -37,11 +44,15 @@ class Config:
         return self._data.get("defaults", {}).get("lang", "en")
 
     @property
-    def wiki_sql(self):
-        """Return SQL connection info for the wiki's database."""
-        return self._data.get("sql", {}).get("wiki", {})
+    def wiki_sql(self, site):
+        """Return SQL connection info for the wiki DB for the given site."""
+        info = self._get_sql_info("wiki")
+        for key, val in info.items():
+            if isinstance(val, str):
+                info[key] = val.format(site=site)
+        return info
 
     @property
     def local_sql(self):
-        """Return SQL connection info for the Reports bot/WPX database."""
-        return self._data.get("sql", {}).get("local", {})
+        """Return SQL connection info for the local Reports bot/WPX DB."""
+        return self._get_sql_info("local")

@@ -20,7 +20,6 @@ class Bot:
         self._site = None
         self._wikidb = None
         self._localdb = None
-        self._sql_args = {}
 
     def _get_wikiid(self):
         """Return the site's ID; e.g. "enwiki" from "en" and "wikipedia"."""
@@ -29,20 +28,20 @@ class Bot:
         return self._lang + self._project
 
     def _sql_connect(self, **kwargs):
-        """Return a new SQL connection using the given arguments."""
-        args = self._sql_args.copy()
-        args.update(kwargs)
+        """Return a new SQL connection using the given arguments.
 
-        if ("read_default_file" not in args and "user" not in args
-                and "password" not in args):
-            args["read_default_file"] = expanduser("~/.my.cnf")
+        We apply some transformations: a default file is configured if not
+        username or password is provided, a default charset is set, and
+        autocommit is turned off.
+        """
+        if ("read_default_file" not in kwargs and "user" not in kwargs
+                and "password" not in kwargs):
+            kwargs["read_default_file"] = expanduser("~/.my.cnf")
+        if "charset" not in kwargs:
+            kwargs["charset"] = "utf8mb4"
+        kwargs["autocommit"] = False
 
-        if "charset" not in args:
-            args["charset"] = "utf8mb4"
-        if "autocommit" not in args:
-            args["autocommit"] = False
-
-        return pymysql.connect(**args)
+        return pymysql.connect(**kwargs)
 
     @property
     def site(self):
@@ -53,13 +52,10 @@ class Bot:
 
     @property
     def wikidb(self):
-        """Return a connection to the wiki's database."""
+        """Return a connection to the wiki replica database."""
         if not self._wikidb:
-            wikiid = self._get_wikiid()
-            self._wikidb = self._sql_connect(
-                host="{}.labsdb".format(wikiid),
-                database="{}_p".format(wikiid),
-                **self._config.wiki_sql)
+            kwargs = self._config.wiki_sql(self._get_wikiid())
+            self._wikidb = self._sql_connect(**kwargs)
         return self._wikidb
 
     @property

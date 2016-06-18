@@ -21,8 +21,8 @@ Next, install these dependencies:
     pip install pywikibot requests PyYAML PyMySQL mwparserfromhell \
     mediawiki-utilities numpy scikit-learn
 
-If you're using a virtualenv, run the following command to ensure the bot's
-task runner always uses it:
+If you set up a virtualenv, run the following command to ensure the bot's task
+runner always uses it:
 
     sed -e "1s|.*|#! $PWD/venv/bin/python|" -i "" ./run
 
@@ -49,6 +49,8 @@ the bot's user.
 [config.yml: read_default_file, remark on unpriv user]
 
 ## Database
+
+Create a database from `schema.sql`.
 
 [TODO: setup database]
 

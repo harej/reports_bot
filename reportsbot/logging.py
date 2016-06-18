@@ -31,8 +31,8 @@ class _ColorFormatter(Formatter):
     }
 
     def __init__(self):
-        format = "%(asctime)s %(levelcolor)s %(name)s: %(message)s"
-        super().__init__(fmt=format, datefmt=_DATE_FORMAT)
+        fmt = "%(asctime)s %(levelcolor)s %(name)s: %(message)s"
+        super().__init__(fmt=fmt, datefmt=_DATE_FORMAT)
 
     def format(self, record):
         default = "[{}]".format(record.levelname)
