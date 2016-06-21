@@ -47,7 +47,7 @@ class Config:
     def wiki_sql(self, site):
         """Return SQL connection info for the wiki DB for the given site."""
         info = self._get_sql_info("wiki")
-        for key, val in info.items():
+        for key, val in info.items():  # Convert db="{site}_p" to "enwiki_p"
             if isinstance(val, str):
                 info[key] = val.format(site=site)
         return info
