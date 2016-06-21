@@ -99,7 +99,14 @@ def run_task(task, config, project=None, lang=None):
         project = config.default_project
     if not lang:
         lang = config.default_lang
+    log_args = (lang, project, task.__name__)
 
-    _logger.info("Running task (%s.%s): %s", lang, project, task.__name__)
+    _logger.info("Running task (%s.%s): %s", *log_args)
     bot = Bot(config, project, lang)
-    task(bot).run()
+
+    try:
+        task(bot).run()
+    except Exception:
+        _logger.exception("Task crashed (%s.%s): %s", *log_args)
+    else:
+        _logger.info("Task finished (%s.%s): %s", *log_args)
