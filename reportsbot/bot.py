@@ -3,7 +3,6 @@
 from os.path import expanduser
 
 import pymysql
-import pywikibot
 
 from .user import User
 
@@ -46,6 +45,7 @@ class Bot:
     @property
     def site(self):
         """Return a Pywikibot site instance."""
+        import pywikibot
         if not self._site:
             self._site = pywikibot.Site(self._lang, self._project)
         return self._site

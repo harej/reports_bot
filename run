@@ -18,6 +18,9 @@ to allow it to switch to that user and ensure permissions are correct.
 
 import os
 
+from reportsbot.cli import run
+from reportsbot.util import ensure_ownership
+
 root = os.path.dirname(__file__)
 
 task_dir = os.path.join(root, "tasks")
@@ -26,10 +29,5 @@ log_dir = os.path.join(root, "logs")
 
 os.environ["PYWIKIBOT2_DIR"] = config_dir
 
-from reportsbot.util import ensure_ownership
-
 ensure_ownership(config_dir)
-
-from reportsbot.cli import run
-
 run(task_dir, config_dir, log_dir)
