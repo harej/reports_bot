@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import errno
 from os import path
 
 import yaml
@@ -21,8 +22,10 @@ class Config:
         filename = path.join(self._base_dir, "config.yml")
         try:
             with open(filename) as fp:
-                self._data = yaml.load(fp.read())
+                self._data = yaml.load(fp)
         except (OSError, yaml.error.YAMLError) as exc:
+            if exc.errno == errno.ENOENT:  # Ignore missing file; use defaults
+                return
             err = "Couldn't read config file ({}):\n{}"
             raise ConfigError(err.format(filename, exc)) from None
 
@@ -32,6 +35,11 @@ class Config:
         info = sql.get("all", {})
         info.update(sql.get(which, {}))
         return info
+
+    @property
+    def dir(self):
+        """Return the bot's config directory."""
+        return self._base_dir
 
     @property
     def default_project(self):

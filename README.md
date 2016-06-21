@@ -52,9 +52,9 @@ The bot requires a `config/config.yml` file for itself and
 `config/user-config.py` file for Pywikibot. The easiest way to create these
 is with the configuration assistant:
 
-    ./run configure
+    ./run -q configure
 
-(As described below, you should use `sudo ./run configure` if the bot is
+(As described below, you should use `sudo ./run -q configure` if the bot is
 running under an unprivileged user.)
 
 Afterwards, you may edit these files manually whenever necessary.
@@ -86,6 +86,18 @@ arguments as `./run`:
     python3 -m reportsbot.cli full/path/to/task.py
     python3 -m reportsbot.cli --help
 
+## Logs
+
+The bot stores logs in the `logs/` directory unless `-t` (`--traceless`) is
+passed to `./run`. `bot.log` stores non-DEBUG-level logs for all tasks, and is
+automatically rotated each night. 30 days of logs are kept.
+
+The bot also prints all logs (including DEBUG-level) to standard out unless
+`-q` (`--quiet`) is passed to `./run`, in which case only ERROR-level and
+higher are printed. This option can be useful for cron jobs; if you set up cron
+to email you the output of `./run -q`, you will be notified immediately when
+problems occur.
+
 # Tasks
 
 A number of tasks are provided. Advice on developing your own is given at the
@@ -98,8 +110,8 @@ end of this section.
 
 ## Developing
 
-To create new tasks, you can follow the skeleton in `example.py`. Important
-things to keep in mind:
+To create new tasks, you can follow the skeleton in `tasks/example.py`.
+Important things to keep in mind:
 
 * The name of the task class doesn't matter (the bot searches by filename), but
   it should be descriptive.
@@ -119,4 +131,5 @@ The task has access to two important attributes:
   manner. See the `reportsbot.bot.Bot` class documentation for details.
 * `self._logger` is the
   [Logger](https://docs.python.org/3/library/logging.html#logging.Logger.debug)
-  instance that you should use for all log messages.
+  instance that you should use for all log messages. `print` and writing to
+  `stdout` directly should be avoided.

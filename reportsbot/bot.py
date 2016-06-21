@@ -43,6 +43,11 @@ class Bot:
         return pymysql.connect(**kwargs)
 
     @property
+    def config(self):
+        """Return the bot's Config object."""
+        return self._config
+
+    @property
     def site(self):
         """Return a Pywikibot site instance."""
         import pywikibot
