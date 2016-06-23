@@ -6,16 +6,12 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-import pywikibot
-
 from reportsbot.task import Task
 
 __all__ = ["UpdateMembers"]
 
 class UpdateMembers(Task):
-    """
-    Updates WikiProject member lists based on WikiProjectCard transclusions.
-    """
+    """Updates WikiProject member lists based on WikiProjectCard usage."""
     MEMBER_TEMPLATE = "WikiProjectCard"
 
     def _get_all_members(self):
@@ -76,8 +72,8 @@ class UpdateMembers(Task):
         active = active[:-1] + "}}"  # removing trailing pipe and closing off module
         inactive += "}}"
 
-        page_active = pywikibot.Page(self._bot.site, active_title)
-        page_inactive = pywikibot.Page(self._bot.site, inactive_title)
+        page_active = self._bot.site.get_page(active_title)
+        page_inactive = self._bot.site.get_page(inactive_title)
 
         if active != page_active.text:
             self._logger.debug("Saving active members: [[%s]]", active_title)

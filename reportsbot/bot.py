@@ -51,7 +51,7 @@ class Bot:
 
     @property
     def site(self):
-        """Return a Pywikibot site instance."""
+        """Return a Pywikibot Site instance."""
         import pywikibot
         if not self._site:
             self._site = pywikibot.Site(self._lang, self._project,
@@ -72,6 +72,10 @@ class Bot:
         if not self._localdb:
             self._localdb = self._sql_connect(**self._config.get_local_sql())
         return self._localdb
+
+    def get_page(self, title):
+        """Return a Pywikibot Page instance for the given page."""
+        return pywikibot.Page(self.site, title)
 
     def get_project(self, name):
         """Return a WikiProject object corresponding to the given name.
