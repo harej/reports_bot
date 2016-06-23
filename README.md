@@ -19,7 +19,7 @@ necessary on Debian systems:
 
 Next, install these dependencies:
 
-    pip install pywikibot requests PyYAML PyMySQL mwparserfromhell \
+    pip install pywikibot mwoauth requests PyYAML PyMySQL mwparserfromhell \
     mediawiki-utilities numpy scikit-learn
 
 If you set up a virtualenv, run the following command to ensure the bot's task
@@ -44,7 +44,8 @@ appropriate ownership:
 Reports bot uses a MySQL database to store its on-wiki config, the WikiProject
 page indices, and some other information. Create this database using the schema
 described in `schema.sql`. You may change the database name—for example, on
-Labs, it should probably be something like `sXXXXX__wpx`.
+Labs, it should probably be something like `sXXXXX__wpx`. Make note of this for
+the next step.
 
 ## Config
 
