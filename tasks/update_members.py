@@ -7,7 +7,6 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 import pywikibot
-import mwparserfromhell
 
 from reportsbot.task import Task
 
@@ -21,6 +20,8 @@ class UpdateMembers(Task):
 
     def _get_all_members(self):
         """Return a dict mapping projects to lists of members (usernames)."""
+        self._logger.debug("Fetching member lists")
+
         query = """SELECT page_title FROM templatelinks
             JOIN page ON page_id = tl_from
             WHERE page_namespace = 2 AND tl_namespace = 10
@@ -47,45 +48,48 @@ class UpdateMembers(Task):
                 else:
                     members[wikiproject] = [username]
 
+        self._logger.info("%s total members in %s projects",
+                          sum(len(L) for L in members.values()), len(members))
+
         return {project: sorted(users) for project, users in members.items()}
+
+    def _update_project(self, project, members):
+        """Update the active and inactive member lists for a single project."""
+        self._logger.debug("Updating project: %s (%s members)", project,
+                           len(members))
+
+        active_title = "Project:" + project + "/Members"
+        inactive_title = "Project:" + project + "/Members/Inactive"
+
+        return_to_wikiproject = "{{Clickable button 2|Project:%s|Return to WikiProject|class=mw-ui-neutral}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>" % project
+        lua_garbage = "{{#invoke:<includeonly>random|list|limit=3</includeonly><noinclude>list|unbulleted</noinclude>|"
+        active = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[%s|inactive members list]].</div>\n\n</noinclude>" % inactive_title + lua_garbage
+        inactive = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[%s|active members list]].</div>\n\n</noinclude>"% active_title + lua_garbage
+
+        for member in members:
+            addition = "{{User:" + member + "/WikiProjectCards/" + project + "<includeonly>|mode=compact</includeonly>}}|"
+            if self._bot.get_user(member).is_active():
+                active += addition
+            else:
+                inactive += addition
+
+        active = active[:-1] + "}}"  # removing trailing pipe and closing off module
+        inactive += "}}"
+
+        page_active = pywikibot.Page(self._bot.site, active_title)
+        page_inactive = pywikibot.Page(self._bot.site, inactive_title)
+
+        if active != page_active.text:
+            self._logger.debug("Saving active members: [[%s]]", active_title)
+            page_active.text = active
+            page_active.save("Updating member list", minor=False)
+
+        if inactive != page_inactive.text:
+            self._logger.debug("Saving inactive members: [[%s]]", inactive_title)
+            page_inactive.text = inactive
+            page_inactive.save("Updating member list", minor=False)
 
     def run(self):
         members = self._get_all_members()
-
-        for wikiproject in members:
-            # Generate active member and inactive member lists:
-            return_to_wikiproject = "{{{{Clickable button 2|Wikipedia:{0}|Return to WikiProject|class=mw-ui-neutral}}}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>".format(wikiproject)
-            lua_garbage = "{{#invoke:<includeonly>random|list|limit=3</includeonly><noinclude>list|unbulleted</noinclude>|"
-            active = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[Wikipedia:{0}/Members/Inactive|inactive members list]].</div>\n\n</noinclude>".format(wikiproject) + lua_garbage
-            inactive = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[Wikipedia:{0}/Members|active members list]].</div>\n\n</noinclude>".format(wikiproject) + lua_garbage
-
-            for member in members[wikiproject]:
-                addition = "{{User:" + member + "/WikiProjectCards/" + wikiproject + "<includeonly>|mode=compact</includeonly>}}|"
-                if self._bot.get_user(member).is_active():
-                    active += addition
-                else:
-                    inactive += addition
-
-            active = active[:-1] + "}}"  # removing trailing pipe and closing off module
-            inactive += "}}"
-
-            # Generate old list to prepare a diff
-            page_active = pywikibot.Page(self._bot.site, "Wikipedia:" + wikiproject + "/Members")
-            page_inactive = pywikibot.Page(self._bot.site, "Wikipedia:" + wikiproject + "/Members/Inactive")
-
-            oldnames = []
-            for text in [page_active.text, page_inactive.text]:
-                contents = mwparserfromhell.parse(text)
-                contents = contents.filter_templates()
-                for t in contents:
-                    if t.name[:5] == "User:":  # differentiating between {{Clickable button 2}} et. al. and the WikiProjectCards
-                        oldnames.append(t.name.split("/")[0][5:])  # i.e. grab username from template
-
-            newnames = list(set(members[wikiproject]) - set(oldnames))
-            newnames.sort()
-
-            # Now, save pages.
-            page_active.text = active
-            page_active.save("Updating member list", minor=False)
-            page_inactive.text = inactive
-            page_inactive.save("Updating member list", minor=False)
+        for project in members:
+            self._update_project(project, members[project])
