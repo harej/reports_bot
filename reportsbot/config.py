@@ -51,8 +51,7 @@ class Config:
         """Return the default site language, like 'en'."""
         return self._data.get("defaults", {}).get("lang", "en")
 
-    @property
-    def wiki_sql(self, site):
+    def get_wiki_sql(self, site):
         """Return SQL connection info for the wiki DB for the given site."""
         info = self._get_sql_info("wiki")
         for key, val in info.items():  # Convert db="{site}_p" to "enwiki_p"
@@ -60,7 +59,6 @@ class Config:
                 info[key] = val.format(site=site)
         return info
 
-    @property
-    def local_sql(self):
+    def get_local_sql(self):
         """Return SQL connection info for the local Reports bot/WPX DB."""
         return self._get_sql_info("local")

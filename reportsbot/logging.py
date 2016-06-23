@@ -49,7 +49,7 @@ def _setup_file_logging(log_dir):
         makedirs(log_dir, stat.S_IWUSR|stat.S_IRUSR|stat.S_IXUSR)
 
     formatter = Formatter(
-        fmt="[%(asctime)s %(levelname)-5s] %(name)s: %(message)s",
+        fmt="[%(asctime)s %(levelname)-7s] %(name)s: %(message)s",
         datefmt=_DATE_FORMAT)
 
     logpath = path.join(log_dir, "bot.log")

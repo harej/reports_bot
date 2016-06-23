@@ -59,7 +59,7 @@ class Bot:
     def wikidb(self):
         """Return a connection to the wiki replica database."""
         if not self._wikidb:
-            kwargs = self._config.wiki_sql(self._get_wikiid())
+            kwargs = self._config.get_wiki_sql(self._get_wikiid())
             self._wikidb = self._sql_connect(**kwargs)
         return self._wikidb
 
@@ -67,7 +67,7 @@ class Bot:
     def localdb(self):
         """Return a connection to the local Reports bot/WPX database."""
         if not self._localdb:
-            self._localdb = self._sql_connect(**self._config.local_sql)
+            self._localdb = self._sql_connect(**self._config.get_local_sql())
         return self._localdb
 
     def get_user(self, name):
