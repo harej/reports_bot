@@ -20,12 +20,6 @@ class Bot:
         self._wikidb = None
         self._localdb = None
 
-    def _get_wikiid(self):
-        """Return the site's ID; e.g. "enwiki" from "en" and "wikipedia"."""
-        if self._project == "wikipedia":
-            return self._lang + "wiki"
-        return self._lang + self._project
-
     def _sql_connect(self, **kwargs):
         """Return a new SQL connection using the given arguments.
 
@@ -48,6 +42,13 @@ class Bot:
         return self._config
 
     @property
+    def wikiid(self):
+        """Return the site's ID; e.g. "enwiki" from "en" and "wikipedia"."""
+        if self._project == "wikipedia":
+            return self._lang + "wiki"
+        return self._lang + self._project
+
+    @property
     def site(self):
         """Return a Pywikibot site instance."""
         import pywikibot
@@ -60,7 +61,7 @@ class Bot:
     def wikidb(self):
         """Return a connection to the wiki replica database."""
         if not self._wikidb:
-            kwargs = self._config.get_wiki_sql(self._get_wikiid())
+            kwargs = self._config.get_wiki_sql(self.wikiid)
             self._wikidb = self._sql_connect(**kwargs)
         return self._wikidb
 

@@ -14,7 +14,9 @@ CREATE DATABASE `wpx`
 
 DROP TABLE IF EXISTS `config`;
 CREATE TABLE `config` (
-    `json` mediumtext
+    `config_site` VARCHAR(255) NOT NULL,
+    `config_json` MEDIUMTEXT NOT NULL,
+    PRIMARY KEY (`config_site`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -23,21 +25,53 @@ CREATE TABLE `config` (
 
 DROP TABLE IF EXISTS `lastupdated`;
 CREATE TABLE `lastupdated` (
-    `lu_key` varchar(255) DEFAULT NULL,
-    `lu_timestamp` varchar(255) DEFAULT NULL
+    `lu_site` VARCHAR(255) NOT NULL,
+    `lu_key` VARCHAR(255) NOT NULL,
+    `lu_timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`lu_site`, `lu_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Table structure for table `index_base`
+-- Table structure for table `base_page`
 --
 
-DROP TABLE IF EXISTS `index_base`;
-CREATE TABLE `index_base` (
-    `pi_id` int(11) NOT NULL AUTO_INCREMENT,
-    `pi_page` varchar(255) DEFAULT NULL,
-    `pi_project` varchar(255) DEFAULT NULL,
-    PRIMARY KEY (`pi_id`),
-    KEY `projectindex_pageindex` (`pi_page`)
+DROP TABLE IF EXISTS `base_page`;
+CREATE TABLE `base_page` (
+    `page_id` INT(8) UNSIGNED NOT NULL,
+    `page_talk_id` INT(8) UNSIGNED NOT NULL,
+    `page_title` VARCHAR(255) NOT NULL,
+    `page_ns` INT(11) NOT NULL,
+    PRIMARY KEY (`page_id`),
+    UNIQUE KEY (`page_talk_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dump completed on 2016-06-18  0:07:05
+--
+-- Table structure for table `base_project`
+--
+
+DROP TABLE IF EXISTS `base_project`;
+CREATE TABLE `base_project` (
+    `project_id` INT(8) UNSIGNED NOT NULL,
+    `project_title` VARCHAR(255) NOT NULL,
+    PRIMARY KEY (`project_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `base_index`
+--
+
+DROP TABLE IF EXISTS `base_index`;
+CREATE TABLE `base_index` (
+    `index_id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `index_page` INT(8) UNSIGNED NOT NULL,
+    `index_project` INT(8) UNSIGNED NOT NULL,
+    PRIMARY KEY (`index_id`),
+    FOREIGN KEY (`index_page`)
+        REFERENCES `base_page` (`page_id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (`index_project`)
+        REFERENCES `base_project` (`project_id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dump completed on 2016-06-23  9:46:05
