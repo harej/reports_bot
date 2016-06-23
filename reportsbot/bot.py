@@ -5,6 +5,7 @@ from os.path import expanduser
 import pymysql
 
 from .user import User
+from .wikiproject import WikiProject
 
 __all__ = ["Bot"]
 
@@ -71,6 +72,14 @@ class Bot:
         if not self._localdb:
             self._localdb = self._sql_connect(**self._config.get_local_sql())
         return self._localdb
+
+    def get_project(self, name):
+        """Return a WikiProject object corresponding to the given name.
+
+        The name is the page title of the project's base page, including the
+        namespace.
+        """
+        return WikiProject(self, name)
 
     def get_user(self, name):
         """Return a User object corresponding to the given username."""
