@@ -83,7 +83,6 @@ class UpdateMembers(Task):
 
             newnames = list(set(members[wikiproject]) - set(oldnames))
             newnames.sort()
-            print(newnames)
 
             # Now, save pages.
             page_active.text = active

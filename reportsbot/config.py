@@ -42,6 +42,11 @@ class Config:
         return self._base_dir
 
     @property
+    def username(self):
+        """Return the bot's username."""
+        return self._data.get("username")
+
+    @property
     def default_project(self):
         """Return the default site project, like 'wikipedia'."""
         return self._data.get("defaults", {}).get("project", "wikipedia")

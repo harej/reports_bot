@@ -19,6 +19,7 @@ class Configure(Task):
     def __init__(self, bot):
         super().__init__(bot)
         self._defaults = OrderedDict()
+        self._username = None
 
     def _ask(self, text, default=None, require=True):
         """Ask a question of the user and return the response."""
@@ -86,6 +87,12 @@ class Configure(Task):
             self._logger.info("Creating config directory: %s", config_dir)
             makedirs(config_dir, stat.S_IWUSR|stat.S_IRUSR|stat.S_IXUSR)
 
+    def _get_username(self):
+        """Return the bot's username; ask for it if necessary."""
+        if not self._username:
+            self._username = self._ask("Bot username:")
+        return self._username
+
     def _get_defaults(self):
         """Return default site info; ask for it if necessary."""
         if not self._defaults:
@@ -141,6 +148,7 @@ class Configure(Task):
             return
 
         config = OrderedDict()
+        config["username"] = self._get_username()
         config["defaults"] = self._get_defaults()
         config["sql"] = self._build_sql_config()
 
@@ -170,9 +178,6 @@ class Configure(Task):
         config.append("family = {}".format(repr(defaults["project"])))
         config.append("mylang = {}".format(repr(defaults["lang"])))
 
-        username = self._ask("Bot username:")
-        config.append("usernames['*']['*'] = {}".format(repr(username)))
-
         if self._ask_bool("Use OAuth for authentication?"):
             consumer_key = self._ask("OAuth consumer token:")
             consumer_secret = self._ask("OAuth consumer secret:")
@@ -182,7 +187,8 @@ class Configure(Task):
                 repr(consumer_key), repr(consumer_secret), repr(access_key),
                 repr(access_secret)))
         else:
-            password = self._ask_pass("Bot bassword:")
+            username = self._get_username()
+            password = self._ask_pass("Bot password:")
             pwfile = self._make_password_file(username, password)
             config.append("password_file = {}".format(repr(pwfile)))
 

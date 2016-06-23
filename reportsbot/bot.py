@@ -52,7 +52,8 @@ class Bot:
         """Return a Pywikibot site instance."""
         import pywikibot
         if not self._site:
-            self._site = pywikibot.Site(self._lang, self._project)
+            self._site = pywikibot.Site(self._lang, self._project,
+                                        self._config.username)
         return self._site
 
     @property
