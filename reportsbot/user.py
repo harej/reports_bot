@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .util import to_sql_format, to_wiki_format
+from .util import to_wiki_format
 
 __all__ = ["User"]
 
@@ -30,7 +30,7 @@ class User:
             TIMESTAMP(rc_timestamp) > DATE_SUB(NOW(), INTERVAL 30 DAY)"""
 
         with self._bot.wikidb as cursor:
-            cursor.execute(query, (to_sql_format(self._name),))
+            cursor.execute(query, (self._name),)
             count = cursor.fetchall()[0][0]
 
         return count > 0
