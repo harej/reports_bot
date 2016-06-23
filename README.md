@@ -104,6 +104,8 @@ problems occur.
 A number of tasks are provided. Advice on developing your own is given at the
 end of this section.
 
+* `load_project_config`: Loads WikiProject-specific configuration from the wiki
+  and stores it in the bot's database.
 * `update_members`: Updates WikiProject membership lists based on
   WikiProjectCard transclusions.
 * `update_project_index`: Updates the index of articles associated with each
