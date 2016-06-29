@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Loads wikiproject.json, validates it, stores it
 Copyright (C) 2015 James Hare

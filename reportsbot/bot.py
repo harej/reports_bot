@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path import expanduser
+import re
 
 import oursql
 
@@ -48,9 +49,12 @@ class Bot:
     @property
     def wikiid(self):
         """Return the site's ID; e.g. "enwiki" from "en" and "wikipedia"."""
+        # TODO: This is somewhat hacky; should really be using the API here...
         if self._project == "wikipedia":
-            return self._lang + "wiki"
-        return self._lang + self._project
+            res = self._lang + "wiki"
+        else:
+            res = self._lang + self._project
+        return re.sub(r"[^a-zA-Z0-9_-]", "", res).replace("-", "_")
 
     @property
     def site(self):
