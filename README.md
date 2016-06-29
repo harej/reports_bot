@@ -19,7 +19,7 @@ necessary on Debian systems:
 
 Next, install these dependencies:
 
-    pip install pywikibot mwoauth requests PyYAML PyMySQL mwparserfromhell \
+    pip install pywikibot mwoauth requests PyYAML oursql3 mwparserfromhell \
     mediawiki-utilities numpy scikit-learn
 
 If you set up a virtualenv, run the following command to ensure the bot's task

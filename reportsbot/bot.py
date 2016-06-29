@@ -2,7 +2,7 @@
 
 from os.path import expanduser
 
-import pymysql
+import oursql
 
 from .user import User
 from .wikiproject import WikiProject
@@ -33,9 +33,12 @@ class Bot:
             kwargs["read_default_file"] = expanduser("~/.my.cnf")
         if "charset" not in kwargs:
             kwargs["charset"] = "utf8mb4"
-        kwargs["autocommit"] = False
+        if "autoping" not in kwargs:
+            kwargs["autoping"] = True
+        if "autoreconnect" not in kwargs:
+            kwargs["autoreconnect"] = True
 
-        return pymysql.connect(**kwargs)
+        return oursql.connect(**kwargs)
 
     @property
     def config(self):
@@ -75,6 +78,7 @@ class Bot:
 
     def get_page(self, title):
         """Return a Pywikibot Page instance for the given page."""
+        import pywikibot
         return pywikibot.Page(self.site, title)
 
     def get_project(self, name):

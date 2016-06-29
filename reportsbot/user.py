@@ -26,7 +26,7 @@ class User:
         """
         query = """SELECT COUNT(*)
             FROM recentchanges_userindex
-            WHERE rc_user_text = %s AND
+            WHERE rc_user_text = ? AND
             TIMESTAMP(rc_timestamp) > DATE_SUB(NOW(), INTERVAL 30 DAY)"""
 
         with self._bot.wikidb as cursor:

@@ -111,19 +111,17 @@ class Configure(Task):
             localdb = self._ask("Local bot database name:")
             sql["all"] = {"read_default_file": defaultsfile}
             sql["wiki"] = OrderedDict((
-                ("host", "{site}.labsdb"), ("database", "{site}_p")))
+                ("host", "{site}.labsdb"), ("db", "{site}_p")))
             sql["local"] = OrderedDict((
-                ("host", "tools.labsdb"), ("database", localdb)))
+                ("host", "tools.labsdb"), ("db", localdb)))
 
         else:
             wikihost = self._ask("Wiki database host (use '{site}' as a placeholder for the site ID, e.g. '{site}.labsdb'):")
             wikidb = self._ask("Wiki database name (e.g. '{site}_p'):")
             localhost = self._ask("Local bot database host:")
             localdb = self._ask("Local bot database name:")
-            sql["wiki"] = OrderedDict((
-                ("host", wikihost), ("database", wikidb)))
-            sql["local"] = OrderedDict((
-                ("host", localhost), ("database", localdb)))
+            sql["wiki"] = OrderedDict((("host", wikihost), ("db", wikidb)))
+            sql["local"] = OrderedDict((("host", localhost), ("db", localdb)))
 
             if self._ask_bool("Use a defaults file for SQL authentication?"):
                 defaultsfile = self._ask("Defaults file path:", "~/.my.cnf")

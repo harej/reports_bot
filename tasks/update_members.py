@@ -21,7 +21,7 @@ class UpdateMembers(Task):
         query = """SELECT page_title FROM templatelinks
             JOIN page ON page_id = tl_from
             WHERE page_namespace = 2 AND tl_namespace = 10
-            AND tl_title = %s"""
+            AND tl_title = ?"""
 
         members = {}
         with self._bot.wikidb as cursor:
