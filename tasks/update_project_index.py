@@ -9,6 +9,8 @@ Licensed under MIT License: http://mitlicense.org
 from collections import namedtuple
 import re
 
+from oursql import ProgrammingError
+
 from reportsbot.task import Task
 from reportsbot.util import to_wiki_format
 
@@ -43,15 +45,13 @@ class UpdateProjectIndex(Task):
 
     def _ensure_tables(self):
         """Ensure that all necessary tables exist for this wiki."""
-        query = """SELECT 1
-            FROM information_schema.tables
-            WHERE table_schema = ?
-            AND table_name IN (?, ?, ?)"""
-
+        query = "SELECT 1 FROM {} LIMIT 1"
         with self._bot.localdb as cursor:
-            cursor.execute(query, (self._bot.localdb.db, self._page_table,
-                                   self._project_table, self._index_table))
-            if cursor.rowcount < 3:
+            try:
+                cursor.execute(query.format(self._page_table))
+                cursor.execute(query.format(self._project_table))
+                cursor.execute(query.format(self._index_table))
+            except ProgrammingError:
                 self._create_tables(cursor)
 
     def _get_project_categories(self):
