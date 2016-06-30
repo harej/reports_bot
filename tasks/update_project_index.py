@@ -1,199 +1,300 @@
 # -*- coding: utf-8 -*-
+
 """
 Project Index -- prepares an index of WikiProjects and their in-scope pages for use by scripts
 Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
+from collections import namedtuple
 import re
 
-import pymysql
+from reportsbot.task import Task
+from reportsbot.util import to_wiki_format
 
+__all__ = ["UpdateProjectIndex"]
 
-class WikiProjectTools:
-    def query(self, switch, sqlquery, values):
-        """Carries out MySQL queries"""
-        if switch == 'wiki':  # Queries to the English Wikipedia database
-            host, db = 'enwiki.labsdb', 'enwiki_p'
-        elif switch == 'index':  # Queries to our article-WikiProject pair index
-            host, db = 'tools-db', 's52475__wpx_p'
-        else:
-            raise ValueError
+Project = namedtuple("Project", ["id", "title", "categories"])
+Page = namedtuple("Page", ["id", "ns", "title"])
 
-        conn = pymysql.connect(host=host, port=3306, db=db, read_default_file='~/.my.cnf', charset='utf8')
-        cur = conn.cursor()
-        cur.execute(sqlquery, values)
-        data = []
-        for row in cur:
-            data.append(row)
-        conn.commit()
-        return data
+class UpdateProjectIndex(Task):
+    """Updates the index of articles associated with each WikiProject."""
 
-    def masterlist(self):
+    def __init__(self, bot):
+        super().__init__(bot)
+        self._page_table = bot.wikiid + "_page"
+        self._project_table = bot.wikiid + "_project"
+        self._index_table = bot.wikiid + "_index"
+
+    def _create_tables(self, cursor):
+        """Create this wiki's various tables, using base_* as references."""
+        self._logger.info("Creating index tables for %s", self._bot.wikiid)
+
+        query1 = "DROP TABLE IF EXISTS {}"
+        query2 = "CREATE TABLE {} LIKE {}"
+
+        cursor.execute(query1.format(self._index_table))
+        cursor.execute(query1.format(self._project_table))
+        cursor.execute(query1.format(self._page_table))
+
+        cursor.execute(query2.format(self._page_table, "base_page"))
+        cursor.execute(query2.format(self._project_table, "base_project"))
+        cursor.execute(query2.format(self._index_table, "base_index"))
+
+    def _ensure_tables(self):
+        """Ensure that all necessary tables exist for this wiki."""
+        query = """SELECT 1
+            FROM information_schema.tables
+            WHERE table_schema = ?
+            AND table_name IN (?, ?, ?)"""
+
+        with self._bot.localdb as cursor:
+            cursor.execute(query, (self._bot.localdb.db, self._page_table,
+                                   self._project_table, self._index_table))
+            if cursor.rowcount < 3:
+                self._create_tables(cursor)
+
+    def _get_project_categories(self):
+        """Return a list of Wikiproject classification categories."""
+        query = r"""SELECT page_title
+            FROM page
+            WHERE page_namespace = 14 AND (
+                page_title LIKE "%-Class\_%\_articles" OR
+                page_title LIKE "Unassessed\_%\_articles" OR
+                page_title LIKE "WikiProject\_%\_articles"
+            )"""
+
+        with self._bot.wikidb as cursor:
+            cursor.execute(query)
+            return [cat.decode("utf8") for (cat,) in cursor.fetchall()]
+
+    def _find_project(self, cursor, name):
+        """Return the ID and title of the given WikiProject's root page."""
+        query1 = """SELECT page_id, page_namespace, page_title,
+                rd_namespace, rd_title
+            FROM page LEFT JOIN redirect ON rd_from = page_id
+            WHERE page_title IN (?, ?) AND page_namespace = 4
+            ORDER BY CHAR_LENGTH(page_title) ASC LIMIT 1"""
+        query2 = """SELECT page_id
+            FROM page
+            WHERE page_namespace = ? AND page_title = ?"""
+
+        candidates = ("WikiProject_%s" % name, "WikiProject_%ss" % name)
+        cursor.execute(query1, candidates)
+
+        results = cursor.fetchall()
+        if not results:
+            raise ValueError(name)
+
+        pid, ns, title, rns, rtitle = results[0]
+        if rns and rtitle:
+            cursor.execute(query2, (rns, rtitle))
+            result = cursor.fetchall()
+            if not result:  # Broken redirect?
+                raise ValueError(name)
+            pid = result[0][0]
+            ns, title = rns, rtitle
+
+        ns_name = self._bot.site.namespaces[ns].custom_name
+        fulltitle = to_wiki_format(ns_name + ":" + title.decode("utf8"))
+        return pid, fulltitle
+
+    def _get_projects(self):
+        """Return a list of valid WikiProjects.
+
+        Each project is a 3-tuple: (project_id, project_title, categories).
         """
-        Prepares the master list of WikiProject quality assessment categories.
-        Returns a dictionary of lists, with the key being the page_title of the WikiProject (or task force)
-        and the value being a list of categories.
-        """
+        self._logger.info("Building project list")
+        categories = self._get_project_categories()
+        catmap = {}
 
-        q = ('select page_title from page where page_namespace = 14 and '
-             '(page_title like "%-Class\_%\_articles" '
-             'or page_title like "Unassessed\_%\_articles" '
-             'or page_title like "WikiProject\_%\_articles") '
-             'and page_title not like "%-importance\_%" '
-             'and page_title not like "Wikipedia\_%" '
-             'and page_title not like "Template-%" '
-             'and page_title not like "Redirect-%" '
-             'and page_title not like "Project-%" '
-             'and page_title not like "Portal-%" '
-             'and page_title not like "File-%" '
-             'and page_title not like "FM-%" '
-             'and page_title not like "Category-%" '
-             'and page_title not like "Cat-%" '
-             'and page_title not like "Book-%" '
-             'and page_title not like "NA-%" '
-             'and page_title not like "%\_Operation\_Majestic\_Titan_%" '
-             'and page_title not like "%\_Version_%" '
-             'and page_title not like "All\_Wikipedia\_%" '
-             'and page_title not like "%\_Wikipedia-Books\_%" '
-             'and page_title not like "Assessed-%" '
-             'and page_title not like "%-Priority\_%" '
-             'and page_title not like "Unassessed\_field\_%" '
-             'and page_title not like "Unassessed\_importance\_%" '
-             'and page_title not like "Unassessed-Class\_articles" '
-             'and page_title not like "%\_Article\_quality\_research\_articles" '
-             'and page_title not like "WikiProject\_lists\_of\_encyclopedic\_articles";')
-        query = self.query('wiki', q, None)
-        categories = []
-        for row in query:
-            categories.append(row[0].decode('utf-8'))
+        # Extract and map project names to their categories:
+        regex = re.compile(r"(?:-Class|Unassessed|WikiProject)_(.*)_articles$")
+        for cat in categories:
+            name = regex.search(cat).group(1)
+            if not name:  # Shouldn't happen, but would break us if it did
+                continue
+            name = name[0].upper() + name[1:]  # Normalize
+            if name in catmap:
+                catmap[name].append(cat)
+            else:
+                catmap[name] = [cat]
 
-        # Record in a dictionary of lists? wikiprojects = {'Military history': ['Category:A', 'Category:B']}
-        buckets = {}
-
-        for category in categories:
-            projectname = category
-            projectname = projectname.replace('WikiProject_', '')  # Some categories include "WikiProject" in the category name.
-            projectname = projectname.replace('-related', '')  # e.g. "Museum-related" -> "Museum"
-            projectname = projectname.replace('_quality', '')  # e.g. "Unassessed_quality" -> "Unassessed"
-            projectname = projectname.replace('_subproject_selected_articles', '')
-            projectname = projectname.replace('_automatically_assessed', '')
-            projectname = re.sub(r'_task_?forces?(_by)?', '', projectname)
-            projectname = re.sub(r'_work_?group', '', projectname)
-            projectname = re.sub(r'_articles$', '', projectname)
-            projectname = re.sub(r'_newsletter$', '', projectname)
-            projectname = re.sub(r'^((.*)-Class|Unassessed)_', '', projectname)
-            projectname = projectname[0].upper() + projectname[1:]  # Capitalize the first letter
-            # TODO: Use collections.defaultdict
-            try:
-                buckets[projectname].append(category)
-            except KeyError:
-                buckets[projectname] = [category]
-
-        # For each key in buckets, try to match it to a real WikiProject or task force name
-        # Checks against the redirect table so that it can follow redirects
-
-        pagetitles = {}
-        namespaces = {2: 'User:', 3: 'User_talk:', 4: 'Wikipedia:', 5: 'Wikipedia_talk:', 100: 'Portal:', 101: 'Portal_talk:'}
-        # Heavens help me if WikiProjects end up in namespaces other than those.
-
-        output = {}
-        for key in buckets.keys():
-            query = self.query('wiki', 'select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key,))
-            if len(query) == 0:
-                query = self.query('wiki', 'select page.page_title,redirect.rd_namespace,redirect.rd_title from page left join redirect on redirect.rd_from = page.page_id where page_title = %s and page_namespace = 4;', ('WikiProject_'+key+'s',))  # Checks for plural
-                if len(query) == 0:
-                    print('Warning: No project page found for key: ' + key)
-                    continue
-
-            page_title = query[0][0]
-            rd_namespace = query[0][1]
-            rd_title = query[0][2]
-
-            if rd_title is not None:
-                pagetitles[key] = namespaces[rd_namespace] + rd_title.decode('utf-8')
-            elif rd_title is None and page_title is not None:
-                pagetitles[key] = namespaces[4] + page_title.decode('utf-8')
-
-            # At this point, each key of buckets should be tied to an actual page name
-            for category in buckets[key]:
-                # TODO: Use a collections.defaultdict here
+        # Build the list of Project objects:
+        projects = []
+        with self._bot.wikidb as cursor:
+            for name, cats in catmap.items():
                 try:
-                    output[pagetitles[key]].append(category)
-                except KeyError:
-                    output[pagetitles[key]] = []
-                    output[pagetitles[key]].append(category)
+                    pid, title = self._find_project(cursor, name)
+                except ValueError:
+                    msg = "Rejecting project: %s (%s categories, first: %s)"
+                    self._logger.debug(msg, name, len(cats), cats[0])
+                    continue
+                project = Project(pid, title, cats)
+                projects.append(project)
 
-        return output
+        msg = "%s projects with %s total categories"
+        total_cats = sum(len(proj.categories) for proj in projects)
+        self._logger.info(msg, len(projects), total_cats)
+        return projects
 
-    def projectscope(self, project, categories):
+    def _sync_projects(self, cursor, projects):
+        """Synchronize the given projects with the database."""
+        self._logger.info("Synchronizing projects with database")
+
+        query1 = "SELECT project_id, project_title FROM {}"
+        query2 = """DELETE {0}, {1}
+            FROM {0} LEFT JOIN {1} ON project_id = index_project
+            WHERE project_id = ?"""
+        query3 = "INSERT INTO {} (project_id, project_title) VALUES (?, ?)"
+        query4 = "UPDATE {} SET project_title = ? WHERE project_id = ?"
+
+        query1 = query1.format(self._project_table)
+        query2 = query2.format(self._project_table, self._index_table)
+        query3 = query3.format(self._project_table)
+        query4 = query4.format(self._project_table)
+
+        cursor.execute(query1)
+        old = dict(cursor.fetchall())
+        new = {proj.id: proj.title for proj in projects}
+
+        to_remove = old.keys() - new.keys()
+        to_add = new.keys() - old.keys()
+        to_update = [pid for pid in new.keys() & old.keys()
+                     if new[pid] != old[pid]]
+
+        msg = "Remove/add/update: %s/%s/%s"
+        self._logger.info(msg, len(to_remove), len(to_add), len(to_update))
+
+        cursor.executemany(query2, [(pid,) for pid in to_remove])                   # TODO: optimization candidate
+        cursor.executemany(query3, [(pid, new[pid]) for pid in to_add])             # TODO: optimization candidate
+        cursor.executemany(query4, [(new[pid], pid) for pid in to_update])
+
+    def _get_pages_in_project(self, cursor, project):
+        """Return a list of Page objects within the given project."""
+        query = """SELECT DISTINCT page_id, page_namespace - 1, page_title
+            FROM page
+            JOIN categorylinks ON cl_from = page_id
+            WHERE cl_type = "page" AND page_namespace % 2 = 1
+            AND cl_to = IN ({})"""
+
+        query = query.format(", ".join("?" for _ in project.categories))
+        cursor.execute(query, project.categories)
+        return [Page(pid, ns, title.decode("utf8"))
+                for (pid, ns, title) in cursor.fetchall()]
+
+    def _resolve_pages(self, cursor, wcursor, talkmap, pages):
+        """Return base page IDs corresponding to the given talkpages.
+
+        Along the way, pages that need to be updated in the database are
+        updated. The talkmap is used to track which have been processed.
         """
-        Returns a list of articles in the scope of a WikiProject
-        Requires the string 'project' and the list 'categories'
-        """
+        query1 = """SELECT page_id, page_is_redirect
+            FROM page WHERE page_title = ? AND page_namespace = ?
+            UNION SELECT NULL LIMIT 1"""
+        query2 = """SELECT page_id, page_talk_id, page_title, page_ns,
+                page_is_redirect
+            FROM {} WHERE page_id IN (%s)"""
+        query3 = """DELETE {0}, {1}
+            FROM {0} LEFT JOIN {1} ON page_id = index_page
+            WHERE page_talk_id = ?"""
+        query4 = """INSERT INTO {}
+            (page_id, page_talk_id, page_title, page_ns, page_is_redirect)
+            VALUES (?, ?, ?, ?, ?)"""
+        query5 = """UPDATE {}
+            SET page_talk_id = ?, page_title = ?, page_ns = ?,
+                page_is_redirect = ?
+            WHERE page_id = ?"""
 
-        query_builder = 'select distinct page.page_title,page.page_namespace from categorylinks join page on categorylinks.cl_from=page.page_id where page_namespace in (1, 119) and cl_to in ('
-        mastertuple = ()
-        for category in categories:
-            query_builder += '%s, '
-            mastertuple += (category,)
-        query_builder = query_builder[:-2]  # Truncate extraneous "or"
-        query_builder += ');'  # Wrap up query
+        query2 = query2.format(self._page_table)
+        query3 = query3.format(self._page_table, self._index_table)
+        query4 = query4.format(self._page_table)
+        query5 = query5.format(self._page_table)
 
-        query = self.query('wiki', query_builder, mastertuple)
-        namespaces = {1: "Talk:", 119: "Draft_talk:"}
-        output = []
+        pageids = [talkmap[page.id] for page in pages if page.id in talkmap]
+        fresh = [page for page in pages if page.id not in talkmap]
 
-        for row in query:
-            page_title = row[0].decode('utf-8')
-            page_namespace = namespaces[row[1]]
-            output.append(page_namespace + page_title)
+        wcursor.executemany(query1, [(page.title, page.ns) for page in fresh])      # TODO: optimization candidate
+        results = wcursor.fetchall()
+        pageids.extend([row[0] for row in results if row[0] is not None])
 
-        output = list(set(output))  # De-duplication
-        return output
+        to_remove = [(page.id,) for page, (baseid, _) in zip(fresh, results)
+                     if baseid is None]
+        to_check = [(page.id,) for page, (baseid, _) in zip(fresh, results)
+                    if baseid is not None]
+        to_add = []
+        to_update = []
 
-    def main(self):
-        # Prepare list of WikiProjects and their categories
-        print('Preparing master list of WikiProjects...')
-        wikiprojects = self.masterlist()
+        if to_check:
+            cursor.execute(query2 % ", ".join("?" for _ in to_check), to_check)
+            results = {row[0]: row[1:] for row in cursor.fetchall()}
+            for page, (baseid, isredir) in zip(fresh, results):
+                talkmap[page.id] = baseid
+                new = (page.id, page.title, page.ns, isredir)
+                if baseid in results:
+                    if new != results[baseid]:
+                        to_update.append(new + (baseid,))
+                else:
+                    to_add.append((baseid,) + new)
 
-        # Get list of pages for each WikiProject
-        print('Getting list of pages for each WikiProject...')
-        pages = {}
-        for wikiproject in wikiprojects.keys():
-            pages[wikiproject] = self.projectscope(wikiproject, wikiprojects[wikiproject])
+        cursor.executemany(query3, to_remove)                                       # TODO: optimization candidate
+        cursor.executemany(query4, to_add)                                          # TODO: optimization candidate
+        cursor.executemany(query5, to_update)
 
-        dbinput = []
-        for wikiproject in pages.keys():
-            for page in pages[wikiproject]:
-                dbinput.append((page, wikiproject))
+        return pageids
 
-        # Saves it to the database
-        print('Saving to the database...')
-        self.query('index', 'create table projectindex_draft (pi_id int(11) NOT NULL auto_increment, pi_page VARCHAR(255) character set utf8 collate utf8_unicode_ci, pi_project VARCHAR(255) character set utf8 collate utf8_unicode_ci, primary key (pi_id)) engine=innodb character set=utf8;', None)
+    def _get_current_index(self, cursor, project):
+        """Return a list of page IDs currently indexed in the given project."""
+        query = "SELECT index_page FROM {} WHERE index_project = ?"
+        cursor.execute(query.format(self._index_table), (project.id,))
+        return [pageid for (pageid,) in cursor.fetchall()]
 
-        packages = []
-        for i in range(0, len(dbinput), 10000):
-            packages.append(dbinput[i:i+10000])
+    def _sync_index(self, cursor, project, newids, oldids):
+        """Synchronize the index table for the given project."""
+        query1 = "DELETE FROM {} WHERE index_page = ? AND index_project = ?"
+        query2 = "INSERT INTO {} (index_page, index_project) VALUES (?, ?)"
 
-        counter = 0
-        for package in packages:
-            query_builder = 'insert into projectindex_draft (pi_page, pi_project) values '  # Seeding really long query
-            mastertuple = ()
-            for item in package:
-                query_builder += '(%s, %s), '
-                mastertuple += item
-            query_builder = query_builder[:-2]  # Truncating the terminal comma and space
-            query_builder += ';'
-            counter += 1
-            print('Executing batch query no. ' + str(counter))
-            self.query('index', query_builder, mastertuple)
+        query1 = query1.format(self._index_table)
+        query2 = query2.format(self._index_table)
 
-        self.query('index', 'drop table if exists projectindex', None)
-        self.query('index', 'rename table projectindex_draft to projectindex', None)  # Moving draft table over to live table
-        self.query('index', 'create index projectindex_pageindex on projectindex (pi_page)', None)  # Creating index
+        to_remove = set(oldids) - set(newids)
+        to_add = set(newids) - set(oldids)
 
+        cursor.executemany(query1, [(pid, project.id) for pid in to_remove])        # TODO: optimization candidate
+        cursor.executemany(query2, [(pid, project.id) for pid in to_add])           # TODO: optimization candidate
 
-if __name__ == "__main__":
-    wptools = WikiProjectTools()
-    wptools.main()
+    def _clear_old_pages(self, cursor, valid):
+        """Remove all pages from the database that aren't in the given list."""
+        query1 = "SELECT page_id FROM {}"
+        query2 = "DELETE FROM {} WHERE page_id = ?"
+
+        query1 = query1.format(self._page_table)
+        query2 = query2.format(self._page_table)
+
+        cursor.execute(query1)
+        current = set(pageid for (pageid,) in cursor.fetchall())
+
+        to_remove = current - set(valid)
+        cursor.executemany(query2, [(pageid,) for pageid in to_remove])             # TODO: optimization candidate
+
+    def _sync_pages(self, cursor, projects):
+        """Synchronize the database's page and index tables."""
+        self._logger.info("Synchronizing pages with database")
+        talkmap = {}
+
+        with self._bot.wikidb as wcursor:
+            for project in projects:
+                self._logger.debug("Processing: %s", project.title)
+                pages = self._get_pages_in_project(wcursor, project)
+                pageids = self._resolve_pages(cursor, wcursor, talkmap, pages)
+                current = self._get_current_index(cursor, project)
+                self._sync_index(cursor, project, pageids, current)
+            self._clear_old_pages(cursor, talkmap.values())
+
+    def run(self):
+        self._ensure_tables()
+        projects = self._get_projects()
+
+        with self._bot.localdb as cursor:
+            self._sync_projects(cursor, projects)
+            self._sync_pages(cursor, projects)
