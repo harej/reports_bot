@@ -180,8 +180,36 @@ class UpdateProjectIndex(Task):
 
         query = query.format(", ".join("?" for _ in project.categories))
         cursor.execute(query, project.categories)
-        return [Page(pid, ns, title.decode("utf8"))
-                for (pid, ns, title) in cursor.fetchall()]
+        pages = [Page(pid, ns, title.decode("utf8"))
+                 for (pid, ns, title) in cursor.fetchall()]
+
+        self._logger.debug("    %s pages", len(pages))
+        return pages
+
+    def _save_modified_pages(self, cursor, to_remove, to_add, to_update):
+        """Update modified pages in the database."""
+        msg = "    remove/add/update: %s/%s/%s"
+        self._logger.debug(msg, len(to_remove), len(to_add), len(to_update))
+
+        query1 = """DELETE {0}, {1}
+            FROM {0} LEFT JOIN {1} ON page_id = index_page
+            WHERE page_talk_id = ?"""
+        query2 = """INSERT INTO {}
+            (page_id, page_talk_id, page_title, page_ns, page_is_redirect)
+            VALUES (?, ?, ?, ?, ?)"""
+        query3 = """UPDATE {}
+            SET page_talk_id = ?, page_title = ?, page_ns = ?,
+                page_is_redirect = ?
+            WHERE page_id = ?"""
+
+        query1 = query1.format(self._page_table, self._index_table)
+        query2 = query2.format(self._page_table)
+        query3 = query3.format(self._page_table)
+
+        # TODO: optimization candidates:
+        cursor.executemany(query1, to_remove)
+        cursor.executemany(query2, to_add)
+        cursor.executemany(query3, to_update)
 
     def _resolve_pages(self, cursor, wcursor, talkmap, pages):
         """Return base page IDs corresponding to the given talkpages.
@@ -196,35 +224,24 @@ class UpdateProjectIndex(Task):
         query2 = """SELECT page_id, page_talk_id, page_title, page_ns,
                 page_is_redirect
             FROM {} WHERE page_id IN (%s)"""
-        query3 = """DELETE {0}, {1}
-            FROM {0} LEFT JOIN {1} ON page_id = index_page
-            WHERE page_talk_id = ?"""
-        query4 = """INSERT INTO {}
-            (page_id, page_talk_id, page_title, page_ns, page_is_redirect)
-            VALUES (?, ?, ?, ?, ?)"""
-        query5 = """UPDATE {}
-            SET page_talk_id = ?, page_title = ?, page_ns = ?,
-                page_is_redirect = ?
-            WHERE page_id = ?"""
 
         query2 = query2.format(self._page_table)
-        query3 = query3.format(self._page_table, self._index_table)
-        query4 = query4.format(self._page_table)
-        query5 = query5.format(self._page_table)
 
         unprocessed = [page for page in pages if page.id not in talkmap]
         idmap = {page.id: page for page in unprocessed}
         titlemap = {(page.title, page.ns): page for page in unprocessed}
 
         query = query1.format(", ".join("(?, ?)" for _ in unprocessed))
-        wcursor.execute(query, titlemap.keys())
-        results = {titlemap[(title, ns)]: (pid, isredir)
+        wcursor.execute(query, [arg for key in titlemap.keys() for arg in key])
+        results = {titlemap[(title.decode("utf8"), ns)]: (pid, isredir)
                    for (title, ns, pid, isredir) in wcursor.fetchall()}
 
         to_check = [(page.id,) for page in unprocessed if page in results]
         to_remove = [(page.id,) for page in unprocessed if page not in results]
         to_add = []
         to_update = []
+
+        self._logger.debug("    %s unprocessed to check", len(to_check))
 
         if to_check:
             cursor.execute(query2 % ", ".join("?" for _ in to_check), to_check)
@@ -240,10 +257,7 @@ class UpdateProjectIndex(Task):
                     to_add.append((baseid,) + new)
                 talkmap[page.id] = baseid
 
-        # TODO: optimization candidates:
-        cursor.executemany(query3, to_remove)
-        cursor.executemany(query4, to_add)
-        cursor.executemany(query5, to_update)
+        self._save_modified_pages(cursor, to_remove, to_add, to_update)
 
         return [talkmap[page.id] for page in pages]
 
@@ -255,6 +269,9 @@ class UpdateProjectIndex(Task):
 
     def _sync_index(self, cursor, project, newids, oldids):
         """Synchronize the index table for the given project."""
+        msg = "    sync index: %s -> %s"
+        self._logger.debug(msg, len(oldids), len(newids))
+
         query1 = "DELETE FROM {} WHERE index_page = ? AND index_project = ?"
         query2 = "INSERT INTO {} (index_page, index_project) VALUES (?, ?)"
 
