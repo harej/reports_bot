@@ -166,8 +166,8 @@ class UpdateProjectIndex(Task):
         msg = "Remove/add/update: %s/%s/%s"
         self._logger.info(msg, len(to_remove), len(to_add), len(to_update))
 
-        cursor.executemany(query2, [(pid,) for pid in to_remove])                   # TODO: optimization candidate
-        cursor.executemany(query3, [(pid, new[pid]) for pid in to_add])             # TODO: optimization candidate
+        cursor.executemany(query2, [(pid,) for pid in to_remove])
+        cursor.executemany(query3, [(pid, new[pid]) for pid in to_add])
         cursor.executemany(query4, [(new[pid], pid) for pid in to_update])
 
     def _get_pages_in_project(self, cursor, project):
@@ -189,9 +189,10 @@ class UpdateProjectIndex(Task):
         Along the way, pages that need to be updated in the database are
         updated. The talkmap is used to track which have been processed.
         """
-        query1 = """SELECT page_id, page_is_redirect
-            FROM page WHERE page_title = ? AND page_namespace = ?
-            UNION SELECT NULL, 0 LIMIT 1"""
+        query1 = """SELECT page_title, page_namespace, page_id,
+                page_is_redirect
+            FROM page
+            WHERE (page_title, page_namespace) IN ({})"""
         query2 = """SELECT page_id, page_talk_id, page_title, page_ns,
                 page_is_redirect
             FROM {} WHERE page_id IN (%s)"""
@@ -211,37 +212,40 @@ class UpdateProjectIndex(Task):
         query4 = query4.format(self._page_table)
         query5 = query5.format(self._page_table)
 
-        pageids = [talkmap[page.id] for page in pages if page.id in talkmap]
-        fresh = [page for page in pages if page.id not in talkmap]
+        unprocessed = [page for page in pages if page.id not in talkmap]
+        idmap = {page.id: page for page in unprocessed}
+        titlemap = {(page.title, page.ns): page for page in unprocessed}
 
-        wcursor.executemany(query1, [(page.title, page.ns) for page in fresh])      # TODO: optimization candidate
-        results = wcursor.fetchall()
-        pageids.extend([row[0] for row in results if row[0] is not None])
+        query = query1.format(", ".join("(?, ?)" for _ in unprocessed))
+        wcursor.execute(query, titlemap.keys())
+        results = {titlemap[(title, ns)]: (pid, isredir)
+                   for (title, ns, pid, isredir) in wcursor.fetchall()}
 
-        to_remove = [(page.id,) for page, (baseid, _) in zip(fresh, results)
-                     if baseid is None]
-        to_check = [(page.id,) for page, (baseid, _) in zip(fresh, results)
-                    if baseid is not None]
+        to_check = [(page.id,) for page in unprocessed if page in results]
+        to_remove = [(page.id,) for page in unprocessed if page not in results]
         to_add = []
         to_update = []
 
         if to_check:
             cursor.execute(query2 % ", ".join("?" for _ in to_check), to_check)
-            results = {row[0]: row[1:] for row in cursor.fetchall()}
-            for page, (baseid, isredir) in zip(fresh, results):
-                talkmap[page.id] = baseid
+            current = {row[0]: row[1:] for row in cursor.fetchall()}
+            for pageid in to_check:
+                page = idmap[pageid]
+                baseid, isredir = results[page]
                 new = (page.id, page.title, page.ns, isredir)
-                if baseid in results:
-                    if new != results[baseid]:
+                if baseid in current:
+                    if new != current[baseid]:
                         to_update.append(new + (baseid,))
                 else:
                     to_add.append((baseid,) + new)
+                talkmap[page.id] = baseid
 
-        cursor.executemany(query3, to_remove)                                       # TODO: optimization candidate
-        cursor.executemany(query4, to_add)                                          # TODO: optimization candidate
+        # TODO: optimization candidates:
+        cursor.executemany(query3, to_remove)
+        cursor.executemany(query4, to_add)
         cursor.executemany(query5, to_update)
 
-        return pageids
+        return [talkmap[page.id] for page in pages]
 
     def _get_current_index(self, cursor, project):
         """Return a list of page IDs currently indexed in the given project."""
