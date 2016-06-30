@@ -176,7 +176,7 @@ class UpdateProjectIndex(Task):
             FROM page
             JOIN categorylinks ON cl_from = page_id
             WHERE cl_type = "page" AND page_namespace % 2 = 1
-            AND cl_to = IN ({})"""
+            AND cl_to IN ({})"""
 
         query = query.format(", ".join("?" for _ in project.categories))
         cursor.execute(query, project.categories)
