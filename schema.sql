@@ -41,6 +41,7 @@ CREATE TABLE `base_page` (
     `page_talk_id` INT(8) UNSIGNED NOT NULL,
     `page_title` VARCHAR(255) NOT NULL,
     `page_ns` INT(11) NOT NULL,
+    `page_is_redirect` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     PRIMARY KEY (`page_id`),
     UNIQUE KEY (`page_talk_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -66,12 +67,8 @@ CREATE TABLE `base_index` (
     `index_page` INT(8) UNSIGNED NOT NULL,
     `index_project` INT(8) UNSIGNED NOT NULL,
     PRIMARY KEY (`index_id`),
-    FOREIGN KEY (`index_page`)
-        REFERENCES `base_page` (`page_id`)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (`index_project`)
-        REFERENCES `base_project` (`project_id`)
-        ON DELETE CASCADE ON UPDATE CASCADE
+    KEY (`index_page`),
+    KEY (`index_project`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dump completed on 2016-06-23  9:46:05

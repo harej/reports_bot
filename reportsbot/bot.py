@@ -33,7 +33,7 @@ class Bot:
                 and "password" not in kwargs):
             kwargs["read_default_file"] = expanduser("~/.my.cnf")
         if "charset" not in kwargs:
-            kwargs["charset"] = "utf8mb4"
+            kwargs["charset"] = "utf8"
         if "autoping" not in kwargs:
             kwargs["autoping"] = True
         if "autoreconnect" not in kwargs:
