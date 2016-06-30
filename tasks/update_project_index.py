@@ -191,7 +191,7 @@ class UpdateProjectIndex(Task):
         """
         query1 = """SELECT page_id, page_is_redirect
             FROM page WHERE page_title = ? AND page_namespace = ?
-            UNION SELECT NULL LIMIT 1"""
+            UNION SELECT NULL, 0 LIMIT 1"""
         query2 = """SELECT page_id, page_talk_id, page_title, page_ns,
                 page_is_redirect
             FROM {} WHERE page_id IN (%s)"""
