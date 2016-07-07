@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import encodings
 from os.path import expanduser
 import re
 
@@ -22,22 +23,38 @@ class Bot:
         self._wikidb = None
         self._localdb = None
 
+    @staticmethod
+    def _register_utf8mb4():
+        """Install utf8mb4 as a valid alias for utf_8."""
+        if "utf8mb4" not in encodings.aliases.aliases:
+            encodings.aliases.aliases["utf8mb4"] = "utf_8"
+        if hasattr(encodings, "_cache") and "utf8mb4" in encodings._cache:
+            del encodings._cache["utf8mb4"]
+
     def _sql_connect(self, **kwargs):
         """Return a new SQL connection using the given arguments.
 
         We apply some transformations: a default file is configured if not
         username or password is provided, a default charset is set, and
         autocommit is turned off.
+
+        The default charset really should be utf8mb4, but because of a bug in
+        oursql's handling of charsets (conflating Python codecs with MySQL
+        charsets, which are sometimes different), we cannot. Instead, if
+        utf8mb4 is chosen, we'll install it as an alias first.
         """
         if ("read_default_file" not in kwargs and "user" not in kwargs
                 and "password" not in kwargs):
             kwargs["read_default_file"] = expanduser("~/.my.cnf")
         if "charset" not in kwargs:
-            kwargs["charset"] = "utf8"
+            kwargs["charset"] = "utf8mb4"
         if "autoping" not in kwargs:
             kwargs["autoping"] = True
         if "autoreconnect" not in kwargs:
             kwargs["autoreconnect"] = True
+
+        if kwargs["charset"] == "utf8mb4":
+            self._register_utf8mb4()
 
         return oursql.connect(**kwargs)
 
