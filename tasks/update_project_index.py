@@ -294,7 +294,7 @@ class UpdateProjectIndex(Task):
 
         for start in range(0, len(unprocessed), chunksize):
             chunk = unprocessed[start:start+chunksize]
-            num = start / chunksize + 1
+            num = int(start / chunksize) + 1
             self._logger.debug("    sync chunk #%s: %s pages", num, len(chunk))
             self._sync_pageset(cursor, chunk)
 
