@@ -81,7 +81,7 @@ class UpdateProjectIndex(Task):
 
         candidates = ("WikiProject_%s" % name, "WikiProject_%ss" % name, name)
         for candidate in candidates:
-            cursor.execute(query1, candidate)
+            cursor.execute(query1, (candidate,))
             results = cursor.fetchall()
             if results:
                 break
