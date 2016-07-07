@@ -198,24 +198,29 @@ class UpdateProjectIndex(Task):
 
         Input pages that do not exist will not be present in the dict.
         """
-        if not pages:
-            return {}, {}
+        page2subject = {}
+        subject2page = {}
 
-        query = """SELECT page_title, page_namespace, page_id,
+        query = """SELECT page_id, page_namespace, page_title,
                 page_is_redirect
             FROM page
             WHERE {}"""
         clause = "(page_title = ? AND page_namespace = ?)"
-        query = query.format(" OR ".join((clause,) * len(pages)))
+        chunksize = 10000
 
-        titlemap = {(page.title, page.ns): page for page in pages}
-        args = (arg for key in titlemap.keys() for arg in key)
-        cursor.execute(query, args)
+        for start in range(0, len(pages), chunksize):
+            chunk = pages[start:start+chunksize]
+            titlemap = {(page.title, page.ns): page for page in chunk}
 
-        page2subject = {titlemap[(title.decode("utf8"), ns)]: (pid, isredir)
-                        for (title, ns, pid, isredir) in cursor.fetchall()}
-        subject2page = {pid: (page, isredir)
-                        for page, (pid, isredir) in page2subject.items()}
+            qform = query.format(" OR ".join((clause,) * len(chunk)))
+            args = (arg for key in titlemap.keys() for arg in key)
+            cursor.execute(qform, args)
+
+            for (subjectid, ns, title, ns, isredir) in cursor.fetchall():
+                page = titlemap[(title.decode("utf8"), ns)]
+                page2subject[page] = (subjectid, isredir)
+                subject2page[subjectid] = (page, isredir)
+
         return page2subject, subject2page
 
     def _save_modified_pages(self, cursor, to_remove, to_add, to_update):
