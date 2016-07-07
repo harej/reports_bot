@@ -201,10 +201,8 @@ class UpdateProjectIndex(Task):
         page2subject = {}
         subject2page = {}
 
-        query = """SELECT page_id, page_namespace, page_title,
-                page_is_redirect
-            FROM page
-            WHERE {}"""
+        query = """SELECT page_id, page_namespace, page_title, page_is_redirect
+            FROM page WHERE {}"""
         clause = "(page_title = ? AND page_namespace = ?)"
         chunksize = 10000
 
@@ -216,7 +214,7 @@ class UpdateProjectIndex(Task):
             args = (arg for key in titlemap.keys() for arg in key)
             cursor.execute(qform, args)
 
-            for (subjectid, ns, title, ns, isredir) in cursor.fetchall():
+            for (subjectid, ns, title, isredir) in cursor.fetchall():
                 page = titlemap[(title.decode("utf8"), ns)]
                 page2subject[page] = (subjectid, isredir)
                 subject2page[subjectid] = (page, isredir)
