@@ -139,7 +139,7 @@ class UpdateProjectIndex(Task):
                     continue
 
                 if pid in projects:
-                    projects[pid].cats.extend(cats)
+                    projects[pid].categories.extend(cats)
                 else:
                     projects[pid] = Project(pid, title, cats)
 
