@@ -189,11 +189,14 @@ class UpdateProjectIndex(Task):
 
         talkmap = IIBTree()
         cursor.execute(query)
+        self._logger.debug("Fetching result chunks")
         while True:
-            self._logger.debug("    fetching new chunk, done %s", len(talkmap))
             resultset = cursor.fetchmany(100000)
             if not resultset:
                 break
+
+            self._logger.debug(
+                "Fetched chunk (%s+%s)", len(talkmap), len(resultset))
             for talkid, subjectid, isredir in resultset:
                 talkmap[talkid] = (subjectid << 1) | isredir
 
@@ -215,7 +218,8 @@ class UpdateProjectIndex(Task):
         cursor.execute(query, project.categories)
         pages = [Page(talkmap[talkid] >> 1, talkid, ns, title.decode("utf8"),
                       bool(talkmap[talkid] & 1))
-                 for (talkid, ns, title) in cursor.fetchall()]
+                 for (talkid, ns, title) in cursor.fetchall()
+                 if talkid in talkmap]
 
         self._logger.debug("    %s pages", len(pages))
         return pages
