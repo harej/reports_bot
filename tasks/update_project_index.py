@@ -110,9 +110,15 @@ class UpdateProjectIndex(Task):
         catmap = {}
 
         # Extract and map project names to their categories:
-        regex = re.compile(r"(?:-Class|Unassessed|WikiProject)_(.*)_articles$")
+        regex = r"""^
+            (?:.*?-Class_|Unassessed_)?
+            (?:.*?-importance_)?
+            (?:WikiProject_)?
+            (.*?)                               # Actual project name fragment
+            (?:-related|_task_force)?
+            _articles$"""
         for cat in categories:
-            name = regex.search(cat).group(1)
+            name = re.search(regex, cat, flags=re.VERBOSE).group(1)
             if not name:  # Shouldn't happen, but would break us if it did
                 continue
             name = name[0].upper() + name[1:]  # Normalize
@@ -121,8 +127,8 @@ class UpdateProjectIndex(Task):
             else:
                 catmap[name] = [cat]
 
-        # Build the list of Project objects:
-        projects = []
+        # Build the Project objects:
+        projects = {}
         with self._bot.wikidb as cursor:
             for name, cats in catmap.items():
                 try:
@@ -131,13 +137,16 @@ class UpdateProjectIndex(Task):
                     msg = "Rejecting project: %s (%s categories, first: %s)"
                     self._logger.debug(msg, name, len(cats), cats[0])
                     continue
-                project = Project(pid, title, cats)
-                projects.append(project)
+
+                if pid in projects:
+                    projects[pid].cats.extend(cats)
+                else:
+                    projects[pid] = Project(pid, title, cats)
 
         msg = "%s projects with %s total categories"
-        total_cats = sum(len(proj.categories) for proj in projects)
+        total_cats = sum(len(proj.categories) for proj in projects.values())
         self._logger.info(msg, len(projects), total_cats)
-        return projects
+        return list(projects.values())
 
     def _sync_projects(self, cursor, projects):
         """Synchronize the given projects with the database."""
