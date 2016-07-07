@@ -74,17 +74,18 @@ class UpdateProjectIndex(Task):
         query1 = """SELECT page_id, page_namespace, page_title,
                 rd_namespace, rd_title
             FROM page LEFT JOIN redirect ON rd_from = page_id
-            WHERE page_title IN (?, ?) AND page_namespace = 4
-            ORDER BY CHAR_LENGTH(page_title) ASC LIMIT 1"""
+            WHERE page_title = ? AND page_namespace = 4"""
         query2 = """SELECT page_id
             FROM page
             WHERE page_namespace = ? AND page_title = ?"""
 
-        candidates = ("WikiProject_%s" % name, "WikiProject_%ss" % name)
-        cursor.execute(query1, candidates)
-
-        results = cursor.fetchall()
-        if not results:
+        candidates = ("WikiProject_%s" % name, "WikiProject_%ss" % name, name)
+        for candidate in candidates:
+            cursor.execute(query1, candidate)
+            results = cursor.fetchall()
+            if results:
+                break
+        else:
             raise ValueError(name)
 
         pid, ns, title, rns, rtitle = results[0]
