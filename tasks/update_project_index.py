@@ -9,6 +9,7 @@ Licensed under MIT License: http://mitlicense.org
 from collections import namedtuple
 import re
 
+from BTrees.IIBTree import IIBTree
 from oursql import ProgrammingError
 
 from reportsbot.task import Task
@@ -17,7 +18,7 @@ from reportsbot.util import to_wiki_format
 __all__ = ["UpdateProjectIndex"]
 
 Project = namedtuple("Project", ["id", "title", "categories"])
-Page = namedtuple("Page", ["talkid", "ns", "title"])
+Page = namedtuple("Page", ["id", "talkid", "ns", "title", "isredir"])
 
 class UpdateProjectIndex(Task):
     """Updates the index of articles associated with each WikiProject."""
@@ -140,7 +141,7 @@ class UpdateProjectIndex(Task):
 
     def _sync_projects(self, cursor, projects):
         """Synchronize the given projects with the database."""
-        self._logger.info("Synchronizing projects with database")
+        self._logger.info("Synchronizing projects")
 
         query1 = "SELECT project_id, project_title FROM {}"
         query2 = """DELETE {0}, {1}
@@ -170,10 +171,39 @@ class UpdateProjectIndex(Task):
         cursor.executemany(query3, [(pid, new[pid]) for pid in to_add])
         cursor.executemany(query4, [(new[pid], pid) for pid in to_update])
 
-    def _get_pages_in_project(self, cursor, project):
+    def _get_talkmap(self, cursor):
+        """Return a dict mapping talk page IDs to subject page IDs.
+
+        Actually, this is misleading. The map also stores whether the subject
+        page is a redirect, and for maximum space efficiency, we do this by
+        shifting the subject page ID right by one bit and storing the boolean
+        in the least significant bit.
+        """
+        self._logger.info("Building talkmap")
+
+        query = """SELECT talk.page_id, subj.page_id, subj.page_is_redirect
+        FROM page AS talk
+        INNER JOIN page AS subj ON talk.page_title = subj.page_title
+            AND talk.page_namespace = subj.page_namespace + 1
+        WHERE talk.page_namespace % 2 = 1"""
+
+        talkmap = IIBTree()
+        cursor.execute(query)
+        while True:
+            self._logger.debug("    fetching new chunk, done %s", len(talkmap))
+            resultset = cursor.fetchmany(100000)
+            if not resultset:
+                break
+            for talkid, subjectid, isredir in resultset:
+                talkmap[talkid] = (subjectid << 1) | isredir
+
+        return talkmap
+
+    def _get_pages_in_project(self, cursor, talkmap, project):
         """Return a list of Page objects within the given project.
 
-        Each page is a 3-tuple of (talk_page_id, subject_page_ns, title).
+        Each page is a 5-tuple of (subject_page_id, talk_page_id,
+        subject_page_ns, title, subject_is_redirect).
         """
         query = """SELECT DISTINCT page_id, page_namespace - 1, page_title
             FROM page
@@ -183,43 +213,12 @@ class UpdateProjectIndex(Task):
 
         query = query.format(", ".join("?" * len(project.categories)))
         cursor.execute(query, project.categories)
-        pages = [Page(talkid, ns, title.decode("utf8"))
+        pages = [Page(talkmap[talkid] >> 1, talkid, ns, title.decode("utf8"),
+                      bool(talkmap[talkid] & 1))
                  for (talkid, ns, title) in cursor.fetchall()]
 
         self._logger.debug("    %s pages", len(pages))
         return pages
-
-    def _lookup_pages(self, cursor, pages):
-        """Look up the subject pages corresponding to a list of talk pages.
-
-        Given a list of Page tuples, we return two dicts. The first maps each
-        Page to a 2-tuple of (subject_page_id, subject_is_redirect). The second
-        maps each subject_page_id to a 2-tuple of (Page, subject_is_redirect).
-
-        Input pages that do not exist will not be present in the dict.
-        """
-        page2subject = {}
-        subject2page = {}
-
-        query = """SELECT page_id, page_namespace, page_title, page_is_redirect
-            FROM page WHERE {}"""
-        clause = "(page_title = ? AND page_namespace = ?)"
-        chunksize = 10000
-
-        for start in range(0, len(pages), chunksize):
-            chunk = pages[start:start+chunksize]
-            titlemap = {(page.title, page.ns): page for page in chunk}
-
-            qform = query.format(" OR ".join((clause,) * len(chunk)))
-            args = (arg for key in titlemap.keys() for arg in key)
-            cursor.execute(qform, args)
-
-            for (subjectid, ns, title, isredir) in cursor.fetchall():
-                page = titlemap[(title.decode("utf8"), ns)]
-                page2subject[page] = (subjectid, isredir)
-                subject2page[subjectid] = (page, isredir)
-
-        return page2subject, subject2page
 
     def _save_modified_pages(self, cursor, to_remove, to_add, to_update):
         """Update modified pages in the database."""
@@ -246,58 +245,56 @@ class UpdateProjectIndex(Task):
         cursor.executemany(query2, to_add)
         cursor.executemany(query3, to_update)
 
-    def _resolve_pages(self, cursor, wcursor, talkmap, pages):
-        """Return subject page IDs corresponding to the given talkpages.
-
-        Along the way, pages that need to be added to, updated in, or removed
-        from the database are processed. The talkmap is used to track which
-        have been processed by previous calls.
-        """
+    def _sync_pageset(self, cursor, pages):
+        """Synchronize every page in the given list with the database."""
         query = """SELECT page_id, page_talk_id, page_title, page_ns,
                 page_is_redirect
             FROM {}
             WHERE page_id IN (%s)""".format(self._page_table)
 
-        unprocessed = [page for page in pages if page.talkid not in talkmap]
-        page2subject, subject2page = self._lookup_pages(wcursor, unprocessed)
+        pageids = [page.id for page in pages]
+        cursor.execute(query % ", ".join("?" * len(pages)), pageids)
+        current = {row[0]: row[1:] for row in cursor.fetchall()}
 
-        # Unprocessed pages missing from the subject page map don't exist; they
-        # are orphaned talk pages. We delete them from the local db if present:
-        to_remove = [(page.talkid,) for page in unprocessed
-                     if page not in page2subject]
+        to_remove = []
         to_add = []
         to_update = []
 
-        # For each resulting subject page ID, we need to check whether its
-        # entry in our database is up-to-date:
-        to_check = subject2page.keys()
-        self._logger.debug("    %s unprocessed to check", len(to_check))
-
-        if to_check:
-            cursor.execute(query % ", ".join("?" * len(to_check)), to_check)
-            current = {row[0]: row[1:] for row in cursor.fetchall()}
-            for subjectid in to_check:
-                page, isredir = subject2page[subjectid]
-                new = (page.talkid, page.title, page.ns, isredir)
-                if subjectid in current:
-                    cur = current[subjectid]
-                    if new != cur:
-                        if page.talkid != cur[0]:
-                            # The talk page of this subject page has changed
-                            # IDs, indicating that stuff has been moved around;
-                            # we need to ensure that the talk page's previous
-                            # entry in the database is removed (if any) before
-                            # we update it since talk IDs are uniquely indexed:
-                            to_remove.append((page.talkid,))
-                        to_update.append(new + (subjectid,))
-                else:
-                    to_add.append((subjectid,) + new)
-                talkmap[page.talkid] = subjectid
+        for page in pages:
+            new = (page.talkid, page.title, page.ns, page.isredir)
+            if page.id in current:
+                cur = current[page.id]
+                if new != cur:
+                    if page.talkid != cur[0]:
+                        # The talk page of this subject page has changed IDs,
+                        # indicating that stuff has been moved around; we need
+                        # to ensure that the talk page's previous entry in the
+                        # database is removed (if any) before we update it
+                        # since talk IDs are uniquely indexed:
+                        to_remove.append((page.talkid,))
+                    to_update.append(new + (page.id,))
+            else:
+                to_add.append((page.id,) + new)
 
         self._save_modified_pages(cursor, to_remove, to_add, to_update)
 
-        return [talkmap[page.talkid] for page in pages
-                if page.talkid in talkmap]
+    def _sync_pages(self, cursor, processed, pages):
+        """Synchronize the given list of pages with the database.
+
+        Pages whose IDs are in in the processed set are skipped. The other
+        pages are added to the set after processing.
+        """
+        unprocessed = [page for page in pages if page.id not in processed]
+        self._logger.debug("    %s unprocessed to check", len(unprocessed))
+        chunksize = 10000
+
+        for start in range(0, len(unprocessed), chunksize):
+            chunk = unprocessed[start:start+chunksize]
+            num = start / chunksize + 1
+            self._logger.debug("    sync chunk #%s: %s pages", num, len(chunk))
+            self._sync_pageset(cursor, chunk)
+
+        processed |= {page.id for page in unprocessed}
 
     def _get_current_index(self, cursor, project):
         """Return a list of page IDs currently indexed in the given project."""
@@ -305,8 +302,10 @@ class UpdateProjectIndex(Task):
         cursor.execute(query.format(self._index_table), (project.id,))
         return [pageid for (pageid,) in cursor.fetchall()]
 
-    def _sync_index(self, cursor, project, newids, oldids):
+    def _sync_index(self, cursor, project, newpages, oldids):
         """Synchronize the index table for the given project."""
+        newids = [page.id for page in newpages]
+
         msg = "    sync index: %s -> %s (change: %s)"
         change = len(set(oldids) ^ set(newids))
         self._logger.debug(msg, len(oldids), len(newids), change)
@@ -325,7 +324,7 @@ class UpdateProjectIndex(Task):
         cursor.executemany(query2, [(pid, project.id) for pid in to_add])
 
     def _clear_old_pages(self, cursor, valid):
-        """Remove all pages from the database that aren't in the given list."""
+        """Remove all pages from the database that aren't in the given set."""
         query1 = "SELECT page_id FROM {}"
         query2 = "DELETE FROM {} WHERE page_id = ?"
 
@@ -333,25 +332,27 @@ class UpdateProjectIndex(Task):
         query2 = query2.format(self._page_table)
 
         cursor.execute(query1)
-        current = set(pageid for (pageid,) in cursor.fetchall())
-        to_remove = current - set(valid)
+        current = {pageid for (pageid,) in cursor.fetchall()}
+        to_remove = current - valid
 
         # TODO: optimization candidate:
         cursor.executemany(query2, [(pageid,) for pageid in to_remove])
 
-    def _sync_pages(self, cursor, projects):
+    def _sync_pages_and_index(self, cursor, projects):
         """Synchronize the database's page and index tables."""
-        self._logger.info("Synchronizing pages with database")
-        talkmap = {}  # Maps talk_page_id => subject_page_id
-
         with self._bot.wikidb as wcursor:
+            talkmap = self._get_talkmap(wcursor)
+            processed = set()
+
+            self._logger.info("Synchronizing pages and index")
             for project in projects:
                 self._logger.debug("Processing: %s", project.title)
-                pages = self._get_pages_in_project(wcursor, project)
-                pageids = self._resolve_pages(cursor, wcursor, talkmap, pages)
+                pages = self._get_pages_in_project(wcursor, talkmap, project)
+                self._sync_pages(cursor, processed, pages)
                 current = self._get_current_index(cursor, project)
-                self._sync_index(cursor, project, pageids, current)
-            self._clear_old_pages(cursor, talkmap.values())
+                self._sync_index(cursor, project, pages, current)
+
+            self._clear_old_pages(cursor, processed)
 
     def run(self):
         self._ensure_tables()
@@ -359,4 +360,4 @@ class UpdateProjectIndex(Task):
 
         with self._bot.localdb as cursor:
             self._sync_projects(cursor, projects)
-            self._sync_pages(cursor, projects)
+            self._sync_pages_and_index(cursor, projects)
