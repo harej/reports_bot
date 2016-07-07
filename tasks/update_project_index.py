@@ -198,6 +198,9 @@ class UpdateProjectIndex(Task):
 
         Input pages that do not exist will not be present in the dict.
         """
+        if not pages:
+            return {}, {}
+
         query = """SELECT page_title, page_namespace, page_id,
                 page_is_redirect
             FROM page
