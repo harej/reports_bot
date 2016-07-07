@@ -43,7 +43,8 @@ CREATE TABLE `base_page` (
     `page_ns` INT(11) NOT NULL,
     `page_is_redirect` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     PRIMARY KEY (`page_id`),
-    UNIQUE KEY (`page_talk_id`)
+    UNIQUE KEY (`page_talk_id`),
+    KEY `title_ns` (`page_title`(191), `page_ns`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -54,7 +55,8 @@ DROP TABLE IF EXISTS `base_project`;
 CREATE TABLE `base_project` (
     `project_id` INT(8) UNSIGNED NOT NULL,
     `project_title` VARCHAR(255) NOT NULL,
-    PRIMARY KEY (`project_id`)
+    PRIMARY KEY (`project_id`),
+    KEY (`project_title`(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
