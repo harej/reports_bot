@@ -17,7 +17,7 @@ from reportsbot.util import to_wiki_format
 __all__ = ["UpdateProjectIndex"]
 
 Project = namedtuple("Project", ["id", "title", "categories"])
-Page = namedtuple("Page", ["id", "ns", "title"])
+Page = namedtuple("Page", ["talkid", "ns", "title"])
 
 class UpdateProjectIndex(Task):
     """Updates the index of articles associated with each WikiProject."""
@@ -171,20 +171,49 @@ class UpdateProjectIndex(Task):
         cursor.executemany(query4, [(new[pid], pid) for pid in to_update])
 
     def _get_pages_in_project(self, cursor, project):
-        """Return a list of Page objects within the given project."""
+        """Return a list of Page objects within the given project.
+
+        Each page is a 3-tuple of (talk_page_id, subject_page_ns, title).
+        """
         query = """SELECT DISTINCT page_id, page_namespace - 1, page_title
             FROM page
             JOIN categorylinks ON cl_from = page_id
             WHERE cl_type = "page" AND page_namespace % 2 = 1
             AND cl_to IN ({})"""
 
-        query = query.format(", ".join("?" for _ in project.categories))
+        query = query.format(", ".join("?" * len(project.categories)))
         cursor.execute(query, project.categories)
-        pages = [Page(pid, ns, title.decode("utf8"))
-                 for (pid, ns, title) in cursor.fetchall()]
+        pages = [Page(talkid, ns, title.decode("utf8"))
+                 for (talkid, ns, title) in cursor.fetchall()]
 
         self._logger.debug("    %s pages", len(pages))
         return pages
+
+    def _lookup_pages(self, cursor, pages):
+        """Look up the subject pages corresponding to a list of talk pages.
+
+        Given a list of Page tuples, we return two dicts. The first maps each
+        Page to a 2-tuple of (subject_page_id, subject_is_redirect). The second
+        maps each subject_page_id to a 2-tuple of (Page, subject_is_redirect).
+
+        Input pages that do not exist will not be present in the dict.
+        """
+        query = """SELECT page_title, page_namespace, page_id,
+                page_is_redirect
+            FROM page
+            WHERE {}"""
+        clause = "(page_title = ? AND page_namespace = ?)"
+        query = query.format(" OR ".join((clause,) * len(pages)))
+
+        titlemap = {(page.title, page.ns): page for page in pages}
+        args = (arg for key in titlemap.keys() for arg in key)
+        cursor.execute(query, args)
+
+        page2subject = {titlemap[(title.decode("utf8"), ns)]: (pid, isredir)
+                        for (title, ns, pid, isredir) in cursor.fetchall()}
+        subject2page = {pid: (page, isredir)
+                        for page, (pid, isredir) in page2subject.items()}
+        return page2subject, subject2page
 
     def _save_modified_pages(self, cursor, to_remove, to_add, to_update):
         """Update modified pages in the database."""
@@ -212,54 +241,57 @@ class UpdateProjectIndex(Task):
         cursor.executemany(query3, to_update)
 
     def _resolve_pages(self, cursor, wcursor, talkmap, pages):
-        """Return base page IDs corresponding to the given talkpages.
+        """Return subject page IDs corresponding to the given talkpages.
 
-        Along the way, pages that need to be updated in the database are
-        updated. The talkmap is used to track which have been processed.
+        Along the way, pages that need to be added to, updated in, or removed
+        from the database are processed. The talkmap is used to track which
+        have been processed by previous calls.
         """
-        query1 = """SELECT page_title, page_namespace, page_id,
+        query = """SELECT page_id, page_talk_id, page_title, page_ns,
                 page_is_redirect
-            FROM page
-            WHERE (page_title, page_namespace) IN ({})"""
-        query2 = """SELECT page_id, page_talk_id, page_title, page_ns,
-                page_is_redirect
-            FROM {} WHERE page_id IN (%s)"""
+            FROM {}
+            WHERE page_id IN (%s)""".format(self._page_table)
 
-        query2 = query2.format(self._page_table)
+        unprocessed = [page for page in pages if page.talkid not in talkmap]
+        page2subject, subject2page = self._lookup_pages(wcursor, unprocessed)
 
-        unprocessed = [page for page in pages if page.id not in talkmap]
-        idmap = {page.id: page for page in unprocessed}
-        titlemap = {(page.title, page.ns): page for page in unprocessed}
-
-        query = query1.format(", ".join("(?, ?)" for _ in unprocessed))
-        wcursor.execute(query, [arg for key in titlemap.keys() for arg in key])
-        results = {titlemap[(title.decode("utf8"), ns)]: (pid, isredir)
-                   for (title, ns, pid, isredir) in wcursor.fetchall()}
-
-        to_check = [(page.id,) for page in unprocessed if page in results]
-        to_remove = [(page.id,) for page in unprocessed if page not in results]
+        # Unprocessed pages missing from the subject page map don't exist; they
+        # are orphaned talk pages. We delete them from the local db if present:
+        to_remove = [(page.talkid,) for page in unprocessed
+                     if page not in page2subject]
         to_add = []
         to_update = []
 
+        # For each resulting subject page ID, we need to check whether its
+        # entry in our database is up-to-date:
+        to_check = subject2page.keys()
         self._logger.debug("    %s unprocessed to check", len(to_check))
 
         if to_check:
-            cursor.execute(query2 % ", ".join("?" for _ in to_check), to_check)
+            cursor.execute(query % ", ".join("?" * len(to_check)), to_check)
             current = {row[0]: row[1:] for row in cursor.fetchall()}
-            for pageid in to_check:
-                page = idmap[pageid]
-                baseid, isredir = results[page]
-                new = (page.id, page.title, page.ns, isredir)
-                if baseid in current:
-                    if new != current[baseid]:
-                        to_update.append(new + (baseid,))
+            for subjectid in to_check:
+                page, isredir = subject2page[subjectid]
+                new = (page.talkid, page.title, page.ns, isredir)
+                if subjectid in current:
+                    cur = current[subjectid]
+                    if new != cur:
+                        if page.talkid != cur[0]:
+                            # The talk page of this subject page has changed
+                            # IDs, indicating that stuff has been moved around;
+                            # we need to ensure that the talk page's previous
+                            # entry in the database is removed (if any) before
+                            # we update it since talk IDs are uniquely indexed:
+                            to_remove.append((page.talkid,))
+                        to_update.append(new + (subjectid,))
                 else:
-                    to_add.append((baseid,) + new)
-                talkmap[page.id] = baseid
+                    to_add.append((subjectid,) + new)
+                talkmap[page.talkid] = subjectid
 
         self._save_modified_pages(cursor, to_remove, to_add, to_update)
 
-        return [talkmap[page.id] for page in pages]
+        return [talkmap[page.talkid] for page in pages
+                if page.talkid in talkmap]
 
     def _get_current_index(self, cursor, project):
         """Return a list of page IDs currently indexed in the given project."""
@@ -269,8 +301,9 @@ class UpdateProjectIndex(Task):
 
     def _sync_index(self, cursor, project, newids, oldids):
         """Synchronize the index table for the given project."""
-        msg = "    sync index: %s -> %s"
-        self._logger.debug(msg, len(oldids), len(newids))
+        msg = "    sync index: %s -> %s (change: %s)"
+        change = len(set(oldids) ^ set(newids))
+        self._logger.debug(msg, len(oldids), len(newids), change)
 
         query1 = "DELETE FROM {} WHERE index_page = ? AND index_project = ?"
         query2 = "INSERT INTO {} (index_page, index_project) VALUES (?, ?)"
@@ -281,8 +314,9 @@ class UpdateProjectIndex(Task):
         to_remove = set(oldids) - set(newids)
         to_add = set(newids) - set(oldids)
 
-        cursor.executemany(query1, [(pid, project.id) for pid in to_remove])        # TODO: optimization candidate
-        cursor.executemany(query2, [(pid, project.id) for pid in to_add])           # TODO: optimization candidate
+        # TODO: optimization candidates:
+        cursor.executemany(query1, [(pid, project.id) for pid in to_remove])
+        cursor.executemany(query2, [(pid, project.id) for pid in to_add])
 
     def _clear_old_pages(self, cursor, valid):
         """Remove all pages from the database that aren't in the given list."""
@@ -294,14 +328,15 @@ class UpdateProjectIndex(Task):
 
         cursor.execute(query1)
         current = set(pageid for (pageid,) in cursor.fetchall())
-
         to_remove = current - set(valid)
-        cursor.executemany(query2, [(pageid,) for pageid in to_remove])             # TODO: optimization candidate
+
+        # TODO: optimization candidate:
+        cursor.executemany(query2, [(pageid,) for pageid in to_remove])
 
     def _sync_pages(self, cursor, projects):
         """Synchronize the database's page and index tables."""
         self._logger.info("Synchronizing pages with database")
-        talkmap = {}
+        talkmap = {}  # Maps talk_page_id => subject_page_id
 
         with self._bot.wikidb as wcursor:
             for project in projects:
