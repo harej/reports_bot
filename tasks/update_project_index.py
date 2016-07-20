@@ -74,16 +74,24 @@ class UpdateProjectIndex(Task):
         query1 = """SELECT page_id, page_namespace, page_title,
                 rd_namespace, rd_title
             FROM page LEFT JOIN redirect ON rd_from = page_id
-            WHERE page_title = ? AND page_namespace = 4"""
+            WHERE page_title LIKE ? ESCAPE "|" AND page_namespace = 4"""
         query2 = """SELECT page_id
             FROM page
             WHERE page_namespace = ? AND page_title = ?"""
 
-        candidates = ("WikiProject_%s" % name, "WikiProject_%ss" % name, name)
+        escname = name.replace("_", "|_")
+        candidates = (
+            "WikiProject|_%s" % escname,
+            "WikiProject|_%ss" % escname,
+            escname,
+            "WikiProject|_?/%s|_task|_force" % escname,
+            "WikiProject|_?/%s" % escname
+        )
+
         for candidate in candidates:
             cursor.execute(query1, (candidate,))
             results = cursor.fetchall()
-            if results:
+            if results and len(results) == 1:
                 break
         else:
             raise ValueError(name)
@@ -173,6 +181,13 @@ class UpdateProjectIndex(Task):
         to_add = new.keys() - old.keys()
         to_update = [pid for pid in new.keys() & old.keys()
                      if new[pid] != old[pid]]
+
+        for pid in to_remove:
+            self._logger.debug("Remove: %s: %s", pid, old[pid])
+        for pid in to_add:
+            self._logger.debug("Add:    %s: %s", pid, new[pid])
+        for pid in to_update:
+            self._logger.debug("Update: %s: %s -> %s", pid, old[pid], new[pid])
 
         msg = "Remove/add/update: %s/%s/%s"
         self._logger.info(msg, len(to_remove), len(to_add), len(to_update))
