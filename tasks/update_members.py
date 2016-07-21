@@ -6,6 +6,7 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
+from reportsbot.exceptions import NoProjectError
 from reportsbot.task import Task
 
 __all__ = ["UpdateMembers"]
@@ -38,11 +39,17 @@ class UpdateMembers(Task):
                     continue
 
                 username = components[0]
-                wikiproject = components[2]
-                if wikiproject in members:
-                    members[wikiproject].append(username)
+                project = components[2]
+
+                try:
+                    self._bot.get_project("Wikipedia:" + project).get_config()
+                except NoProjectError:
+                    continue
+
+                if project in members:
+                    members[project].append(username)
                 else:
-                    members[wikiproject] = [username]
+                    members[project] = [username]
 
         self._logger.info("%s total members in %s projects",
                           sum(len(L) for L in members.values()), len(members))
