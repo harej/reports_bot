@@ -4,9 +4,9 @@
 This module contains utility code for Python's standard logging library.
 """
 
-from logging import getLogger, Formatter, StreamHandler
-from logging.handlers import TimedRotatingFileHandler
-from os import makedirs, path
+from logging import getLogger, Formatter, StreamHandler, FileHandler
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+import os
 import stat
 
 from .exceptions import ConfigError
@@ -17,7 +17,48 @@ _ROOT_NAME = "reportsbot"
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _root = getLogger(_ROOT_NAME)
+_log_dir = None
 _setup_done = False
+_file_logging_enabled = False
+
+
+class _WatchedRotatingFileHandler(RotatingFileHandler):
+    """Modifies a RotatingFileHandler to emulate a WatchedFileHandler.
+
+    The goal here is to ensure that if another process rotates a log file while
+    we are using it, we'll reopen the new log file instead of continuing to
+    write to its old location (and possibly rotating things multiple times).
+
+    I'd prefer to just subclass RotatingFileHandler and WatchedFileHandler
+    together, but due to the way they structure their method calls, it's not
+    possible. Instead, code from WatchedFileHandler is adapted here.
+    """
+
+    def __init__(self, filename, maxBytes=0, backupCount=0):
+        super().__init__(filename, maxBytes=maxBytes, backupCount=backupCount)
+        self.dev, self.ino = -1, -1
+        self._statstream()
+
+    def _statstream(self):
+        if self.stream:
+            sres = os.fstat(self.stream.fileno())
+            self.dev, self.ino = sres[stat.ST_DEV], sres[stat.ST_INO]
+
+    def emit(self, record):
+        try:
+            sres = os.stat(self.baseFilename)
+        except FileNotFoundError:
+            sres = None
+
+        if not sres or sres[stat.ST_DEV] != self.dev or sres[stat.ST_INO] != self.ino:
+            if self.stream is not None:
+                self.stream.flush()
+                self.stream.close()
+                self.stream = None
+                self.stream = self._open()
+                self._statstream()
+
+        super().emit(record)
 
 
 class _ColorFormatter(Formatter):
@@ -40,29 +81,77 @@ class _ColorFormatter(Formatter):
         return super().format(record)
 
 
+def _ensure_dirs(dirpath):
+    """Ensure that the given path exists as a directory."""
+    if not os.path.isdir(dirpath):
+        if os.path.exists(dirpath):
+            err = "log path ({}) exists but is not a directory"
+            raise ConfigError(err.format(dirpath))
+        os.makedirs(dirpath, stat.S_IWUSR|stat.S_IRUSR|stat.S_IXUSR)
+
 def _setup_file_logging(log_dir):
     """Set up logging to the filesystem."""
-    if not path.isdir(log_dir):
-        if path.exists(log_dir):
-            err = "log_dir ({}) exists but is not a directory"
-            raise ConfigError(err.format(log_dir))
-        makedirs(log_dir, stat.S_IWUSR|stat.S_IRUSR|stat.S_IXUSR)
+    global _file_logging_enabled, _log_dir
+    _file_logging_enabled = True
+
+    _log_dir = log_dir
+    _ensure_dirs(log_dir)
 
     formatter = Formatter(
         fmt="[%(asctime)s %(levelname)-7s] %(name)s: %(message)s",
         datefmt=_DATE_FORMAT)
 
-    logpath = path.join(log_dir, "bot.log")
-    handler = TimedRotatingFileHandler(logpath, "midnight", 1, 30)
-    handler.setLevel("INFO")
-    handler.setFormatter(formatter)
-    _root.addHandler(handler)
+    infohandler = _WatchedRotatingFileHandler(
+        os.path.join(log_dir, "all.log"), maxBytes=32 * 1024**2, backupCount=4)
+    infohandler.setLevel("INFO")
+
+    errorhandler = _WatchedRotatingFileHandler(
+        os.path.join(log_dir, "all.err"), maxBytes=32 * 1024**2, backupCount=4)
+    errorhandler.setLevel("WARNING")
+
+    for handler in [infohandler, errorhandler]:
+        handler.setFormatter(formatter)
+        _root.addHandler(handler)
+
+def _setup_task_logger(logger):
+    """Configure a task logger to generate site- and task-specific logs."""
+    if logger.handlers:  # Already processed
+        return
+
+    parts = logger.name.split(".")
+    if len(parts) < 4:  # Malformed
+        return
+    site = parts[2]
+    task = parts[3]
+
+    _ensure_dirs(os.path.join(_log_dir, site))
+
+    formatter = Formatter(
+        fmt="[%(asctime)s %(levelname)-7s] %(message)s",
+        datefmt=_DATE_FORMAT)
+
+    infohandler = TimedRotatingFileHandler(
+        os.path.join(_log_dir, site, task + ".log"), "midnight", 1, 30)
+    infohandler.setLevel("INFO")
+
+    debughandler = FileHandler(
+        os.path.join(_log_dir, site, task + ".log.verbose"), "w")
+    debughandler.setLevel("DEBUG")
+
+    errorhandler = RotatingFileHandler(
+        os.path.join(_log_dir, site, task + ".err"), maxBytes=1024**2,
+        backupCount=4)
+    errorhandler.setLevel("WARNING")
+
+    for handler in [infohandler, debughandler, errorhandler]:
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
 def setup_logging(log_dir=None, quiet=False):
     """Set up the logging infrastructure.
 
     If *log_dir* is given, logs will be written to that directory. If *quiet*
-    is True, logs below ERROR level will not be written to standard out.
+    is True, logs below ERROR level will not be written to standard error.
     """
     global _setup_done
 
@@ -82,5 +171,13 @@ def setup_logging(log_dir=None, quiet=False):
         _setup_file_logging(log_dir)
 
 def get_logger(name):
-    """Return a logger for the given service."""
-    return _root.getChild(name)
+    """Return a logger for the given service.
+
+    If the logger is a task logger (e.g. "task.enwiki.update_foo"), then we
+    will ensure that the returned logger is configured to generate
+    site-specific detailed logs.
+    """
+    logger = _root.getChild(name)
+    if name.startswith("task.") and _file_logging_enabled:
+        _setup_task_logger(logger)
+    return logger

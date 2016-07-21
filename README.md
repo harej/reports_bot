@@ -90,10 +90,20 @@ arguments as `./run`:
 ## Logs
 
 The bot stores logs in the `logs/` directory unless `-t` (`--traceless`) is
-passed to `./run`. `bot.log` stores non-DEBUG-level logs for all tasks, and is
-automatically rotated each night. 30 days of logs are kept.
+passed to `./run`. A few different kinds of logs are kept:
 
-The bot also prints all logs (including DEBUG-level) to standard out unless
+* `all.log` stores non-DEBUG level logs for all tasks. It automatically rotates
+  when it grows large.
+* `all.err` stores WARNING-level logs and above for all tasks. It automatically
+  rotates when it grows large.
+* `<sitename>/<taskname>.log` stores non-DEBUG level logs for the specified
+  task running on the specified site. It automatically rotates nightly.
+* `<sitename>/<taskname>.err` stores WARNING-level logs and above. It
+  automatically rotates when it grows large.
+* `<sitename>/<taskname>.log.verbose` stores full logs for the last run of the
+  task. It is cleared at the start of each run.
+
+The bot also prints all logs (including DEBUG-level) to standard error unless
 `-q` (`--quiet`) is passed to `./run`, in which case only ERROR-level and
 higher are printed. This option can be useful for cron jobs; if you set up cron
 to email you the output of `./run -q`, you will be notified immediately when
