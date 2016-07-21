@@ -9,24 +9,24 @@ CREATE DATABASE `wpx`
     DEFAULT COLLATE utf8mb4_unicode_ci;
 
 --
--- Table structure for table `config`
+-- Table structure for table `project_config`
 --
 
-DROP TABLE IF EXISTS `config`;
-CREATE TABLE `config` (
-    `config_site` VARCHAR(255) NOT NULL,
+DROP TABLE IF EXISTS `project_config`;
+CREATE TABLE `project_config` (
+    `config_site` VARCHAR(191) NOT NULL,
     `config_json` MEDIUMTEXT NOT NULL,
     PRIMARY KEY (`config_site`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Table structure for table `lastupdated`
+-- Table structure for table `last_update`
 --
 
-DROP TABLE IF EXISTS `lastupdated`;
-CREATE TABLE `lastupdated` (
-    `lu_site` VARCHAR(255) NOT NULL,
-    `lu_key` VARCHAR(255) NOT NULL,
+DROP TABLE IF EXISTS `last_update`;
+CREATE TABLE `last_update` (
+    `lu_site` VARCHAR(191) NOT NULL,
+    `lu_key` VARCHAR(191) NOT NULL,
     `lu_timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`lu_site`, `lu_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

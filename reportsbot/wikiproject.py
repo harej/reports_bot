@@ -26,7 +26,7 @@ class WikiProject:
 
         Raises NoProjectError if the project is not found in the config.
         """
-        query = "SELECT config_json FROM config WHERE config_site = ?"
+        query = "SELECT config_json FROM project_config WHERE config_site = ?"
 
         with self._bot.localdb as cursor:
             cursor.execute(query, (self._bot.wikiid,))
