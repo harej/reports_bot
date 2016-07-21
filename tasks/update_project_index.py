@@ -101,7 +101,12 @@ class UpdateProjectIndex(Task):
         for candidate in candidates:
             cursor.execute(query1, (candidate,))
             results = cursor.fetchall()
-            if results and len(results) == 1:
+            if "%" in candidate:
+                # If this was a wildcard search, we want to make sure we didn't
+                # accidentally pick up a subpage of a subpage:
+                results = [res for res in results
+                           if res[2].decode("utf8").count("/") <= 1]
+            if len(results) == 1:  # Need a definitive result
                 break
         else:
             raise ValueError(name)
