@@ -20,7 +20,7 @@ class LoadProjectConfig(Task):
 
     def _report_error(self, message):
         """Report an error to the error page."""
-        page = self._site.get_page(self.ERROR_TITLE)
+        page = self._bot.get_page(self.ERROR_TITLE)
         wikitime = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         page.text = "{}: {}".format(wikitime, message)
         page.save("Error while loading configuration", minor=False)
@@ -80,7 +80,7 @@ class LoadProjectConfig(Task):
             cursor.execute(query2, (self._bot.wikiid, dump))
 
     def run(self):
-        page = self._site.get_page(self.CONFIG_TITLE)
+        page = self._bot.get_page(self.CONFIG_TITLE)
 
         try:
             data = json.loads(page.text)
