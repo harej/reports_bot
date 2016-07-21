@@ -318,6 +318,9 @@ class UpdateProjectIndex(Task):
                         to_remove.append((page.talkid,))
                     to_update.append(new + (page.id,))
             else:
+                # Again, there's a chance that an old talk page has a new
+                # subject page, so we remove it for safety:
+                to_remove.append((page.talkid,))
                 to_add.append((page.id,) + new)
 
         self._save_modified_pages(cursor, to_remove, to_add, to_update)
@@ -369,6 +372,8 @@ class UpdateProjectIndex(Task):
 
     def _clear_old_pages(self, cursor, valid):
         """Remove all pages from the database that aren't in the given set."""
+        self._logger.debug("Clearing old pages")
+
         query1 = "SELECT page_id FROM {}"
         query2 = "DELETE FROM {} WHERE page_id = ?"
 
@@ -378,6 +383,7 @@ class UpdateProjectIndex(Task):
         cursor.execute(query1)
         current = {pageid for (pageid,) in cursor.fetchall()}
         to_remove = current - valid
+        self._logger.debug("    remove: %s", len(to_remove))
 
         # TODO: optimization candidate:
         cursor.executemany(query2, [(pageid,) for pageid in to_remove])
