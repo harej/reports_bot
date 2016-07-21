@@ -20,6 +20,7 @@ class LoadProjectConfig(Task):
 
     def _report_error(self, message):
         """Report an error to the error page."""
+        self._logger.error(message)
         page = self._bot.get_page(self.ERROR_TITLE)
         wikitime = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         page.text = "{}: {}".format(wikitime, message)
@@ -70,6 +71,8 @@ class LoadProjectConfig(Task):
 
     def _save_to_database(self, data):
         """Save the given config data to the database."""
+        self._logger.info("Saving new config to database")
+
         query1 = "DELETE FROM project_config WHERE config_site = ?"
         query2 = """INSERT INTO project_config (config_site, config_json)
                     VALUES (?, ?)"""
