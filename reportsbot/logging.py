@@ -7,7 +7,7 @@ This module contains utility code for Python's standard logging library.
 from logging import getLogger, Formatter, StreamHandler, FileHandler
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 import os
-import stat
+from stat import ST_DEV, ST_INO
 
 from .exceptions import ConfigError
 
@@ -42,7 +42,7 @@ class _WatchedRotatingFileHandler(RotatingFileHandler):
     def _statstream(self):
         if self.stream:
             sres = os.fstat(self.stream.fileno())
-            self.dev, self.ino = sres[stat.ST_DEV], sres[stat.ST_INO]
+            self.dev, self.ino = sres[ST_DEV], sres[ST_INO]
 
     def emit(self, record):
         try:
@@ -50,7 +50,7 @@ class _WatchedRotatingFileHandler(RotatingFileHandler):
         except FileNotFoundError:
             sres = None
 
-        if not sres or sres[stat.ST_DEV] != self.dev or sres[stat.ST_INO] != self.ino:
+        if not sres or sres[ST_DEV] != self.dev or sres[ST_INO] != self.ino:
             if self.stream is not None:
                 self.stream.flush()
                 self.stream.close()
@@ -87,7 +87,7 @@ def _ensure_dirs(dirpath):
         if os.path.exists(dirpath):
             err = "log path ({}) exists but is not a directory"
             raise ConfigError(err.format(dirpath))
-        os.makedirs(dirpath, stat.S_IWUSR|stat.S_IRUSR|stat.S_IXUSR)
+        os.makedirs(dirpath, 0o777)
 
 def _setup_file_logging(log_dir):
     """Set up logging to the filesystem."""
