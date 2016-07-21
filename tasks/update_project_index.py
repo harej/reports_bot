@@ -70,7 +70,17 @@ class UpdateProjectIndex(Task):
             return [cat.decode("utf8") for (cat,) in cursor.fetchall()]
 
     def _find_project(self, cursor, name):
-        """Return the ID and title of the given WikiProject's root page."""
+        """Return the ID and title of the given WikiProject's root page.
+
+        This function accepts a project name "fragment" that has been extracted
+        from a category name. For example, we might get "Insects" from
+        "Category:C-Class Insects articles" and have to deduce that the
+        relevant WikiProject is "Wikipedia:WikiProject Insects". To that end,
+        we try a number of candidate titles in the Project namespace, including
+        prepending "WikiProject" to it and checking whether it exists as a task
+        force within a larger project. If any of those yield a definitive
+        match, we'll return it.
+        """
         query1 = """SELECT page_id, page_namespace, page_title,
                 rd_namespace, rd_title
             FROM page LEFT JOIN redirect ON rd_from = page_id
@@ -84,8 +94,8 @@ class UpdateProjectIndex(Task):
             "WikiProject|_%s" % escname,
             "WikiProject|_%ss" % escname,
             escname,
-            "WikiProject|_?/%s|_task|_force" % escname,
-            "WikiProject|_?/%s" % escname
+            "WikiProject|_%%/%s|_task|_force" % escname,
+            "WikiProject|_%%/%s" % escname
         )
 
         for candidate in candidates:
