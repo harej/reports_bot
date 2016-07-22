@@ -2,7 +2,7 @@
 
 """
 Project Index -- prepares an index of WikiProjects and their in-scope pages for use by scripts
-Copyright (C) 2015 James Hare
+Copyright (C) 2015 James Hare, 2016 Ben Kurtovic
 Licensed under MIT License: http://mitlicense.org
 """
 

@@ -2,7 +2,7 @@
 
 """
 Loads wikiproject.json, validates it, stores it
-Copyright (C) 2015 James Hare
+Copyright (C) 2015 James Hare, 2016 Ben Kurtovic
 Licensed under MIT License: http://mitlicense.org
 """
 
