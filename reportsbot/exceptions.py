@@ -7,7 +7,6 @@ Exception
 +-- ReportsBotError
     +-- ConfigError
     +-- TaskLoaderError
-    +-- NoProjectError
 """
 
 class ReportsBotError(Exception):
@@ -20,8 +19,4 @@ class ConfigError(ReportsBotError):
 
 class TaskLoaderError(ReportsBotError):
     """Represents an error while loading or setting up a bot task."""
-    pass
-
-class NoProjectError(ReportsBotError):
-    """Raised when trying to work with a WikiProject that is not configured."""
     pass

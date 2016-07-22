@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import encodings
+import json
 from os.path import expanduser
 import re
 
 import oursql
 
 from .user import User
+from .util import to_wiki_format
 from .wikiproject import WikiProject
 
 __all__ = ["Bot"]
@@ -22,6 +24,7 @@ class Bot:
         self._site = None
         self._wikidb = None
         self._localdb = None
+        self._project_config = None
 
     @staticmethod
     def _register_utf8mb4():
@@ -57,6 +60,44 @@ class Bot:
             self._register_utf8mb4()
 
         return oursql.connect(**kwargs)
+
+    def _load_project_config(self):
+        """Load the project config JSON blob from the database.
+
+        After calling this function, the config is available from and cached in
+        self._project_config.
+        """
+        if self._project_config is not None:
+            return
+
+        query = "SELECT config_json FROM project_config WHERE config_site = ?"
+        with self.localdb as cursor:
+            cursor.execute(query, (self.wikiid,))
+            if cursor.rowcount == 0:
+                self._project_config = {}
+                return
+            raw = json.loads(cursor.fetchall()[0][0])
+
+        config = {"defaults": raw["defaults"], "projects": {}}
+        for project in raw["projects"]:
+            config["projects"][project["name"]] = project
+        self._project_config = config
+
+    def _get_project_config(self, name):
+        """Return the on-wiki JSON configuration for the given project.
+
+        Default values are automatically resolved. If the project doesn't
+        exist, None is returned.
+        """
+        self._load_project_config()
+
+        name = to_wiki_format(name)
+        if name not in self._project_config["projects"]:
+            return None
+
+        config = self._project_config["defaults"]
+        config.update(self._project_config["projects"][name])
+        return config
 
     @property
     def config(self):
@@ -108,8 +149,14 @@ class Bot:
         The name is the page title of the project's base page, including the
         namespace.
         """
-        return WikiProject(self, name)
+        return WikiProject(self, name, self._get_project_config(name))
 
     def get_user(self, name):
         """Return a User object corresponding to the given username."""
         return User(self, name)
+
+    def get_projects(self):
+        """Return a list of all WikiProjects that are configured."""
+        self._load_project_config()
+        projects = self._project_config["projects"]
+        return [self.get_project(name) for name in projects]
