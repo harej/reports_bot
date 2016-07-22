@@ -172,10 +172,8 @@ class UpdateProjectIndex(Task):
         self._logger.info(msg, len(projects), total_cats)
         return list(projects.values())
 
-    def _sync_projects(self, cursor, projects):
-        """Synchronize the given projects with the database."""
-        self._logger.info("Synchronizing projects")
-
+    def _really_sync_projects(self, cursor, projects):
+        """Really update the given projects inside an SQL transaction."""
         query1 = "SELECT project_id, project_title FROM {}"
         query2 = """DELETE {0}, {1}
             FROM {0} LEFT JOIN {1} ON project_id = index_project
@@ -210,6 +208,14 @@ class UpdateProjectIndex(Task):
         cursor.executemany(query2, [(pid,) for pid in to_remove])
         cursor.executemany(query3, [(pid, new[pid]) for pid in to_add])
         cursor.executemany(query4, [(new[pid], pid) for pid in to_update])
+
+    def _sync_projects(self, projects):
+        """Synchronize the given projects with the database."""
+        self._logger.info("Synchronizing projects")
+
+        with self._bot.localdb as cursor:
+            cursor.execute("BEGIN")
+            self._really_sync_projects(cursor, projects)
 
     def _get_talkmap(self, cursor):
         """Return a dict mapping talk page IDs to subject page IDs.
@@ -388,26 +394,32 @@ class UpdateProjectIndex(Task):
         # TODO: optimization candidate:
         cursor.executemany(query2, [(pageid,) for pageid in to_remove])
 
-    def _sync_pages_and_index(self, cursor, projects):
+    def _sync_pages_and_index(self, projects):
         """Synchronize the database's page and index tables."""
-        with self._bot.wikidb as wcursor:
-            talkmap = self._get_talkmap(wcursor)
-            processed = set()
+        with self._bot.wikidb as cursor:
+            talkmap = self._get_talkmap(cursor)
 
-            self._logger.info("Synchronizing pages and index")
-            for project in projects:
-                self._logger.debug("Processing: %s", project.title)
-                pages = self._get_pages_in_project(wcursor, talkmap, project)
+        self._logger.info("Synchronizing pages and index")
+        processed = set()
+
+        for project in projects:
+            self._logger.debug("Processing: %s", project.title)
+
+            with self._bot.wikidb as cursor:
+                pages = self._get_pages_in_project(cursor, talkmap, project)
+
+            with self._bot.localdb as cursor:
+                cursor.execute("BEGIN")
                 self._sync_pages(cursor, processed, pages)
                 current = self._get_current_index(cursor, project)
                 self._sync_index(cursor, project, pages, current)
 
+        with self._bot.localdb as cursor:
+            cursor.execute("BEGIN")
             self._clear_old_pages(cursor, processed)
 
     def run(self):
         self._ensure_tables()
         projects = self._get_projects()
-
-        with self._bot.localdb as cursor:
-            self._sync_projects(cursor, projects)
-            self._sync_pages_and_index(cursor, projects)
+        self._sync_projects(projects)
+        self._sync_pages_and_index(projects)
