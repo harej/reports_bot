@@ -96,7 +96,7 @@ class Bot:
         if name not in self._project_config["projects"]:
             return None
 
-        config = self._project_config["defaults"]
+        config = self._project_config["defaults"].copy()
         config.update(self._project_config["projects"][name])
         return config
 

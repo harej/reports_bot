@@ -32,7 +32,7 @@ class Config:
     def _get_sql_info(self, which):
         """Get some SQL connection info."""
         sql = self._data.get("sql", {})
-        info = sql.get("all", {})
+        info = sql.get("all", {}).copy()
         info.update(sql.get(which, {}))
         return info
 
