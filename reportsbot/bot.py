@@ -73,10 +73,11 @@ class Bot:
         query = "SELECT config_json FROM project_config WHERE config_site = ?"
         with self.localdb as cursor:
             cursor.execute(query, (self.wikiid,))
-            if cursor.rowcount == 0:
-                self._project_config = {}
+            results = cursor.fetchall()
+            if not results:
+                self._project_config = {"defaults": {}, "projects": {}}
                 return
-            raw = json.loads(cursor.fetchall()[0][0])
+            raw = json.loads(results[0][0])
 
         config = {"defaults": raw["defaults"], "projects": {}}
         for project in raw["projects"]:
