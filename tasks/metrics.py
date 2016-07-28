@@ -65,7 +65,7 @@ class Metrics(Task):
                 if not results:
                     continue
 
-                timestamp = results[0][0]
+                timestamp = results[0][0].decode("utf8")
                 creation = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
                 month = datetime(creation.year, creation.month, 1)
 
