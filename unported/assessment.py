@@ -84,7 +84,8 @@ class WikiProjectAssess:
                       "/Assessment/Assess for quality"
             q = ('select page_title from categorylinks '
                  'join page on cl_from = page_id '
-                 'where cl_to = "{0}";').format(category.replace(' ', '_'))
+                 'where cl_to = "{0}" '
+                 'order by page_random limit 100;').format(category.replace(' ', '_'))
             to_process = [row[0].decode('utf-8') \
                          for row in self.wptools.query('wiki', q, None)]
             to_process = self.qualitypredictor(to_process)
@@ -117,6 +118,7 @@ class WikiProjectAssess:
             q = ('select page_namespace, page_title from page '
                  'join categorylinks on categorylinks.cl_from = page.page_id '
                  'where page_namespace in (0, 14) '
+                 'and page_is_redirect = 0 '
                  'and cl_to in ( '
                  'select page.page_title from page '
                  'join categorylinks on categorylinks.cl_from = page.page_id '
