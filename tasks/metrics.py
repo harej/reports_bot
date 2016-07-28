@@ -119,10 +119,10 @@ class Metrics(Task):
 
         oldlist = re.search(wrap("list", r"(.*?)"), oldtext, re.S)
         pagelist = self._build_page_list(
-            articles, oldlist.group(1) if oldlist else "")
+            articles, oldlist.group(1).strip() if oldlist else "")
 
         replacements = {
-            "list": wrap("list", pagelist),
+            "list": wrap("list", "\n" + pagelist + "\n"),
             "articlecount": wrap("count", str(len(articles))),
             "date": month.strftime("%B %Y"),
             "month": month.strftime("%B"),
