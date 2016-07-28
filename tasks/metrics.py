@@ -106,7 +106,7 @@ class Metrics(Task):
             cursor.execute(query.format(params), args)
             results = cursor.fetchall()
 
-        valid = {join_full_title(self._bot.site, ns, title)
+        valid = {join_full_title(self._bot.site, ns, title.decode("utf8"))
                  for (ns, title) in results}
         return list(set(titles) - valid)
 
