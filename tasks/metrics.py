@@ -138,7 +138,7 @@ class Metrics(Task):
                              sorted(entries.items(), key=lambda item: item[0]))
 
         # Exclude commented-out lines in the count:
-        count = len(val for val in entries.values() if val.startswith("#"))
+        count = sum(1 for val in entries.values() if val.startswith("#"))
         return pagelist, count
 
     def _build_page_text(self, month, articles, oldtext, template):
