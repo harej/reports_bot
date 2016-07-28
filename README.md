@@ -140,6 +140,7 @@ The task has access to two important attributes:
     * `self._bot.site`: the Pywikibot site instance
     * `self._bot.wikidb`: a database connection to the wiki replica
     * `self._bot.localdb`: a connection to the bot's local database
+    * `self._bot.wikidata`: an interface to Wikidata
   Some methods are available for working with WikiProjects in a structured
   manner. See the `reportsbot.bot.Bot` class documentation for details.
 * `self._logger` is the

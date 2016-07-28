@@ -9,7 +9,8 @@ import pwd
 
 from .exceptions import ConfigError
 
-__all__ = ["to_sql_format", "to_wiki_format", "ensure_ownership"]
+__all__ = ["to_sql_format", "to_wiki_format", "split_full_title",
+           "join_full_title", "ensure_ownership"]
 
 def to_sql_format(title):
     """Convert a page title or username to 'canonical' SQL format.
@@ -32,6 +33,30 @@ def to_wiki_format(title):
     if not title:
         return ""
     return title[0].upper() + title[1:]
+
+def split_full_title(site, title):
+    """Split a full pagename into a 2-tuple of (namespace ID, SQL-ready title).
+
+    The first parameter should be a Pywikibot Site object, and is used to look
+    up namespace names.
+    """
+    if ":" in title:
+        ns_name, title = title.split(":", 1)
+        return (site.namespaces[ns_name].id, to_sql_format(title))
+    else:
+        return (0, to_sql_format(title))
+
+def join_full_title(site, ns, title):
+    """Join a namespace ID and page title into a wiki-formatted full pagename.
+
+    The first parameter should be a Pywikibot Site object, and is used to look
+    up namespace IDs.
+    """
+    if ns == 0:
+        return to_wiki_format(title)
+    else:
+        ns_name = site.namespaces[ns].custom_name
+        return ns_name + ":" + to_wiki_format(title)
 
 def ensure_ownership(path):
     """Ensure that we are the owner of the given path.

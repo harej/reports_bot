@@ -13,7 +13,7 @@ from BTrees.IIBTree import IIBTree
 from oursql import ProgrammingError
 
 from reportsbot.task import Task
-from reportsbot.util import to_wiki_format
+from reportsbot.util import join_full_title
 
 __all__ = ["UpdateProjectIndex"]
 
@@ -120,9 +120,7 @@ class UpdateProjectIndex(Task):
             pid = result[0][0]
             ns, title = rns, rtitle
 
-        ns_name = self._bot.site.namespaces[ns].custom_name
-        fulltitle = to_wiki_format(ns_name + ":" + title.decode("utf8"))
-        return pid, fulltitle
+        return pid, join_full_title(self._bot.site, ns, title.decode("utf8"))
 
     def _get_projects(self):
         """Return a list of valid WikiProjects.

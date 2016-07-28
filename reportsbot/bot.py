@@ -9,12 +9,19 @@ import oursql
 
 from .user import User
 from .util import to_wiki_format
+from .wikidata import Wikidata
 from .wikiproject import WikiProject
 
 __all__ = ["Bot"]
 
 class Bot:
-    """Represents an instance of the Reports bot on a particular wiki."""
+    """Represents an instance of the Reports bot on a particular wiki.
+
+    An instance of this class is accessible from all tasks as their '_bot'
+    attribute, and is their primary way of interacting with the external world.
+    It provides access to databases and structured representations of many
+    objects like WikiProjects and users.
+    """
 
     def __init__(self, config, project, lang):
         self._config = config
@@ -24,6 +31,7 @@ class Bot:
         self._site = None
         self._wikidb = None
         self._localdb = None
+        self._wikidata = None
         self._project_config = None
 
     @staticmethod
@@ -126,7 +134,7 @@ class Bot:
 
     @property
     def wikidb(self):
-        """Return a connection to the wiki replica database."""
+        """Return a connection to the wiki replica SQL database."""
         if not self._wikidb:
             kwargs = self._config.get_wiki_sql(self.wikiid)
             self._wikidb = self._sql_connect(**kwargs)
@@ -134,10 +142,19 @@ class Bot:
 
     @property
     def localdb(self):
-        """Return a connection to the local Reports bot/WPX database."""
+        """Return a connection to the local Reports bot/WPX SQL database."""
         if not self._localdb:
             self._localdb = self._sql_connect(**self._config.get_local_sql())
         return self._localdb
+
+    @property
+    def wikidata(self):
+        """Return an interface to Wikidata."""
+        if not self._wikidata:
+            sql_kwargs = self._config.get_wiki_sql("wikidatawiki")
+            sql_conn = self._sql_connect(**sql_kwargs)
+            self._wikidata = Wikidata(sql_conn)
+        return self._wikidata
 
     def get_page(self, title):
         """Return a Pywikibot Page instance for the given page."""
@@ -156,7 +173,7 @@ class Bot:
         """Return a User object corresponding to the given username."""
         return User(self, name)
 
-    def get_projects(self):
+    def get_configured_projects(self):
         """Return a list of all WikiProjects that are configured."""
         self._load_project_config()
         projects = self._project_config["projects"]
