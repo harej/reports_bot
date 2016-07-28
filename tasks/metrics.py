@@ -51,11 +51,11 @@ class Metrics(Task):
 
     def _lookup_pages(self, pages):
         """Given some pages, return a list of them and their creation dates."""
-        query = """SELECT page_namespace, page_title, rev_timestamp
+        query = """SELECT page_namespace, page_title, MIN(rev_timestamp)
         FROM revision
         JOIN page ON rev_page = page_id
         WHERE ({})
-        ORDER BY rev_timestamp ASC LIMIT 1"""
+        GROUP BY page_id"""
         clause = "(page_namespace = ? AND page_title = ?)"
 
         chunksize = 10000
@@ -111,7 +111,8 @@ class Metrics(Task):
 
     def _build_page_text(self, month, articles, oldtext, template):
         """Return a metrics subpage's new content."""
-        self._logger.debug("Updating month: %s", month.strftime("%B %Y"))
+        self._logger.debug("Updating month: %s (%s articles)",
+                           month.strftime("%B %Y"), len(articles))
 
         comment = "<!-- Reports bot variable: %s %s -->"
         wrap = lambda key, body: (
