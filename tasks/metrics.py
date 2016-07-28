@@ -88,26 +88,55 @@ class Metrics(Task):
             if month in buckets:
                 buckets[month].append((ns, title))
 
-        # Sort the buckets in alphabetical order:
-        for month in buckets:
-            buckets[month].sort(key=lambda item: item[1])
+    def _check_for_redlinks(self, titles):
+        """Given a list of article titles, return those which don't exist."""
+        self._logger.debug("Checking %s possible redlinks", len(titles))
+
+        query = "SELECT page_namespace, page_title FROM page WHERE ({})"
+        clause = "(page_namespace = ? AND page_title = ?)"
+
+        with self._bot.wikidb as cursor:
+            params = " OR ".join([clause] * len(titles))
+            args = [arg for title in titles
+                    for arg in split_full_title(self._bot.site, title)]
+
+            cursor.execute(query.format(params), args)
+            results = cursor.fetchall()
+
+        valid = {join_full_title(self._bot.site, ns, title)
+                 for (ns, title) in results}
+        return list(set(titles) - valid)
 
     def _build_page_list(self, articles, oldlist):
         """Return a metrics subpage's new article list."""
-        existing = {}
-
-        for line in oldlist.splitlines():
-            link = re.search(r"\[\[(.*?)(\]\]|\|)", line, re.S)
-            if not link:
-                continue
-            existing[link.group(1)] = line
-
         titles = [join_full_title(self._bot.site, ns, title)
                   for (ns, title) in articles]
+        possible_redlinks = []
 
-        return "\n".join(
-            existing[title] if title in existing else "# [[{}]]".format(title)
-            for title in titles)
+        # Preliminary list of plain bot-generated entries:
+        entries = {title: "# [[{}]]".format(title) for title in titles}
+
+        # Merge in current (user-generated) entries:
+        for line in oldlist.splitlines():
+            link = re.search(r"\[\[(.*?)(\]\]|\|)", line)
+            if not link:
+                continue
+
+            title = link.group(1).strip()
+            if title not in entries:
+                possible_redlinks.append(title)
+            entries[title] = line
+
+        for title in self._check_for_redlinks(possible_redlinks):
+            del entries[title]
+
+        # Join list of entries' values, sorted by the corresponding keys:
+        pagelist = "\n".join(val for (key, val) in
+                             sorted(entries.items(), key=lambda item: item[0]))
+
+        # Exclude commented-out lines in the count:
+        count = len(val for val in entries.values() if val.startswith("#"))
+        return pagelist, count
 
     def _build_page_text(self, month, articles, oldtext, template):
         """Return a metrics subpage's new content."""
@@ -119,12 +148,12 @@ class Metrics(Task):
             comment.format("start", key) + body + comment.format("end", key))
 
         oldlist = re.search(wrap("list", r"(.*?)"), oldtext, re.S)
-        pagelist = self._build_page_list(
+        pagelist, count = self._build_page_list(
             articles, oldlist.group(1).strip() if oldlist else "")
 
         replacements = {
             "list": wrap("list", "\n" + pagelist + "\n"),
-            "articlecount": wrap("count", str(len(articles))),
+            "articlecount": wrap("count", str(count)),
             "date": month.strftime("%B %Y"),
             "month": month.strftime("%B"),
             "year": month.strftime("%Y")
