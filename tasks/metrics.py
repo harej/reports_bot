@@ -114,7 +114,7 @@ class Metrics(Task):
         self._logger.debug("Updating month: %s (%s articles)",
                            month.strftime("%B %Y"), len(articles))
 
-        comment = "<!-- Reports bot variable: %s %s -->"
+        comment = "<!-- Reports bot variable: {} {} -->"
         wrap = lambda key, body: (
             comment.format("start", key) + body + comment.format("end", key))
 
@@ -145,7 +145,7 @@ class Metrics(Task):
 
     def _save_metrics(self, project, months, buckets):
         """Save compiled metrics for the given project."""
-        # TODO: if base title doesn't exist, create it
+        # TODO: if base title or template don't exist, create them
 
         config = project.config["metrics"]
         base_title = config.get("page", project.name + "/Metrics")
