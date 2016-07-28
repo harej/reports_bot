@@ -90,6 +90,9 @@ class Metrics(Task):
 
     def _check_for_redlinks(self, titles):
         """Given a list of article titles, return those which don't exist."""
+        if not titles:
+            return []
+
         self._logger.debug("Checking %s possible redlinks", len(titles))
 
         query = "SELECT page_namespace, page_title FROM page WHERE ({})"
