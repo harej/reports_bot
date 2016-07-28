@@ -48,29 +48,44 @@ class Metrics(Task):
         pages = project.get_members(namespaces=0, redirect=False)
         return [(page.ns, page.title) for page in pages]
 
+    def _lookup_pages(self, pages):
+        """Given some pages, return a list of them and their creation dates."""
+        query = """SELECT page_namespace, page_title, rev_timestamp
+        FROM revision
+        JOIN page ON rev_page = page_id
+        WHERE ({})
+        ORDER BY rev_timestamp ASC LIMIT 1"""
+        clause = "(page_namespace = ? AND page_title = ?)"
+
+        chunksize = 10000
+        results = []
+
+        with self._bot.wikidb as cursor:
+            for start in range(0, len(pages), chunksize):
+                if start != 0:
+                    self._logger.debug("Done: %s/%s", start, len(pages))
+
+                chunk = pages[start:start+chunksize]
+                params = " OR ".join([clause] * len(chunk))
+                args = [arg for page in chunk for arg in page]
+
+                cursor.execute(query.format(params), args)
+                chunkdata = cursor.fetchall()
+                results.extend([(ns, title.decode("utf8"), ts.decode("utf8"))
+                                for (ns, title, ts) in chunkdata])
+
+        return results
+
     def _bucket_articles(self, articles, buckets):
         """Place each article inside a month bucket."""
         self._logger.debug("Bucketing articles")
 
-        query = """SELECT rev_timestamp
-        FROM revision
-        JOIN page ON rev_page = page_id
-        WHERE page_namespace = ? AND page_title = ?
-        ORDER BY rev_timestamp ASC LIMIT 1"""
-
-        with self._bot.wikidb as cursor:
-            for ns, title in articles:
-                cursor.execute(query, (ns, title))
-                results = cursor.fetchall()
-                if not results:
-                    continue
-
-                timestamp = results[0][0].decode("utf8")
-                creation = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
-                month = datetime(creation.year, creation.month, 1)
-
-                if month in buckets:
-                    buckets[month].append(((ns, title), creation))
+        pages = self._lookup_pages(articles)
+        for (ns, title, timestamp) in pages:
+            creation = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
+            month = datetime(creation.year, creation.month, 1)
+            if month in buckets:
+                buckets[month].append(((ns, title), creation))
 
         # Sort the buckets in order of descending creation date (newest first):
         for month in buckets:
