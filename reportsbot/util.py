@@ -41,10 +41,10 @@ def split_full_title(site, title):
     up namespace names.
     """
     if ":" in title:
-        ns_name, title = title.split(":", 1)
-        return (site.namespaces[ns_name].id, to_sql_format(title))
-    else:
-        return (0, to_sql_format(title))
+        ns_name, base_name = title.split(":", 1)
+        if ns_name in site.namespaces:
+            return (site.namespaces[ns_name].id, to_sql_format(base_name))
+    return (0, to_sql_format(title))
 
 def join_full_title(site, ns, title):
     """Join a namespace ID and page title into a wiki-formatted full pagename.
@@ -54,9 +54,8 @@ def join_full_title(site, ns, title):
     """
     if ns == 0:
         return to_wiki_format(title)
-    else:
-        ns_name = site.namespaces[ns].custom_name
-        return ns_name + ":" + to_wiki_format(title)
+    ns_name = site.namespaces[ns].custom_name
+    return ns_name + ":" + to_wiki_format(title)
 
 def ensure_ownership(path):
     """Ensure that we are the owner of the given path.
