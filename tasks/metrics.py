@@ -21,8 +21,8 @@ class Metrics(Task):
         end = datetime.utcnow()
         end = datetime(end.year, end.month, 1)
 
-        if start < end:
-            return []
+        if start > end:
+            raise ValueError(start_month)
 
         months = [start]
         while months[-1] < end:
