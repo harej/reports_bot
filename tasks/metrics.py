@@ -40,7 +40,7 @@ class Metrics(Task):
         query = "({}) AND LINK[{}]".format(query, self._bot.wikiid)
         items = self._bot.wikidata.query(query)
         titles = self._bot.wikidata.get_linked_pages(self._bot.wikiid, items)
-        return [split_full_title(title) for title in titles]
+        return [split_full_title(self._bot.site, title) for title in titles]
 
     def _fetch_articles_by_index(self, project):
         """Return a list of articles in the project, using the SQL index."""
@@ -117,7 +117,8 @@ class Metrics(Task):
             self._logger.warn("Project %s invalid start_month: %s",
                               project.name, start)
             return
-        self._logger.debug("%s months, from %s", len(months), months[0])
+        self._logger.debug("%s months, starting with %s", len(months),
+                           months[0].strftime("%B %Y"))
 
         wdq = config.get("wikidata_query")
         if wdq:
