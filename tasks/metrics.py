@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+import re
 
 from reportsbot.task import Task
 from reportsbot.util import split_full_title, join_full_title
@@ -85,35 +86,82 @@ class Metrics(Task):
             creation = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
             month = datetime(creation.year, creation.month, 1)
             if month in buckets:
-                buckets[month].append(((ns, title), creation))
+                buckets[month].append((ns, title))
 
-        # Sort the buckets in order of descending creation date (newest first):
+        # Sort the buckets in alphabetical order:
         for month in buckets:
-            buckets[month].sort(key=lambda item: item[1], reverse=True)
-            buckets[month] = [page for (page, _) in buckets[month]]
+            buckets[month].sort(key=lambda item: item[1])
 
-    def _build_page_text(self, oldtext, month, articles):
+    def _build_page_list(self, articles, oldlist):
+        """Return a metrics subpage's new article list."""
+        existing = {}
+
+        for line in oldlist.splitlines():
+            link = re.search(r"\[\[(.*?)(\]\]|\|)", line, re.S)
+            if not link:
+                continue
+            existing[link.group(1)] = line
+
+        titles = [join_full_title(self._bot.site, ns, title)
+                  for (ns, title) in articles]
+
+        return "\n".join(
+            existing[title] if title in existing else "# [[{}]]".format(title)
+            for title in titles)
+
+    def _build_page_text(self, month, articles, oldtext, template):
         """Return a metrics subpage's new content."""
         self._logger.debug("Updating month: %s", month.strftime("%B %Y"))
 
-        pagelist = "\n".join(
-            "# [[{}]]".format(join_full_title(self._bot.site, ns, title))
-            for ns, title in articles)
-        return pagelist
+        comment = "<!-- Reports bot variable: %s %s -->"
+        wrap = lambda key, body: (
+            comment.format("start", key) + body + comment.format("end", key))
+
+        oldlist = re.search(wrap("list", r"(.*?)"), oldtext, re.S)
+        pagelist = self._build_page_list(
+            articles, oldlist.group(1) if oldlist else "")
+
+        replacements = {
+            "list": wrap("list", pagelist),
+            "articlecount": wrap("count", str(len(articles))),
+            "date": month.strftime("%B %Y"),
+            "month": month.strftime("%B"),
+            "year": month.strftime("%Y")
+        }
+
+        if oldtext:
+            newtext = oldtext
+            newtext = re.sub(wrap("list", r"(.*?)"), replacements["list"],
+                             newtext, flags=re.S)
+            newtext = re.sub(wrap("count", r"(.*?)"),
+                             replacements["articlecount"], newtext, flags=re.S)
+        else:
+            newtext = template
+            for key, val in replacements.items():
+                newtext = newtext.replace("{{{" + key + "}}}", val)
+
+        return newtext
 
     def _save_metrics(self, project, months, buckets):
         """Save compiled metrics for the given project."""
         # TODO: if base title doesn't exist, create it
-        # TODO: use /Template subpage and add comment to top indicating such
-        # TODO: use oldtext in _build_page_text; remove deleted, don't rm notes
 
         config = project.config["metrics"]
         base_title = config.get("page", project.name + "/Metrics")
 
+        tmpl_title = base_title + "/Template"
+        template = self._bot.get_page(tmpl_title).text
+        if template:
+            tmpl_comment = "<!-- Created from: [[{}]] -->\n".format(tmpl_title)
+            template = tmpl_comment + template
+        else:
+            self._logger.warn("Project %s missing template", project.name)
+
         for month in months:
             monthname = month.strftime("%B %Y")
             page = self._bot.get_page(base_title + "/" + monthname)
-            page.text = self._build_page_text(page.text, month, buckets[month])
+            page.text = self._build_page_text(month, buckets[month], page.text,
+                                              template)
             page.save("Updating monthly metrics", minor=False)
 
     def _update_metrics(self, project):
