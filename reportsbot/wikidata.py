@@ -48,7 +48,8 @@ class Wikidata:
                 args = [wikiid] + chunk
 
                 cursor.execute(query.format(params), args)
-                results = [title for (title,) in cursor.fetchall()]
+                results = [title.decode("utf8")
+                           for (title,) in cursor.fetchall()]
                 pages.extend(results)
 
         return pages
