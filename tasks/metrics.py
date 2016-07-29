@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 from reportsbot.task import Task
-from reportsbot.util import split_full_title, join_full_title
+from reportsbot.util import to_sql_format, split_full_title, join_full_title
 
 __all__ = ["Metrics"]
 
@@ -48,6 +48,49 @@ class Metrics(Task):
         self._logger.debug("Using project index for scope")
         pages = project.get_members(namespaces=0, redirect=False)
         return [(page.ns, page.title) for page in pages]
+
+    def _fetch_articles_by_categories(self, cats):
+        """Return a list of articles in the project, using a list of cats."""
+        self._logger.debug("Using categories for scope")
+
+        query = """SELECT page_namespace, page_title
+        FROM categorylinks
+        JOIN page ON page_id = cl_from
+        WHERE cl_to IN ({})
+        AND page_namespace IN (0, 14) AND page_is_redirect = 0"""
+
+        pages = set()
+        cats = [to_sql_format(cat) for cat in cats]
+        processed = []
+
+        with self._bot.wikidb as cursor:
+            while cats:
+                processed.extend(cats)
+                cursor.execute(query.format(", ".join("?" * len(cats))), cats)
+                results = [(ns, title.decode("utf8"))
+                           for (ns, title) in cursor.fetchall()]
+
+                pages |= {(ns, title) for (ns, title) in results if ns == 0}
+                cats = [title for (ns, title) in results
+                        if ns == 14 and title not in processed]
+
+        return list(pages)
+
+    def _fetch_articles(self, project):
+        """Return a list of articles in the project."""
+        config = project.config["metrics"]
+        cats = config.get("categories")
+        wdq = config.get("wikidata_query")
+
+        if not cats and not wdq:
+            return self._fetch_articles_by_index(project)
+
+        articles = set()
+        if cats:
+            articles |= self._fetch_articles_by_categories(cats)
+        if wdq:
+            articles |= self._fetch_articles_by_wikidata(wdq)
+        return list(articles)
 
     def _lookup_pages(self, pages):
         """Given some pages, return a list of them and their creation dates."""
@@ -216,11 +259,7 @@ class Metrics(Task):
         self._logger.debug("%s months, starting with %s", len(months),
                            months[0].strftime("%B %Y"))
 
-        wdq = config.get("wikidata_query")
-        if wdq:
-            articles = self._fetch_articles_by_wikidata(wdq)
-        else:
-            articles = self._fetch_articles_by_index(project)
+        articles = self._fetch_articles(project)
         self._logger.debug("%s articles in scope", len(articles))
 
         buckets = {month: [] for month in months}
