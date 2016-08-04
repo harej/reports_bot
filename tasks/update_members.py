@@ -109,8 +109,8 @@ class UpdateMembers(Task):
         active = active[:-1] + "}}"  # removing trailing pipe and closing off module
         inactive += "}}"
 
-        page_active = self._bot.site.get_page(active_title)
-        page_inactive = self._bot.site.get_page(inactive_title)
+        page_active = self._bot.get_page(active_title)
+        page_inactive = self._bot.get_page(inactive_title)
 
         if active != page_active.text:
             self._logger.debug("Saving active members: [[%s]]", active_title)
