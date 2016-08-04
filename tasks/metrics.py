@@ -218,20 +218,72 @@ class Metrics(Task):
 
         return newtext
 
+    def _create_metrics_page(self, project, title):
+        """Create a missing base metrics page for the given project."""
+        self._logger.warn("Creating missing metrics page for %s", project.name)
+
+        text = """{{Archive box|box-width=10em|
+{{#invoke:WikiProject metrics|list|%(start)s}}
+}}
+
+{{#invoke:WikiProject metrics|chart|%(start)s}}
+
+<noinclude>
+{{#invoke:WikiProject metrics|recent|30em}}
+<noinclude>"""
+        text = text % {"start": project.config["metrics"]["start_month"]}
+
+        page = self._bot.get_page(title)
+        page.text = text
+        page.save("Creating metrics page", minor=False)
+
+    def _create_template(self, project, title):
+        """Create a missing template for the given project."""
+        self._logger.warn("Creating missing template for %s", project.name)
+
+        text = """{{#ifeq:{{#time:F Y}}|{{SUBPAGENAME}}||{{archive}}}}
+{{main|%(base)s}}
+
+<!-- You don't need to update the number below! It will be updated \
+automatically. -->
+<section begin="count"/>{{{articlecount}}}<section end="count"/> articles
+
+<!--
+== Instructions ==
+You may freely add items to this list, and "annotate" existing ones to add \
+things like notes, bold, italics, etc.
+To remove an entry, turn the whole line into a comment. If you just delete it \
+from the page, the bot may add it back.
+The bot keeps this list alphabetized and removes deleted pages.
+-->
+
+{{Div col||30em}}
+<section begin="list"/>
+{{{list}}}
+<section end="list"/>
+{{Div col end}}"""
+        text = text % {"base": title.rsplit("/", 1)[0]}
+
+        page = self._bot.get_page(title)
+        page.text = text
+        page.save("Creating template", minor=False)
+        return text
+
     def _save_metrics(self, project, months, buckets):
         """Save compiled metrics for the given project."""
-        # TODO: if base title or template don't exist, create them
-
         config = project.config["metrics"]
         base_title = config.get("page", project.name + "/Metrics")
 
+        if not self._bot.get_page(base_title).text:
+            self._create_metrics_page(project, base_title)
+
         tmpl_title = base_title + "/Template"
         template = self._bot.get_page(tmpl_title).text
-        if template:
-            tmpl_comment = "<!-- Created from: [[{}]] -->\n".format(tmpl_title)
-            template = tmpl_comment + template
-        else:
-            self._logger.warn("Project %s missing template", project.name)
+        if not template:
+            template = self._create_template(project, tmpl_title)
+
+        tmpl_comment = "<!-- Created from: [[{}]] -->\n".format(tmpl_title)
+        template = tmpl_comment + template
 
         for month in months:
             monthname = month.strftime("%B %Y")
