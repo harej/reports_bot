@@ -159,7 +159,7 @@ class Metrics(Task):
             ns_name, base = title.split(":", 1)
             ns_dict = self._bot.site.namespaces
             if ns_name in ns_dict:
-                title = ns_dict[ns_name].custom_prefix + base
+                title = ns_dict[ns_name].custom_prefix() + base
         return "# [[{}]]".format(title)
 
     def _build_page_list(self, articles, oldlist):
