@@ -7,12 +7,41 @@ Licensed under MIT License: http://mitlicense.org
 """
 
 from reportsbot.task import Task
+from reportsbot.util import to_wiki_format
+
+import mwparserfromhell
 
 __all__ = ["UpdateMembers"]
 
 class UpdateMembers(Task):
     """Updates WikiProject member lists based on WikiProjectCard usage."""
     MEMBER_TEMPLATE = "WikiProjectCard"
+
+    def _migrate_card(self, title, project):
+        """Migrate the card at the given title to the given project."""
+        self._logger.debug("Moving card [[%s]] to %s", title, project)
+
+        username = title.split("/", 2)[0]
+        new_title = "User:" + "/".join((username, "WikiProjectCards", project))
+
+        card = self._bot.get_page("User:" + title)
+        card = card.move(new_title, "Renaming card to match WikiProject name")
+
+        code = mwparserfromhell.parse(card.text)
+        tmpl = code.filter_templates(self.MEMBER_TEMPLATE)[0]
+        tmpl.add("wikiproject", project)
+
+        card.text = str(code)
+        card.save("Updating WikiProject name", minor=True)
+
+    def _follow_project_redirect(self, title):
+        """Return the redirect target of the given project, if it exists."""
+        page = self._bot.get_page(title)
+        if page.isRedirectPage():
+            target = page.getRedirectTarget().title()
+            if self._bot.get_project(target).configured:
+                return target.split(":", 1)[1]
+        return None
 
     def _get_all_members(self):
         """Return a dict mapping projects to lists of members (usernames)."""
@@ -38,10 +67,14 @@ class UpdateMembers(Task):
                     continue
 
                 username = components[0]
-                project = components[2]
+                project = to_wiki_format(None, components[2], ignore_ns=True)
 
-                if not self._bot.get_project("Wikipedia:" + project).exists:
-                    continue
+                proj_title = "Project:" + project
+                if not self._bot.get_project(proj_title).configured:
+                    project = self._follow_project_redirect(proj_title)
+                    if not project:
+                        continue
+                    self._migrate_card(title, project)
 
                 if project in members:
                     members[project].append(username)

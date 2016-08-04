@@ -14,8 +14,6 @@ class WikiProject:
     def __init__(self, bot, name, config=None):
         self._bot = bot
         self._name = to_wiki_format(bot.site, name)
-
-        self._exists = config is not None
         self._config = config or {}
 
     @property
@@ -24,9 +22,9 @@ class WikiProject:
         return self._name
 
     @property
-    def exists(self):
+    def configured(self):
         """Return whether this project has a configuration entry."""
-        return self._exists
+        return self._config is not None
 
     @property
     def config(self):
