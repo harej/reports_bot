@@ -19,7 +19,7 @@ class UpdateMembers(Task):
 
     def _migrate_card(self, title, project):
         """Migrate the card at the given title to the given project."""
-        self._logger.debug("Moving card [[%s]] to %s", title, project)
+        self._logger.debug("Moving card [[User:%s]] to %s", title, project)
 
         username = title.split("/", 2)[0]
         new_title = "User:" + "/".join((username, "WikiProjectCards", project))
@@ -56,7 +56,7 @@ class UpdateMembers(Task):
         with self._bot.wikidb as cursor:
             cursor.execute(query, (self.MEMBER_TEMPLATE,))
             for row in cursor.fetchall():
-                title = row[0].decode('utf-8')
+                title = row[0].decode("utf-8").replace("_", " ")
                 if title.count("/") < 2:
                     continue
 
