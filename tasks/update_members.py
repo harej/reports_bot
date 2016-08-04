@@ -91,10 +91,11 @@ class UpdateMembers(Task):
         self._logger.debug("Updating project: %s (%s members)", project,
                            len(members))
 
-        active_title = "Project:" + project + "/Members"
-        inactive_title = "Project:" + project + "/Members/Inactive"
+        ns_name = self._bot.site.namespaces.PROJECT.custom_name + ":"
+        active_title = ns_name + project + "/Members"
+        inactive_title = ns_name + project + "/Members/Inactive"
 
-        return_to_wikiproject = "{{Clickable button 2|Project:%s|Return to WikiProject|class=mw-ui-neutral}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>" % project
+        return_to_wikiproject = "{{Clickable button 2|%s%s|Return to WikiProject|class=mw-ui-neutral}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>" % (ns_name, project)
         lua_garbage = "{{#invoke:<includeonly>random|list|limit=3</includeonly><noinclude>list|unbulleted</noinclude>|"
         active = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[%s|inactive members list]].</div>\n\n</noinclude>" % inactive_title + lua_garbage
         inactive = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[%s|active members list]].</div>\n\n</noinclude>"% active_title + lua_garbage
