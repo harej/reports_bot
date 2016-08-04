@@ -22,9 +22,23 @@ class LoadProjectConfig(Task):
         """Report an error to the error page."""
         self._logger.error(message)
         page = self._bot.get_page(self.ERROR_TITLE)
+
+        current = page.text
+        if current and current.split(":", 1)[1][1:] == message:
+            # No need to double-report the same message
+            return
+
         wikitime = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         page.text = "{}: {}".format(wikitime, message)
         page.save("Error while loading configuration", minor=False)
+
+    def _clear_errors(self):
+        page = self._bot.get_page(self.ERROR_TITLE)
+        if not page.text:
+            return
+
+        page.text = ""
+        page.save("Resetting configuration error page", minor=True)
 
     def _verify(self, data):
         """Verify that the given config data matches the schema.
@@ -96,3 +110,4 @@ class LoadProjectConfig(Task):
             return
 
         self._save_to_database(data)
+        self._clear_errors()
