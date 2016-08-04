@@ -18,21 +18,29 @@ def to_sql_format(title):
     SQL format uses underscores instead of spaces, and capitalizes the first
     letter.
     """
-    title = title.strip().replace(" ", "_")
+    title = title.replace(" ", "_")
     if not title:
         return ""
     return title[0].upper() + title[1:]
 
-def to_wiki_format(title):
+def to_wiki_format(site, title, ignore_ns=False):
     """Convert a page title or username to 'canonical' wiki format.
 
     Wiki format uses spaces instead of underscores, and capitalizes the first
-    letter.
+    letter. It also uses custom (not canonical) namespace names. The first
+    parameter should be a Pywikibot Site object, and is used to look up
+    namespace names.
     """
-    title = title.strip().replace("_", " ")
-    if not title:
-        return ""
-    return title[0].upper() + title[1:]
+    def _format(title):
+        title = title.replace("_", " ")
+        return (title[0].upper() + title[1:]) if title else ""
+
+    if ":" in title and not ignore_ns:
+        ns_name, base_name = title.split(":", 1)
+        if ns_name in site.namespaces:
+            ns_name = site.namespaces[ns_name].custom_name
+            return ns_name + ":" + _format(base_name)
+    return _format(title)
 
 def split_full_title(site, title):
     """Split a full pagename into a 2-tuple of (namespace ID, SQL-ready title).
@@ -53,9 +61,9 @@ def join_full_title(site, ns, title):
     up namespace IDs.
     """
     if ns == 0:
-        return to_wiki_format(title)
+        return to_wiki_format(site, title, ignore_ns=True)
     ns_name = site.namespaces[ns].custom_name
-    return ns_name + ":" + to_wiki_format(title)
+    return ns_name + ":" + to_wiki_format(site, title, ignore_ns=True)
 
 def ensure_ownership(path):
     """Ensure that we are the owner of the given path.

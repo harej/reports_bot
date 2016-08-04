@@ -100,7 +100,7 @@ class Bot:
         """
         self._load_project_config()
 
-        name = to_wiki_format(name)
+        name = to_wiki_format(self.site, name)
         if name not in self._project_config["projects"]:
             return None
 

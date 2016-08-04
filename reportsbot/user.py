@@ -12,7 +12,7 @@ class User:
 
     def __init__(self, bot, name):
         self._bot = bot
-        self._name = to_wiki_format(name)
+        self._name = to_wiki_format(bot.site, name)
 
     @property
     def name(self):

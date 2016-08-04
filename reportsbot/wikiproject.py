@@ -13,7 +13,7 @@ class WikiProject:
 
     def __init__(self, bot, name, config=None):
         self._bot = bot
-        self._name = to_wiki_format(name)
+        self._name = to_wiki_format(bot.site, name)
 
         self._exists = config is not None
         self._config = config or {}
