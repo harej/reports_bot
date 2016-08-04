@@ -35,22 +35,22 @@ class Metrics(Task):
 
         return months
 
-    def _fetch_articles_by_wikidata(self, query):
-        """Return a list of articles in the project, using a Wikidata query."""
-        self._logger.debug("Using Wikidata for scope")
-        query = "({}) AND LINK[{}]".format(query, self._bot.wikiid)
-        items = self._bot.wikidata.query(query)
-        titles = self._bot.wikidata.get_linked_pages(self._bot.wikiid, items)
-        return [split_full_title(self._bot.site, title) for title in titles]
-
     def _fetch_articles_by_index(self, project):
         """Return a list of articles in the project, using the SQL index."""
         self._logger.debug("Using project index for scope")
         pages = project.get_members(namespaces=0, redirect=False)
         return [(page.ns, page.title) for page in pages]
 
+    def _fetch_articles_by_wikidata(self, query):
+        """Return a set of articles in the project, using a Wikidata query."""
+        self._logger.debug("Using Wikidata for scope")
+        query = "({}) AND LINK[{}]".format(query, self._bot.wikiid)
+        items = self._bot.wikidata.query(query)
+        titles = self._bot.wikidata.get_linked_pages(self._bot.wikiid, items)
+        return {split_full_title(self._bot.site, title) for title in titles}
+
     def _fetch_articles_by_categories(self, cats):
-        """Return a list of articles in the project, using a list of cats."""
+        """Return a set of articles in the project, using a list of cats."""
         self._logger.debug("Using categories for scope")
 
         query = """SELECT page_namespace, page_title
@@ -74,7 +74,7 @@ class Metrics(Task):
                 cats = [title for (ns, title) in results
                         if ns == 14 and title not in processed]
 
-        return list(pages)
+        return pages
 
     def _fetch_articles(self, project):
         """Return a list of articles in the project."""
