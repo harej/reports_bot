@@ -153,6 +153,15 @@ class Metrics(Task):
                  for (ns, title) in results}
         return list(set(titles) - valid)
 
+    def _list_item_for_title(self, title):
+        """Return a list item string for the given title."""
+        if ":" in title:
+            ns_name, base = title.split(":", 1)
+            ns_dict = self._bot.site.namespaces
+            if ns_name in ns_dict:
+                title = ns_dict[ns_name].custom_prefix + base
+        return "# [[{}]]".format(title)
+
     def _build_page_list(self, articles, oldlist):
         """Return a metrics subpage's new article list."""
         titles = [join_full_title(self._bot.site, ns, title)
@@ -160,11 +169,11 @@ class Metrics(Task):
         possible_redlinks = []
 
         # Preliminary list of plain bot-generated entries:
-        entries = {title: "# [[{}]]".format(title) for title in titles}
+        entries = {title: self._list_item_for_title(title) for title in titles}
 
         # Merge in current (user-generated) entries:
         for line in oldlist.splitlines():
-            link = re.search(r"\[\[(.*?)(\]\]|\|)", line)
+            link = re.search(r"\[\[:?(.*?)(\]\]|\|)", line)
             if not link:
                 continue
 
