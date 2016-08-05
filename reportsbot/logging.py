@@ -113,6 +113,14 @@ def _setup_file_logging(log_dir):
         handler.setFormatter(formatter)
         _root.addHandler(handler)
 
+def _disable_pywikibot_logging():
+    """Tells Pywikibot to not log messages below WARNING level to stderr."""
+    # We need to wake up Pywikibot's logging interface so that its logger level
+    # won't get overridden by a later logging call:
+    import pywikibot
+    pywikibot.debug("Disabling routine logging", "logging")
+    getLogger("pywiki").setLevel("WARNING")
+
 def _setup_task_logger(logger):
     """Configure a task logger to generate site- and task-specific logs."""
     if logger.handlers:  # Already processed
@@ -169,6 +177,9 @@ def setup_logging(log_dir=None, quiet=False):
 
     if log_dir:
         _setup_file_logging(log_dir)
+
+    if quiet:
+        _disable_pywikibot_logging()
 
 def get_logger(name):
     """Return a logger for the given service.
