@@ -14,7 +14,7 @@ from reportsbot.task import Task
 from reportsbot.util import join_full_title
 
 import mwparserfromhell
-from pywikibot.api import Request
+from pywikibot.data.api import Request
 
 __all__ = ["NewDiscussions"]
 
