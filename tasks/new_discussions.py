@@ -191,12 +191,8 @@ class NewDiscussions(Task):
         self._logger.info("Updating new discussions for %s", project.name)
         title = project.name + "/Discussions"
 
-        namespaces = [ns for ns in self._bot.site.namespaces
-                      if ns % 2 == 1 and ns > 0]
-        pages = project.get_members(namespaces=namespaces)
-
+        pages = project.get_members()
         current = self._get_current_discussions(title)
-
         discussions = self._process_discussions(pages, current, updated)
         self._save_discussions(project, title, discussions)
 
