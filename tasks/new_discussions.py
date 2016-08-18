@@ -47,7 +47,7 @@ class NewDiscussions(Task):
             except ValueError:
                 continue
 
-            name = str(section.get(0).title)
+            name = str(section.get(0).title.strip_code()).strip()
             sections.append(_Section(name, timestamp))
 
         return sections
