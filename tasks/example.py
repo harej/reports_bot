@@ -12,5 +12,5 @@ class Example(Task):
 
         In this case, it simply launches a debugging session.
         """
-        import pdb
-        pdb.set_trace()
+        import code
+        code.interact(local=locals())
