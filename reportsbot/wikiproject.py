@@ -53,7 +53,7 @@ class WikiProject:
             FROM {0}_index
             JOIN {0}_page ON index_page = page_id
             JOIN {0}_project ON index_project = project_id
-            WHERE index_project = ?"""
+            WHERE project_title = ?"""
 
         args = [self._name]
 
