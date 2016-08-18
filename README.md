@@ -117,6 +117,8 @@ end of this section.
 * `load_project_config`: Loads WikiProject-specific configuration from the wiki
   and stores it in the bot's database.
 * `metrics`: Updates monthly metrics on the number of articles in a project.
+* `new_discussions`: Provides a list of new discussions within a WikiProject's
+  scope.
 * `update_members`: Updates WikiProject membership lists based on
   WikiProjectCard transclusions.
 * `update_project_index`: Updates the index of articles associated with each
