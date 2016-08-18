@@ -35,7 +35,7 @@ class NewDiscussions(Task):
     def _extract_sections(self, text):
         """Return a list of section tuples for the given page."""
         code = mwparserfromhell.parse(text)
-        sections = []
+        sections = set()
 
         for section in code.get_sections(levels=[2]):
             clean = section.strip_code()
@@ -48,7 +48,7 @@ class NewDiscussions(Task):
                 continue
 
             name = str(section.get(0).title.strip_code()).strip()
-            sections.append(_Section(name, timestamp))
+            sections.add(_Section(name, timestamp))
 
         return sections
 
@@ -123,9 +123,9 @@ class NewDiscussions(Task):
             title = str(tmpl.get("title").value)
             section = _Section(tmpl.get("section").value, timestamp)
             if title in discussions:
-                discussions[title].append(section)
+                discussions[title].add(section)
             else:
-                discussions[title] = [section]
+                discussions[title] = {section}
 
         return discussions
 
