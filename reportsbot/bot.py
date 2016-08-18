@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
 import encodings
 import json
 from os.path import expanduser
@@ -178,3 +179,29 @@ class Bot:
         self._load_project_config()
         projects = self._project_config["projects"]
         return [self.get_project(name) for name in projects]
+
+    def get_last_updated(self, key):
+        """Get the last update timestamp for the given key."""
+        query = """SELECT lu_timestamp
+            FROM last_update
+            WHERE lu_site = ? AND lu_key = ?"""
+
+        with self.localdb as cursor:
+            cursor.execute(query, (self.wikiid, key))
+            results = cursor.fetchall()
+
+        if results:
+            return results[0][0]
+        return datetime.min
+
+    def set_last_updated(self, key, timestamp=None):
+        """Set the last update timestamp for the given key."""
+        query = """INSERT INTO last_update (lu_site, lu_key, lu_timestamp)
+            VALUES(?, ?, ?)
+            ON DUPLICATE KEY UPDATE lu_timestamp = ?"""
+
+        if not timestamp:
+            timestamp = datetime.utcnow()
+
+        with self.localdb as cursor:
+            cursor.execute(query, (self.wikiid, key, timestamp, timestamp))
