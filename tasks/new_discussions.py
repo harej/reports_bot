@@ -61,7 +61,8 @@ class NewDiscussions(Task):
 
         data = req.submit()
         return [(page["title"], page["revisions"][0]["*"])
-                for page in data["query"]["pages"].values()]
+                for page in data["query"]["pages"].values()
+                if "*" in page["revisions"][0]]
 
     def _get_updated_discussions(self, start, end):
         """Return a dict mapping talk page titles to lists of section tuples.
@@ -69,13 +70,12 @@ class NewDiscussions(Task):
         The only pages included in the dict are those that have been updated
         in the given time range.
         """
-        query = """SELECT rc_this_oldid
+        query = """SELECT MAX(rc_this_oldid)
             FROM recentchanges
             WHERE rc_timestamp >= ? AND rc_timestamp < ?
             AND rc_namespace % 2 = 1 AND rc_namespace != 3
             AND (rc_type = 0 OR rc_type = 1) AND rc_bot = 0
-            GROUP BY rc_namespace, rc_title
-            ORDER BY rc_timestamp DESC"""
+            GROUP BY rc_namespace, rc_title"""
         # TODO: generate events for pages that have been moved/deleted
 
         startts = start.strftime("%Y%m%d%H%M%S")
