@@ -30,7 +30,7 @@ class NewDiscussions(Task):
     @staticmethod
     def _parse_timestamp(text):
         """Return a datetime for the given timestamp string, or ValueError."""
-        return datetime.strptime(text, "%H:%M, %d %B %Y (UTC)")
+        return datetime.strptime(str(text), "%H:%M, %d %B %Y (UTC)")
 
     def _extract_sections(self, text):
         """Return a list of section tuples for the given page."""
@@ -110,7 +110,7 @@ class NewDiscussions(Task):
         discussions = {}
 
         for tmpl in code.filter_templates():
-            if tmpl.title != self.DISCUSSION_TEMPLATE:
+            if tmpl.name != self.DISCUSSION_TEMPLATE:
                 continue
             if not (tmpl.has("title") and tmpl.has("section") and
                     tmpl.has("timestamp")):
