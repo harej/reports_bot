@@ -121,7 +121,7 @@ class NewDiscussions(Task):
             except ValueError:
                 continue
             title = str(tmpl.get("title").value)
-            section = _Section(tmpl.get("section").value, timestamp)
+            section = _Section(str(tmpl.get("section").value), timestamp)
             if title in discussions:
                 discussions[title].add(section)
             else:
