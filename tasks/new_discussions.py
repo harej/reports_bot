@@ -14,6 +14,7 @@ from reportsbot.task import Task
 from reportsbot.util import join_full_title
 
 import mwparserfromhell
+from pywikibot.api import Request
 
 __all__ = ["NewDiscussions"]
 
@@ -31,9 +32,8 @@ class NewDiscussions(Task):
         """Return a datetime for the given timestamp string, or ValueError."""
         return datetime.strptime(text, "%H:%M, %d %B %Y (UTC)")
 
-    def _read_page(self, title):
+    def _extract_sections(self, text):
         """Return a list of section tuples for the given page."""
-        text = self._bot.get_page(title).text
         code = mwparserfromhell.parse(text)
         sections = []
 
@@ -52,17 +52,30 @@ class NewDiscussions(Task):
 
         return sections
 
+    def _load_pages(self, revids):
+        """Load a chunk of pages from the API by revision."""
+        req = Request(self._bot.site, parameters={
+            "action": "query", "prop": "revisions", "rvprop": "content",
+            "revids": "|".join(str(revid) for revid in revids)
+        })
+
+        data = req.submit()
+        return [(page["title"], page["revisions"][0]["*"])
+                for page in data["query"]["pages"].values()]
+
     def _get_updated_discussions(self, start, end):
         """Return a dict mapping talk page titles to lists of section tuples.
 
         The only pages included in the dict are those that have been updated
         in the given time range.
         """
-        query = """SELECT DISTINCT rc_namespace, rc_title
+        query = """SELECT rc_this_oldid
             FROM recentchanges
             WHERE rc_timestamp >= ? AND rc_timestamp < ?
-            AND rc_namespace % 2 = 1
-            AND (rc_type = 0 OR rc_type = 1) AND rc_bot = 0"""
+            AND rc_namespace % 2 = 1 AND rc_namespace != 3
+            AND (rc_type = 0 OR rc_type = 1) AND rc_bot = 0
+            GROUP BY rc_namespace, rc_title
+            ORDER BY rc_timestamp DESC"""
         # TODO: generate events for pages that have been moved/deleted
 
         startts = start.strftime("%Y%m%d%H%M%S")
@@ -72,11 +85,19 @@ class NewDiscussions(Task):
 
         with self._bot.wikidb as cursor:
             cursor.execute(query, (startts, endts))
-            titles = [join_full_title(self._bot.site, ns, title)
-                      for (ns, title) in cursor.fetchall()]
+            revids = [revid for (revid,) in cursor.fetchall()]
 
-        self._logger.debug("Fetching sections for %s pages", len(titles))
-        return {title: self._read_page(title) for title in titles}
+        self._logger.debug("Fetching sections for %s pages", len(revids))
+
+        sections = {}
+        chunksize = 50
+        for start in range(0, len(revids), chunksize):
+            chunk = revids[start:start+chunksize]
+            pages = self._load_pages(chunk)
+            sections.update({title: self._extract_sections(text)
+                             for title, text in pages})
+
+        return sections
 
     def _get_current_discussions(self, title):
         """Return a dict mapping talk page titles to lists of section tuples.
