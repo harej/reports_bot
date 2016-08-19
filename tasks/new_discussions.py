@@ -148,6 +148,10 @@ class NewDiscussions(Task):
         discussions.sort(key=lambda disc: disc.timestamp, reverse=True)
         discussions = discussions[:self.DISCUSSIONS_PER_PAGE]
 
+        for disc in discussions:
+            self._logger.debug("    [[%s#%s]] at %s", disc.title, disc.name,
+                               disc.timestamp.strftime("%Y %m %d, %H:%M:%S"))
+
         news = [disc.title for disc in discussions
                 if disc.title not in current][:3]
         return discussions, news
@@ -199,7 +203,7 @@ class NewDiscussions(Task):
 
     def _process(self, project, updated):
         """Process new discussions for the given project."""
-        self._logger.info("Updating new discussions for %s", project.name)
+        self._logger.debug("Updating new discussions for %s", project.name)
         title = project.name + "/Discussions"
 
         pages = project.get_members()
