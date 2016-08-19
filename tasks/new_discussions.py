@@ -52,17 +52,21 @@ class NewDiscussions(Task):
 
         return sections
 
-    def _load_pages(self, revids):
-        """Load a chunk of pages from the API by revision."""
+    def _load_pages(self, titles):
+        """Load a chunk of pages from the API."""
+        def _get_rev(page):
+            if "revisions" in page and "*" in page["revisions"][0]:
+                return page["revisions"][0]["*"]
+            return ""
+
         req = Request(self._bot.site, parameters={
             "action": "query", "prop": "revisions", "rvprop": "content",
-            "revids": "|".join(str(revid) for revid in revids)
+            "titles": "|".join(titles)
         })
 
         data = req.submit()
-        return [(page["title"], page["revisions"][0]["*"])
-                for page in data["query"]["pages"].values()
-                if "*" in page["revisions"][0]]
+        return [(page["title"], _get_rev(page))
+                for page in data["query"]["pages"].values()]
 
     def _get_updated_discussions(self, start, end):
         """Return a dict mapping talk page titles to lists of section tuples.
@@ -70,13 +74,11 @@ class NewDiscussions(Task):
         The only pages included in the dict are those that have been updated
         in the given time range.
         """
-        query = """SELECT MAX(rc_this_oldid)
+        query = """SELECT DISTINCT rc_namespace, rc_title
             FROM recentchanges
             WHERE rc_timestamp >= ? AND rc_timestamp < ?
             AND rc_namespace % 2 = 1 AND rc_namespace != 3
-            AND (rc_type = 0 OR rc_type = 1) AND rc_bot = 0
-            GROUP BY rc_namespace, rc_title"""
-        # TODO: generate events for pages that have been moved/deleted
+            AND (rc_type = 0 OR rc_type = 1 OR rc_type = 3) AND rc_bot = 0"""
 
         startts = start.strftime("%Y%m%d%H%M%S")
         endts = end.strftime("%Y%m%d%H%M%S")
@@ -85,14 +87,15 @@ class NewDiscussions(Task):
 
         with self._bot.wikidb as cursor:
             cursor.execute(query, (startts, endts))
-            revids = [revid for (revid,) in cursor.fetchall()]
+            titles = [join_full_title(self._bot.site, ns, title)
+                      for (ns, title) in cursor.fetchall()]
 
-        self._logger.debug("Fetching sections for %s pages", len(revids))
+        self._logger.debug("Fetching sections for %s pages", len(titles))
 
         sections = {}
         chunksize = 50
-        for start in range(0, len(revids), chunksize):
-            chunk = revids[start:start+chunksize]
+        for start in range(0, len(titles), chunksize):
+            chunk = titles[start:start+chunksize]
             pages = self._load_pages(chunk)
             sections.update({title: self._extract_sections(text)
                              for title, text in pages})
@@ -143,9 +146,13 @@ class NewDiscussions(Task):
         discussions = [_Discussion(title, section.name, section.timestamp)
                        for title in sections for section in sections[title]]
         discussions.sort(key=lambda disc: disc.timestamp, reverse=True)
-        return discussions[:self.DISCUSSIONS_PER_PAGE]
+        discussions = discussions[:self.DISCUSSIONS_PER_PAGE]
 
-    def _save_discussions(self, project, title, discussions):
+        news = [disc.title for disc in discussions
+                if disc.title not in current][:3]
+        return discussions, news
+
+    def _save_discussions(self, project, title, discussions, news):
         """Save the given list of discussions to the given page title."""
         text = """<noinclude><div style="padding-bottom:1em;">{{Clickable button 2|%(projname)s|Return to WikiProject|class=mw-ui-neutral}}</div></noinclude>
 {{WPX action box|color={{{2|#086}}}|title=Have a question?|content=
@@ -184,7 +191,11 @@ class NewDiscussions(Task):
             "projtalk": projtalk,
             "discussions": disclist
         }
-        page.save("Updating new discussions", minor=False)
+
+        summary = "Updating new discussions"
+        if news:
+            summary += ": " + ", ".join("[[%s]]" % item for item in news)
+        page.save(summary, minor=False)
 
     def _process(self, project, updated):
         """Process new discussions for the given project."""
@@ -193,8 +204,8 @@ class NewDiscussions(Task):
 
         pages = project.get_members()
         current = self._get_current_discussions(title)
-        discussions = self._process_discussions(pages, current, updated)
-        self._save_discussions(project, title, discussions)
+        discussions, news = self._process_discussions(pages, current, updated)
+        self._save_discussions(project, title, discussions, news)
 
     def run(self):
         start = self._bot.get_last_updated("new_discussions")
