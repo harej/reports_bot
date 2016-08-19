@@ -87,7 +87,7 @@ class NewDiscussions(Task):
 
         with self._bot.wikidb as cursor:
             cursor.execute(query, (startts, endts))
-            titles = [join_full_title(self._bot.site, ns, title)
+            titles = [join_full_title(self._bot.site, ns, title.decode("utf8"))
                       for (ns, title) in cursor.fetchall()]
 
         self._logger.debug("Fetching sections for %s pages", len(titles))
