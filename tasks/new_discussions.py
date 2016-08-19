@@ -216,6 +216,7 @@ class NewDiscussions(Task):
         end = datetime.utcnow()
         updated = self._get_updated_discussions(start, end)
 
+        self._logger.info("Updating discussion reports")
         for project in self._bot.get_configured_projects():
             if project.config.get("new_discussions"):
                 self._process(project, updated)
