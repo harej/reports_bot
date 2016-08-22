@@ -19,8 +19,18 @@ necessary on Debian systems:
 
 Next, install these dependencies:
 
-    pip install pywikibot mwoauth requests PyYAML oursql3 mwparserfromhell BTrees \
+    pip install mwoauth requests PyYAML oursql3 mwparserfromhell BTrees \
     mediawiki-utilities numpy scikit-learn
+
+You also need [Pywikibot](https://www.mediawiki.org/wiki/Manual:Pywikibot). You
+can `pip install pywikibot`, but I recommend installing it from source to get
+the latest updates:
+
+    cd venv
+    git clone https://gerrit.wikimedia.org/r/pywikibot/core.git pywikibot
+    cd pywikibot
+    git submodule update --init
+    python setup.py develop
 
 If you set up a virtualenv, run the following command to ensure the bot's task
 runner always uses it:
