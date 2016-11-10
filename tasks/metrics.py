@@ -44,8 +44,12 @@ class Metrics(Task):
     def _fetch_articles_by_wikidata(self, query):
         """Return a set of articles in the project, using a Wikidata query."""
         self._logger.debug("Using Wikidata for scope")
-        query = "({}) AND LINK[{}]".format(query, self._bot.wikiid)
-        items = self._bot.wikidata.query(query)
+
+        try:
+            items = self._bot.wikidata.query(query)
+        except ValueError as exc:
+            self._logger.warn("Invalid results for query: %s: %s", query, exc)
+
         titles = self._bot.wikidata.get_linked_pages(self._bot.wikiid, items)
         return {split_full_title(self._bot.site, title) for title in titles}
 

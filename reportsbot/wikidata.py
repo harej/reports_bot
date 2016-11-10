@@ -17,15 +17,48 @@ class Wikidata:
         """Return a connection to Wikidata's SQL database."""
         return self._db
 
-    def query(self, query):
-        """Make a WDQ query and return a list of items IDs.
+    @staticmethod
+    def _parse_sparql_result_binding(bind):
+        """Parse a result binding from a SPARQL query. Return an item ID.
 
-        Syntax is described at: http://wdq.wmflabs.org/api_documentation.html
+        Raise ValueError if we can't parse it.
         """
-        params = {"q": query}
-        url = "https://wdq.wmflabs.org/api?" + urlencode(params)
+        if bind["type"] != "uri":
+            raise ValueError("Unknown binding type: %s" % bind["type"])
+
+        val = bind["value"]
+        if "/entity/Q" not in val:
+            raise ValueError("Invalid value for URI binding: %s" % val)
+
+        itemid = val.split("/entity/Q")[1]
+        try:
+            return int(itemid)
+        except ValueError:
+            raise ValueError("Invalid item ID for URI binding: %s" % val)
+
+    def query(self, query):
+        """Make a SPARQL query and return a list of item IDs.
+
+        Syntax is described at:
+        https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries
+
+        Raise ValueError if some aspect of the query resulted in invalid data.
+        Return an empty list if there were no results.
+        """
+        params = {"query": query, "format": "json"}
+        url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?"
+        url += urlencode(params)
+
         req = requests.get(url)
-        return req.json()["items"]
+        data = req.json()
+
+        try:
+            var = data["head"]["vars"][0]
+            bindings = data["results"]["bindings"]
+            return [self._parse_sparql_result_binding(bind[var])
+                    for bind in bindings]
+        except (KeyError, IndexError):
+            return []
 
     def get_linked_pages(self, wikiid, items):
         """Return pages linked to by the given items on the given wiki.
