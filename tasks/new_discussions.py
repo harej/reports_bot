@@ -97,8 +97,11 @@ class NewDiscussions(Task):
         for start in range(0, len(titles), chunksize):
             chunk = titles[start:start+chunksize]
             pages = self._load_pages(chunk)
-            sections.update({title: self._extract_sections(text)
-                             for title, text in pages})
+            for title, text in pages:
+                try:
+                    sections[title] = self._extract_sections(text)
+                except mwparserfromhell.parser.ParserError:
+                    self._logger.exception("Failed to parse [[%s]]", title)
 
         return sections
 
