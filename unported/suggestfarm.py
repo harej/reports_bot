@@ -5,12 +5,12 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
-import time  # Whoa.
 import json
-import pywikibot
-from project_index import WikiProjectTools
+import time  # Whoa.
 
+import pywikibot
+
+from project_index import WikiProjectTools
 
 def main(rootpage):
     bot = pywikibot.Site('en', 'wikipedia')
@@ -42,7 +42,6 @@ def main(rootpage):
         page = pywikibot.Page(bot, project + '/Edit articles')
         page.text = '===Edit articles===\n{{WPX last updated|' + project + '/Edit articles' + '}}\n\n' + table
         page.save("Updating list", minor=False, async=True, quiet=True)
-
 
 if __name__ == "__main__":
     main('User:Reports bot')

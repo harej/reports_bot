@@ -5,8 +5,8 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import pywikibot
+
 from project_index import WikiProjectTools
 
 
@@ -61,6 +61,7 @@ class ProjectCategoryAudit:
             output = output[:-2] + "\n"  # Truncate trailing endash and add line break
 
         return output
+
 
 if __name__ == "__main__":
     audit = ProjectCategoryAudit()

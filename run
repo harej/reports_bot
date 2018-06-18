@@ -1,0 +1,33 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Simple wrapper script around the Reports bot task runner.
+
+To run a task located at 'tasks/foobar.py':
+
+    ./run foobar
+
+For detailed command-line arguments:
+
+    ./run --help
+
+If the bot uses a separate (unprivileged) user, you should run this with sudo
+to allow it to switch to that user and ensure permissions are correct.
+"""
+
+import os
+
+from reportsbot.cli import run
+from reportsbot.util import ensure_ownership
+
+root = os.path.dirname(__file__)
+
+task_dir = os.path.join(root, "tasks")
+config_dir = os.path.join(root, "config")
+log_dir = os.path.join(root, "logs")
+
+os.environ["PYWIKIBOT2_DIR"] = config_dir
+
+ensure_ownership(config_dir)
+run(task_dir, config_dir, log_dir)

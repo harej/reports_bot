@@ -5,16 +5,18 @@ Copyright (C) 2015 James Hare, Betacommand, Merlijn Van Deen
 Licensed under MIT License: http://mitlicense.org
 """
 
-
-import re
-import time
-import pywikibot
+from collections import Counter
 import json
 import operator
+import re
+import time
+
 import mwparserfromhell as mwph
-from collections import Counter
+import pywikibot
+
 from project_index import WikiProjectTools
 from category_tree import WikiProjectCategories
+
 
 class WikiProjectDirectory:
     def listpull(self, wptools, projects, directoryrow, key):
@@ -171,7 +173,7 @@ class WikiProjectDirectory:
                     subject_editors_formatted += "\n* [[User:{0}|{0}]] ([[User talk:{0}|talk]])".format(editor)
             else:
                 subject_editors_formatted = ""
-    
+
             profilepage = "{{{{WikiProject description page | project = {0} | list_of_active_wikiproject_participants = {1} | list_of_active_subject_area_editors = {2}}}}}".format(project_normalized, wp_editors_formatted, subject_editors_formatted)
             page = pywikibot.Page(bot, rootpage + '/Description/' + project_normalized)
             if profilepage != page.text:  # Checking to see if a change was made to cut down on API queries

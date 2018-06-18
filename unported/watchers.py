@@ -5,11 +5,13 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import datetime
 import operator
+from urllib.parse import quote
+
 import pywikibot
 import requests
+
 from project_index import WikiProjectTools
 
 
@@ -39,7 +41,7 @@ class WikiProjectWatchers:
              'or page_title like "WikiProject\_%");')
         formaldefinition = wptools.query('wiki', q, None)  # http://quarry.wmflabs.org/query/3509
         for row in formaldefinition:
-            row = row[0].decode('utf-8')
+            row = "Wikipedia:" + row[0].decode('utf-8')
             if row not in projects:
                 projects.append(row)
 
@@ -50,7 +52,7 @@ class WikiProjectWatchers:
         for package in packages:
             url = "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=info&inprop=watchers&titles="
             for title in package:
-                url += title + "|"
+                url += quote(title) + "|"
             url = url[:-1]  # Truncate trailing pipe
             apiquery = requests.get(url)
             apiquery = apiquery.json()

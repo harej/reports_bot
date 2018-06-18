@@ -5,10 +5,12 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import json
+from urllib.parse import urlencode
+
 import pywikibot
 import requests
+
 from project_index import WikiProjectTools
 
 
@@ -26,9 +28,20 @@ class WikidataMagic:
 
 
     def wikidataquery(self, query):
-        url = 'https://wdq.wmflabs.org/api?q=' + query
-        r = requests.get(url)
-        return ['Q' + str(item) for item in r.json()['items']]
+        params = {"query": query, "format": "json"}
+        url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?"
+        url += urlencode(params)
+
+        req = requests.get(url)
+        data = req.json()
+
+        try:
+            var = data["head"]["vars"][0]
+            bindings = data["results"]["bindings"]
+            return [bind[var]["value"].split("/entity/")[1]
+                    for bind in bindings]
+        except (KeyError, IndexError):
+            return []
 
 
     def missing_from_enwiki(self, total_item_list):
@@ -81,7 +94,7 @@ class WikidataMagic:
                             description = "No English description available"
                     else:
                         description = "No English Description available"
-                    
+
                     content += "| {{WPX block|largetext='''" + label + \
                                "'''|smalltext=" + description + \
                                "<br />([[d:" + item + \

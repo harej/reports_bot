@@ -5,19 +5,19 @@ Copyright (C) 2015 James Hare
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import datetime
 import gzip
 import html
 import json
+from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
 import operator
 import os
+
 import numpy as np
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
-from math import log  # https://www.youtube.com/watch?v=RTrAVpK9blw
-from project_index import WikiProjectTools
 
+from project_index import WikiProjectTools
 
 def getviewdump(wptools, proj, days=30):
     '''
@@ -125,7 +125,7 @@ def getinternalclout(wptools, destination, articlebatch):
                 q = "select pl_title, count(*) from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_title in {0} and page_title in {1} group by pl_title;".format(tuple(destination_package), tuple(articlebatch_package))
             else:
                 q = 'select pl_title, count(*) from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_title = "{0}" and page_title in {1} group by pl_title;'.format(destination_package[0], tuple(articlebatch_package))
-        
+
             for row in wptools.query('wiki', q, None):
                 if row[0].decode('utf-8') in stats:
                     stats[row[0].decode('utf-8')] += row[1]  # append to existing record
@@ -156,7 +156,7 @@ def getsopv(wptools, dump, articles):
             q = "select pl_title, page_title from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title in {0};".format(tuple(package))
         else:
             q = 'select pl_title, page_title from pagelinks join page on pl_from = page_id and pl_from_namespace = page_namespace where pl_namespace = 0 and pl_from_namespace = 0 and pl_title = "{0}";'.format(package[0])
-    
+
         for row in wptools.query('wiki', q, None):
             to_title = row[0].decode('utf-8')
             from_title = row[1].decode('utf-8')
@@ -199,7 +199,7 @@ class PriorityPredictor:
         pageviews = []  # List of tuples (article title, log of view count)
         linkcount = []  # List of tuples (article title, log of link count)
         for row in self.wptools.query('index', 'select pi_page from projectindex where pi_project = "Wikipedia:{0}";'.format(self.project), None):
-            if row[0].startswith("Talk:"):  # 
+            if row[0].startswith("Talk:"):  #
                 article = row[0][5:] # Stripping out "Talk:"
                 self.articles.append(article)
                 pageviews.append((article, log(getpageviews(self.dump, article) + 1)))

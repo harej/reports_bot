@@ -5,13 +5,12 @@ Copyright (C) 2015 James Hare, Betacommand, Merlijn Van Deen
 Licensed under MIT License: http://mitlicense.org
 """
 
-
 import mwparserfromhell as mwph
 import pywikibot
+
+from category_tree import WikiProjectCategories
 from directory import WikiProjectDirectory
 from project_index import WikiProjectTools
-from category_tree import WikiProjectCategories
-
 
 def main(rootpage):
     d = WikiProjectDirectory()
@@ -65,7 +64,6 @@ def main(rootpage):
             oldcontents = page.text
             page.text = contents
             page.save('Updating', minor=False, async=True, quiet=True)
-
 
 if __name__ == "__main__":
     main('Wikipedia:WikiProject Directory')
