@@ -64,7 +64,7 @@ class WikiProjectAssess:
                            for row in self.wptools.query('wiki', q, None)}
             api_input = [rev_id for rev_id in revision_ids.keys()]
 
-            api_url = "http://ores.wmflabs.org/scores/enwiki/wp10/?revids="
+            api_url = "http://ores.wmflabs.org/scores/enwiki/articlequality/?revids="
             for rev_id in api_input:
                 api_url += rev_id + "|"
             api_url = api_url[:-1]  # Truncating extra vertical pipe
