@@ -49,6 +49,7 @@ class Metrics(Task):
             items = self._bot.wikidata.query(query)
         except ValueError as exc:
             self._logger.warn("Invalid results for query: %s: %s", query, exc)
+            return set()
 
         titles = self._bot.wikidata.get_linked_pages(self._bot.wikiid, items)
         return {split_full_title(self._bot.site, title) for title in titles}

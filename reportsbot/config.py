@@ -22,7 +22,7 @@ class Config:
         filename = path.join(self._base_dir, "config.yml")
         try:
             with open(filename) as fp:
-                self._data = yaml.load(fp)
+                self._data = yaml.full_load(fp)
         except (OSError, yaml.error.YAMLError) as exc:
             if exc.errno == errno.ENOENT:  # Ignore missing file; use defaults
                 return
