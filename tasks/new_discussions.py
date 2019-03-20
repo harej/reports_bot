@@ -55,18 +55,19 @@ class NewDiscussions(Task):
     def _load_pages(self, titles):
         """Load a chunk of pages from the API."""
         def _get_rev(page):
-            if "revisions" in page and "*" in page["revisions"][0]:
-                return page["revisions"][0]["*"]
-            return ""
+            try:
+                return page["revisions"][0]["slots"]["main"]["content"]
+            except (KeyError, IndexError):
+                return ""
 
         req = Request(self._bot.site, parameters={
             "action": "query", "prop": "revisions", "rvprop": "content",
-            "titles": "|".join(titles)
+            "rvslots": "main", "formatversion": "2", "titles": "|".join(titles)
         })
 
         data = req.submit()
         return [(page["title"], _get_rev(page))
-                for page in data["query"]["pages"].values()]
+                for page in data["query"]["pages"]]
 
     def _get_updated_discussions(self, start, end):
         """Return a dict mapping talk page titles to lists of section tuples.
