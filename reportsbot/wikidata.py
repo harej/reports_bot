@@ -27,12 +27,15 @@ class Wikidata:
             raise ValueError("Unknown binding type: %s" % bind["type"])
 
         val = bind["value"]
-        if "/entity/Q" not in val:
+        if "/entity/" not in val:
             raise ValueError("Invalid value for URI binding: %s" % val)
 
-        itemid = val.split("/entity/Q")[1]
+        itemid = val.split("/entity/", 1)[1]
+        if not itemid.startswith("Q"):
+            return None
+
         try:
-            return int(itemid)
+            return int(itemid[1:])
         except ValueError:
             raise ValueError("Invalid item ID for URI binding: %s" % val)
 
@@ -59,8 +62,9 @@ class Wikidata:
         try:
             var = data["head"]["vars"][0]
             bindings = data["results"]["bindings"]
-            return [self._parse_sparql_result_binding(bind[var])
-                    for bind in bindings]
+            items = [self._parse_sparql_result_binding(bind[var])
+                     for bind in bindings]
+            return [item for item in items if item is not None]
         except (KeyError, IndexError):
             return []
 
