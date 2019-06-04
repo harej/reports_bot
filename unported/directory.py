@@ -118,7 +118,7 @@ class WikiProjectDirectory:
             wp_editors = []
             start_date = time.strftime('%Y%m%d000000',time.gmtime(time.time()-(60*60*24*90)))  # 90 days
             end_date = time.strftime('%Y%m%d000000',time.gmtime(time.time()))  # Today
-            query = "select rev_user_text from page left join revision on page_id = rev_page where (page_namespace = 4 OR page_namespace = 5) and (page_title like \"{0}/%%\" OR page_title = \"{0}\") and rev_timestamp > {1} and rev_timestamp < {2} group by rev_user_text HAVING count(*) > 1;".format(project, start_date, end_date)
+            query = "select actor_name from page left join revision on page_id = rev_page left join actor on rev_actor = actor_id where (page_namespace = 4 OR page_namespace = 5) and (page_title like \"{0}/%%\" OR page_title = \"{0}\") and rev_timestamp > {1} and rev_timestamp < {2} group by actor_name HAVING count(*) > 1;".format(project, start_date, end_date)
             for result in wptools.query('wiki', query, None):
                 if result[0] is not None:
                     user = result[0].decode('utf-8')
@@ -140,9 +140,9 @@ class WikiProjectDirectory:
                 for package in packages:
                     counter += 1
                     if len(package) > 1:
-                        query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(tuple(package), start_date, end_date)
+                        query_builder = 'select actor_name from page left join revision on page_id = rev_page left join actor on rev_actor = actor_id where page_namespace in (0, 1, 118, 119) and page_title in {0} and rev_timestamp > {1} and rev_timestamp < {2} order by actor_name;'.format(tuple(package), start_date, end_date)
                     else:
-                        query_builder = 'select rev_user_text from page left join revision on page_id = rev_page where page_namespace in (0, 1, 118, 119) and page_title = "{0}" and rev_timestamp > {1} and rev_timestamp < {2} order by rev_user_text;'.format(package[0], start_date, end_date)
+                        query_builder = 'select actor_name from page left join revision on page_id = rev_page left join actor on rev_actor = actor_id where page_namespace in (0, 1, 118, 119) and page_title = "{0}" and rev_timestamp > {1} and rev_timestamp < {2} order by actor_name;'.format(package[0], start_date, end_date)
 
                     for result in wptools.query('wiki', query_builder, None):
                         if result[0] is not None:

@@ -49,7 +49,7 @@ class WikiProjectNotifications:
         Threshold is one edit in the recent changes tables (i.e. in the past 30 days)
         '''
 
-        q = 'select count(*) from recentchanges_userindex where rc_user_text = "{0}"'.format(username.replace('_', ' '))
+        q = 'select count(*) from recentchanges_userindex join actor on rc_actor = actor_id where actor_name = "{0}"'.format(username.replace('_', ' '))
         if self.wptools.query('wiki', q, None)[0][0] > 0:
             return True
         else:
