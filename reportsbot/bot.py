@@ -154,7 +154,7 @@ class Bot:
         if not self._wikidata:
             sql_kwargs = self._config.get_wiki_sql("wikidatawiki")
             sql_conn = self._sql_connect(**sql_kwargs)
-            self._wikidata = Wikidata(sql_conn)
+            self._wikidata = Wikidata(self.site, sql_conn)
         return self._wikidata
 
     def get_page(self, title):

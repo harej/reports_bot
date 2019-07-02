@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from urllib.parse import urlencode
-
 import requests
 
 __all__ = ["Wikidata"]
@@ -9,8 +7,19 @@ __all__ = ["Wikidata"]
 class Wikidata:
     """Provides a structured interface for querying Wikidata."""
 
-    def __init__(self, db):
+    def __init__(self, site, db):
+        self._site = site
         self._db = db
+        self._user_agent = None
+
+    def _get_user_agent(self):
+        """
+        Return a user agent string suitable for accessing Wikidata.
+        """
+        if self._user_agent is None:
+            from pywikibot.comms import http
+            self._user_agent = http.user_agent(self._site)
+        return self._user_agent
 
     @property
     def db(self):
@@ -50,8 +59,8 @@ class Wikidata:
         """
         params = {"query": query, "format": "json"}
         url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?"
-        url += urlencode(params)
-        req = requests.get(url)
+        req = requests.get(url, params=params, headers={"User-Agent": self._get_user_agent()})
+        req.raise_for_status()
 
         try:
             data = req.json()
