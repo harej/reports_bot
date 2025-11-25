@@ -118,7 +118,7 @@ def _disable_pywikibot_logging():
     # We need to wake up Pywikibot's logging interface so that its logger level
     # won't get overridden by a later logging call:
     import pywikibot
-    pywikibot.debug("Disabling routine logging", "logging")
+    pywikibot.debug("Disabling routine logging", layer="logging")
     getLogger("pywiki").setLevel("WARNING")
 
 def _setup_task_logger(logger):

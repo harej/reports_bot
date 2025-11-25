@@ -47,10 +47,13 @@ class UpdateMembers(Task):
         """Return a dict mapping projects to lists of members (usernames)."""
         self._logger.debug("Fetching member lists")
 
-        query = """SELECT page_title FROM templatelinks
-            JOIN page ON page_id = tl_from
-            WHERE page_namespace = 2 AND tl_namespace = 10
-            AND tl_title = ?"""
+        query = """
+        SELECT page_title
+        FROM templatelinks
+        INNER JOIN page ON page_id = tl_from
+        INNER JOIN linktarget on lt_id = tl_target_id
+        WHERE page_namespace = 2 AND lt_namespace = 10 AND lt_title = ?
+        """
 
         members = {}
         with self._bot.wikidb as cursor:
