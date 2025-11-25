@@ -75,11 +75,14 @@ class NewDiscussions(Task):
         The only pages included in the dict are those that have been updated
         in the given time range.
         """
-        query = """SELECT DISTINCT rc_namespace, rc_title
-            FROM recentchanges
-            WHERE rc_timestamp >= ? AND rc_timestamp < ?
-            AND rc_namespace % 2 = 1 AND rc_namespace != 3
-            AND (rc_type = 0 OR rc_type = 1 OR rc_type = 3) AND rc_bot = 0"""
+        query = """
+        SELECT DISTINCT rc_namespace, rc_title
+        FROM recentchanges
+        WHERE rc_timestamp >= ? AND rc_timestamp < ?
+        AND rc_namespace % 2 = 1 AND rc_namespace != 3
+        AND rc_source IN ('mw.edit', 'mw.new', 'mw.log')
+        AND rc_bot = 0
+        """
 
         startts = start.strftime("%Y%m%d%H%M%S")
         endts = end.strftime("%Y%m%d%H%M%S")
