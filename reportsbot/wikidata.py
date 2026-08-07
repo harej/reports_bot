@@ -4,6 +4,7 @@ import requests
 
 __all__ = ["Wikidata"]
 
+
 class Wikidata:
     """Provides a structured interface for querying Wikidata."""
 
@@ -18,6 +19,7 @@ class Wikidata:
         """
         if self._user_agent is None:
             from pywikibot.comms import http
+
             self._user_agent = http.user_agent(self._site)
         return self._user_agent
 
@@ -59,20 +61,20 @@ class Wikidata:
         """
         params = {"query": query, "format": "json"}
         url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?"
-        req = requests.get(url, params=params, headers={"User-Agent": self._get_user_agent()})
+        req = requests.get(
+            url, params=params, headers={"User-Agent": self._get_user_agent()}
+        )
         req.raise_for_status()
 
         try:
             data = req.json()
         except ValueError as exc:
-            raise ValueError(
-                "Couldn't decode JSON from URL: %s: %s" % (url, exc))
+            raise ValueError("Couldn't decode JSON from URL: %s: %s" % (url, exc))
 
         try:
             var = data["head"]["vars"][0]
             bindings = data["results"]["bindings"]
-            items = [self._parse_sparql_result_binding(bind[var])
-                     for bind in bindings]
+            items = [self._parse_sparql_result_binding(bind[var]) for bind in bindings]
             return [item for item in items if item is not None]
         except (KeyError, IndexError):
             return []
@@ -93,13 +95,12 @@ class Wikidata:
 
         with self._db as cursor:
             for start in range(0, len(items), chunksize):
-                chunk = items[start:start+chunksize]
+                chunk = items[start : start + chunksize]
                 params = ", ".join(["%s"] * len(chunk))
                 args = [wikiid] + chunk
 
                 cursor.execute(query.format(params), args)
-                results = [title.decode("utf8")
-                           for (title,) in cursor.fetchall()]
+                results = [title.decode("utf8") for (title,) in cursor.fetchall()]
                 pages.extend(results)
 
         return pages

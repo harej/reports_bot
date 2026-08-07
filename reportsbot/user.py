@@ -4,6 +4,7 @@ from .util import to_wiki_format
 
 __all__ = ["User"]
 
+
 class User:
     """Represents a user on a particular site.
 

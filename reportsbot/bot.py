@@ -48,6 +48,8 @@ class Bot:
             and "passwd" not in kwargs
         ):
             kwargs["read_default_file"] = expanduser("~/.my.cnf")
+        if "passwd" in kwargs:
+            kwargs["password"] = kwargs.pop("passwd")
         if "charset" not in kwargs:
             kwargs["charset"] = "utf8mb4"
 

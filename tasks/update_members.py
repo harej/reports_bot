@@ -13,8 +13,10 @@ import mwparserfromhell
 
 __all__ = ["UpdateMembers"]
 
+
 class UpdateMembers(Task):
     """Updates WikiProject member lists based on WikiProjectCard usage."""
+
     MEMBER_TEMPLATE = "WikiProjectCard"
 
     def _migrate_card(self, title, project):
@@ -84,27 +86,50 @@ class UpdateMembers(Task):
                 else:
                     members[project] = [username]
 
-        self._logger.info("%s total members in %s projects",
-                          sum(len(L) for L in members.values()), len(members))
+        self._logger.info(
+            "%s total members in %s projects",
+            sum(len(L) for L in members.values()),
+            len(members),
+        )
 
         return {project: sorted(users) for project, users in members.items()}
 
     def _update_project(self, project, members):
         """Update the active and inactive member lists for a single project."""
-        self._logger.debug("Updating project: %s (%s members)", project,
-                           len(members))
+        self._logger.debug("Updating project: %s (%s members)", project, len(members))
 
         ns_name = self._bot.site.namespaces.PROJECT.custom_name + ":"
         active_title = ns_name + project + "/Members"
         inactive_title = ns_name + project + "/Members/Inactive"
 
-        return_to_wikiproject = "{{Clickable button 2|%s%s|Return to WikiProject|class=mw-ui-neutral}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>" % (ns_name, project)
+        return_to_wikiproject = (
+            "{{Clickable button 2|%s%s|Return to WikiProject|class=mw-ui-neutral}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>"
+            % (ns_name, project)
+        )
         lua_garbage = "{{#invoke:<includeonly>random|list|limit=3</includeonly><noinclude>list|unbulleted</noinclude>|"
-        active = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[%s|inactive members list]].</div>\n\n</noinclude>" % inactive_title + lua_garbage
-        inactive = "<noinclude>" + return_to_wikiproject + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[%s|active members list]].</div>\n\n</noinclude>"% active_title + lua_garbage
+        active = (
+            "<noinclude>"
+            + return_to_wikiproject
+            + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[%s|inactive members list]].</div>\n\n</noinclude>"
+            % inactive_title
+            + lua_garbage
+        )
+        inactive = (
+            "<noinclude>"
+            + return_to_wikiproject
+            + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[%s|active members list]].</div>\n\n</noinclude>"
+            % active_title
+            + lua_garbage
+        )
 
         for member in members:
-            addition = "{{User:" + member + "/WikiProjectCards/" + project + "<includeonly>|mode=compact</includeonly>}}|"
+            addition = (
+                "{{User:"
+                + member
+                + "/WikiProjectCards/"
+                + project
+                + "<includeonly>|mode=compact</includeonly>}}|"
+            )
             if self._bot.get_user(member).is_active():
                 active += addition
             else:

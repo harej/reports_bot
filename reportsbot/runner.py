@@ -16,6 +16,7 @@ __all__ = ["find_task", "run_task"]
 
 _logger = get_logger("runner")
 
+
 def _get_module_info_for_task(name, base_dir):
     """Convert a task name and base directory into a module name and path."""
     if os.path.isabs(name):
@@ -28,6 +29,7 @@ def _get_module_info_for_task(name, base_dir):
 
     modname = os.path.split(path)[1].rsplit(".", 1)[0].replace("-", "_")
     return modname, path
+
 
 def _extract_task_class(objects):
     """Given a list of objects, try to return the correct Task subclass."""
@@ -44,6 +46,7 @@ def _extract_task_class(objects):
     _logger.debug("Found unique task class: %s", classes[0].__name__)
     return classes[0]
 
+
 def _get_task_class_from_module(module):
     """Extract the main Task subclass from the given module.
 
@@ -54,14 +57,16 @@ def _get_task_class_from_module(module):
     """
     if "__all__" in vars(module):
         _logger.debug("Searching within %s.__all__", module.__name__)
-        objects = [getattr(module, name) for name in module.__all__
-                   if hasattr(module, name)]
+        objects = [
+            getattr(module, name) for name in module.__all__ if hasattr(module, name)
+        ]
         task = _extract_task_class(objects)
         if task:
             return task
 
     _logger.debug("Searching within %s.__dict__", module.__name__)
     return _extract_task_class(vars(module).values())
+
 
 def find_task(name, base_dir="."):
     """Locate and return the Task object for the given task name.
@@ -88,6 +93,7 @@ def find_task(name, base_dir="."):
         raise TaskLoaderError(path)
 
     return task
+
 
 def run_task(task, config, project=None, lang=None):
     """Execute the given Task object.

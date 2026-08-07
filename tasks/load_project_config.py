@@ -13,8 +13,10 @@ from reportsbot.task import Task
 
 __all__ = ["LoadProjectConfig"]
 
+
 class LoadProjectConfig(Task):
     """Loads project config from on-wiki and stores it in our database."""
+
     CONFIG_TITLE = "Project:WikiProject X/wikiproject.json"
     ERROR_TITLE = "Project talk:WikiProject X/wikiproject.json/Errors"
 
@@ -48,7 +50,7 @@ class LoadProjectConfig(Task):
         sections = {
             "schema": dict,
             "defaults": dict,
-            "projects": list
+            "projects": list,
         }
 
         for key, type_ in sections.items():

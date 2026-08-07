@@ -2,6 +2,7 @@
 
 from .logging import get_logger
 
+
 class Task:
     """Represents a single task to be done by the bot."""
 

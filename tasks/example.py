@@ -4,6 +4,7 @@ from reportsbot.task import Task
 
 __all__ = ["Example"]
 
+
 class Example(Task):
     """Example task for demonstration purposes."""
 
@@ -13,4 +14,5 @@ class Example(Task):
         In this case, it simply launches a debugging session.
         """
         import code
+
         code.interact(local=locals())

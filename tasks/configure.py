@@ -12,8 +12,10 @@ from reportsbot.task import Task
 
 __all__ = ["Configure"]
 
+
 class Configure(Task):
     """Assisted creation of Reports bot's configuration."""
+
     PROMPT = "\x1b[32m> \x1b[0m"
 
     def __init__(self, bot):
@@ -65,13 +67,14 @@ class Configure(Task):
 
         Based on: http://stackoverflow.com/a/21912744/2712951
         """
+
         class OrderedDumper(yaml.Dumper):
             pass
 
         def _dict_representer(dumper, data):
             return dumper.represent_mapping(
-                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                data.items())
+                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, data.items()
+            )
 
         OrderedDumper.add_representer(OrderedDict, _dict_representer)
         return yaml.dump(data, stream, OrderedDumper, **kwargs)
@@ -85,7 +88,7 @@ class Configure(Task):
                 raise ConfigError(err.format(config_dir))
 
             self._logger.info("Creating config directory: %s", config_dir)
-            makedirs(config_dir, stat.S_IWUSR|stat.S_IRUSR|stat.S_IXUSR)
+            makedirs(config_dir, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
 
     def _get_username(self):
         """Return the bot's username; ask for it if necessary."""
@@ -110,13 +113,13 @@ class Configure(Task):
             defaultsfile = self._ask("Defaults file path:", "~/replica.my.cnf")
             localdb = self._ask("Local bot database name:")
             sql["all"] = {"read_default_file": defaultsfile}
-            sql["wiki"] = OrderedDict((
-                ("host", "{site}.labsdb"), ("db", "{site}_p")))
-            sql["local"] = OrderedDict((
-                ("host", "tools.labsdb"), ("db", localdb)))
+            sql["wiki"] = OrderedDict((("host", "{site}.labsdb"), ("db", "{site}_p")))
+            sql["local"] = OrderedDict((("host", "tools.labsdb"), ("db", localdb)))
 
         else:
-            wikihost = self._ask("Wiki database host (use '{site}' as a placeholder for the site ID, e.g. '{site}.labsdb'):")
+            wikihost = self._ask(
+                "Wiki database host (use '{site}' as a placeholder for the site ID, e.g. '{site}.labsdb'):"
+            )
             wikidb = self._ask("Wiki database name (e.g. '{site}_p'):")
             localhost = self._ask("Local bot database host:")
             localdb = self._ask("Local bot database name:")
@@ -127,14 +130,12 @@ class Configure(Task):
                 defaultsfile = self._ask("Defaults file path:", "~/.my.cnf")
                 sql["all"] = {"read_default_file": defaultsfile}
             else:
-                sql["wiki"]["user"] = self._ask(
-                    "Wiki database username:")
-                sql["wiki"]["password"] = self._ask_pass(
-                    "Wiki database password:")
-                sql["local"]["user"] = self._ask(
-                    "Local bot database username:")
+                sql["wiki"]["user"] = self._ask("Wiki database username:")
+                sql["wiki"]["password"] = self._ask_pass("Wiki database password:")
+                sql["local"]["user"] = self._ask("Local bot database username:")
                 sql["local"]["password"] = self._ask_pass(
-                    "Local bot database password:")
+                    "Local bot database password:"
+                )
 
         return sql
 
@@ -151,8 +152,10 @@ class Configure(Task):
         config["sql"] = self._build_sql_config()
 
         self._write_file_with_mode(
-            filename, stat.S_IWUSR|stat.S_IRUSR,
-            lambda fp: self._dump_yaml(config, stream=fp))
+            filename,
+            stat.S_IWUSR | stat.S_IRUSR,
+            lambda fp: self._dump_yaml(config, stream=fp),
+        )
 
     def _make_password_file(self, username, password):
         """Create a .password file for Pywikibot."""
@@ -160,8 +163,8 @@ class Configure(Task):
         data = "({}, {})".format(repr(username), repr(password))
 
         self._write_file_with_mode(
-            filename, stat.S_IWUSR|stat.S_IRUSR,
-            lambda fp: fp.write(data))
+            filename, stat.S_IWUSR | stat.S_IRUSR, lambda fp: fp.write(data)
+        )
         return filename
 
     def _make_pywiki_config(self):
@@ -181,9 +184,14 @@ class Configure(Task):
             consumer_secret = self._ask("OAuth consumer secret:")
             access_key = self._ask("OAuth access token:")
             access_secret = self._ask("OAuth access secret:")
-            config.append("authenticate['*'] = ({}, {}, {}, {})".format(
-                repr(consumer_key), repr(consumer_secret), repr(access_key),
-                repr(access_secret)))
+            config.append(
+                "authenticate['*'] = ({}, {}, {}, {})".format(
+                    repr(consumer_key),
+                    repr(consumer_secret),
+                    repr(access_key),
+                    repr(access_secret),
+                )
+            )
         else:
             username = self._get_username()
             password = self._ask_pass("Bot password:")
@@ -194,8 +202,10 @@ class Configure(Task):
         config.append("noisysleep = 120")
 
         self._write_file_with_mode(
-            filename, stat.S_IWUSR|stat.S_IRUSR,
-            lambda fp: fp.write("\n".join(config) + "\n"))
+            filename,
+            stat.S_IWUSR | stat.S_IRUSR,
+            lambda fp: fp.write("\n".join(config) + "\n"),
+        )
 
     def run(self):
         self._create_config_dir()

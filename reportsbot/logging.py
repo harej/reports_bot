@@ -63,12 +63,13 @@ class _WatchedRotatingFileHandler(RotatingFileHandler):
 
 class _ColorFormatter(Formatter):
     """A logging formatter that adds a bit of color to stream messages."""
+
     _LEVELS = {
-        "DEBUG"   : "\x1b[34m[DEBUG]\x1b[0m",
-        "INFO"    : "\x1b[32m[INFO] \x1b[0m",
-        "WARNING" : "\x1b[33m[WARN] \x1b[0m",
-        "ERROR"   : "\x1b[31m[ERROR]\x1b[0m",
-        "CRITICAL": "\x1b[1m\x1b[31m[CRIT] \x1b[0m"
+        "DEBUG": "\x1b[34m[DEBUG]\x1b[0m",
+        "INFO": "\x1b[32m[INFO] \x1b[0m",
+        "WARNING": "\x1b[33m[WARN] \x1b[0m",
+        "ERROR": "\x1b[31m[ERROR]\x1b[0m",
+        "CRITICAL": "\x1b[1m\x1b[31m[CRIT] \x1b[0m",
     }
 
     def __init__(self):
@@ -89,6 +90,7 @@ def _ensure_dirs(dirpath):
             raise ConfigError(err.format(dirpath))
         os.makedirs(dirpath, 0o777)
 
+
 def _setup_file_logging(log_dir):
     """Set up logging to the filesystem."""
     global _file_logging_enabled, _log_dir
@@ -98,28 +100,33 @@ def _setup_file_logging(log_dir):
     _ensure_dirs(log_dir)
 
     formatter = Formatter(
-        fmt="[%(asctime)s %(levelname)-7s] %(name)s: %(message)s",
-        datefmt=_DATE_FORMAT)
+        fmt="[%(asctime)s %(levelname)-7s] %(name)s: %(message)s", datefmt=_DATE_FORMAT
+    )
 
     infohandler = _WatchedRotatingFileHandler(
-        os.path.join(log_dir, "all.log"), maxBytes=32 * 1024**2, backupCount=4)
+        os.path.join(log_dir, "all.log"), maxBytes=32 * 1024**2, backupCount=4
+    )
     infohandler.setLevel("INFO")
 
     errorhandler = _WatchedRotatingFileHandler(
-        os.path.join(log_dir, "all.err"), maxBytes=32 * 1024**2, backupCount=4)
+        os.path.join(log_dir, "all.err"), maxBytes=32 * 1024**2, backupCount=4
+    )
     errorhandler.setLevel("WARNING")
 
     for handler in [infohandler, errorhandler]:
         handler.setFormatter(formatter)
         _root.addHandler(handler)
 
+
 def _disable_pywikibot_logging():
     """Tells Pywikibot to not log messages below WARNING level to stderr."""
     # We need to wake up Pywikibot's logging interface so that its logger level
     # won't get overridden by a later logging call:
     import pywikibot
+
     pywikibot.debug("Disabling routine logging", layer="logging")
     getLogger("pywiki").setLevel("WARNING")
+
 
 def _setup_task_logger(logger):
     """Configure a task logger to generate site- and task-specific logs."""
@@ -135,25 +142,26 @@ def _setup_task_logger(logger):
     _ensure_dirs(os.path.join(_log_dir, site))
 
     formatter = Formatter(
-        fmt="[%(asctime)s %(levelname)-7s] %(message)s",
-        datefmt=_DATE_FORMAT)
+        fmt="[%(asctime)s %(levelname)-7s] %(message)s", datefmt=_DATE_FORMAT
+    )
 
     infohandler = TimedRotatingFileHandler(
-        os.path.join(_log_dir, site, task + ".log"), "midnight", 1, 30)
+        os.path.join(_log_dir, site, task + ".log"), "midnight", 1, 30
+    )
     infohandler.setLevel("INFO")
 
-    debughandler = FileHandler(
-        os.path.join(_log_dir, site, task + ".log.verbose"), "w")
+    debughandler = FileHandler(os.path.join(_log_dir, site, task + ".log.verbose"), "w")
     debughandler.setLevel("DEBUG")
 
     errorhandler = RotatingFileHandler(
-        os.path.join(_log_dir, site, task + ".err"), maxBytes=1024**2,
-        backupCount=4)
+        os.path.join(_log_dir, site, task + ".err"), maxBytes=1024**2, backupCount=4
+    )
     errorhandler.setLevel("WARNING")
 
     for handler in [infohandler, debughandler, errorhandler]:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+
 
 def setup_logging(log_dir=None, quiet=False):
     """Set up the logging infrastructure.
@@ -180,6 +188,7 @@ def setup_logging(log_dir=None, quiet=False):
 
     if quiet:
         _disable_pywikibot_logging()
+
 
 def get_logger(name):
     """Return a logger for the given service.

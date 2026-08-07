@@ -9,6 +9,7 @@ from .exceptions import ConfigError
 
 __all__ = ["Config"]
 
+
 class Config:
     """Stores general-purpose bot configuration."""
 

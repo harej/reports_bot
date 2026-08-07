@@ -8,6 +8,7 @@ __all__ = ["WikiProject"]
 
 _Page = namedtuple("_Page", ["id", "title", "ns"])
 
+
 class WikiProject:
     """Represents a single WikiProject on a single site."""
 
