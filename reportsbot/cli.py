@@ -4,6 +4,7 @@
 This module contains the command-line interface wrapper around the task runner.
 """
 
+import os
 from argparse import ArgumentParser
 
 from .config import Config
@@ -12,6 +13,7 @@ from .logging import setup_logging
 from .runner import find_task, run_task
 
 __all__ = ["run"]
+
 
 def run(task_dir=".", config_dir="config", log_dir=None):
     """Main entry point into the Reports bot task runner.
@@ -23,36 +25,62 @@ def run(task_dir=".", config_dir="config", log_dir=None):
     bot configuration directory. *log_dir* is the (default) log file directory.
     """
     parser = ArgumentParser(
-        description="Run tasks through the Reports bot.", add_help=False,
-        usage="%(prog)s [-p <project>] [-l <lang>] [-q] <task> [<task> ...]")
+        description="Run tasks through the Reports bot.",
+        add_help=False,
+        usage="%(prog)s [-p <project>] [-l <lang>] [-q] <task> [<task> ...]",
+    )
 
     g_task = parser.add_argument_group("task options")
-    g_task.add_argument("task_names", nargs="+", metavar="<task>",
-                        help="name of task to run")
-    g_task.add_argument("-p", "--project", metavar="<project>",
-                        help="""project to run the bot on (default: wikipedia,
-                        unless overridden in config)""")
-    g_task.add_argument("-l", "--lang", metavar="<lang>",
-                        help="""language to run the bot on (default: en, unless
-                        overridden in config)""")
+    g_task.add_argument(
+        "task_names", nargs="+", metavar="<task>", help="name of task to run"
+    )
+    g_task.add_argument(
+        "-p",
+        "--project",
+        metavar="<project>",
+        help="project to run the bot on (default: wikipedia, unless overridden in config)",
+    )
+    g_task.add_argument(
+        "-l",
+        "--lang",
+        metavar="<lang>",
+        help="language to run the bot on (default: en, unless overridden in config)",
+    )
 
     g_logs = parser.add_argument_group("logging")
-    g_logs.add_argument("-q", "--quiet", action="store_true",
-                        help="don't print routine (non-error) logs to stdout")
-    g_logs.add_argument("-t", "--traceless", action="store_true",
-                        help="don't write any logs to the filesystem")
-    g_logs.add_argument("--log-dir", metavar="<path>", default=log_dir,
-                        help="use a custom log directory")
+    g_logs.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="don't print routine (non-error) logs to stdout",
+    )
+    g_logs.add_argument(
+        "-t",
+        "--traceless",
+        action="store_true",
+        help="don't write any logs to the filesystem",
+    )
+    g_logs.add_argument(
+        "--log-dir",
+        metavar="<path>",
+        default=log_dir,
+        help="use a custom log directory",
+    )
 
     g_misc = parser.add_argument_group("miscellaneous")
-    g_misc.add_argument("-c", "--config", metavar="<path>", default=config_dir,
-                        help="use a custom config directory")
-    g_misc.add_argument("-h", "--help", action="help",
-                        help="show this help message and exit")
+    g_misc.add_argument(
+        "-c",
+        "--config",
+        metavar="<path>",
+        default=config_dir,
+        help="use a custom config directory",
+    )
+    g_misc.add_argument(
+        "-h", "--help", action="help", help="show this help message and exit"
+    )
 
     args = parser.parse_args()
-    setup_logging(log_dir=None if args.traceless else args.log_dir,
-                  quiet=args.quiet)
+    setup_logging(log_dir=None if args.traceless else args.log_dir, quiet=args.quiet)
     config = Config(args.config)
 
     try:
@@ -63,5 +91,10 @@ def run(task_dir=".", config_dir="config", log_dir=None):
     for task in tasks:
         run_task(task, config, project=args.project, lang=args.lang)
 
+
 if __name__ == "__main__":
-    run()
+    run(
+        task_dir=os.getenv("REPORTS_BOT_TASKS_DIR", "."),
+        config_dir=os.getenv("REPORTS_BOT_CONFIG_DIR", "config"),
+        log_dir=os.getenv("REPORTS_BOT_LOGS_DIR", None),
+    )

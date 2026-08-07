@@ -8,34 +8,12 @@ First, clone the bot:
     git clone git@github.com:harej/reports_bot.git
     cd reports_bot
 
-Python 3.4+ is required. You should set up and activate a
-[virtual environment](https://www.python.org/dev/peps/pep-0405/) in the `venv`
-directory, though this is not required. The following workaround may be
-necessary on Debian systems:
+Python 3.9+ is required. Set up a virtual environment in the `venv` directory
+and install the dependencies:
 
-    python3 -m venv --without-pip venv
-    source venv/bin/activate
-    curl https://bootstrap.pypa.io/get-pip.py | python
-
-Next, install these dependencies:
-
-    pip install mwoauth requests PyYAML oursql3 mwparserfromhell BTrees \
-    mediawiki-utilities numpy scikit-learn
-
-You also need [Pywikibot](https://www.mediawiki.org/wiki/Manual:Pywikibot). You
-can `pip install pywikibot`, but I recommend installing it from source to get
-the latest updates:
-
-    cd venv
-    git clone https://gerrit.wikimedia.org/r/pywikibot/core.git pywikibot
-    cd pywikibot
-    git submodule update --init
-    python setup.py develop
-
-If you set up a virtualenv, run the following command to ensure the bot's task
-runner always uses it:
-
-    sed -e "1s|.*|#! $PWD/venv/bin/python|" -i "" ./run
+    python3 -m venv venv
+    . venv/bin/activate
+    pip install -r requirements.txt
 
 ## Unprivileged user
 
@@ -83,12 +61,6 @@ To run a task located at `tasks/foobar.py`:
 For a full description of the command-line interface:
 
     ./run --help
-
-If you're using a separate user for the bot, be aware that the `./run` script
-tries to ensure that it is running under the account that owns the `config`
-directory. You can run jobs from `reportsbot`'s crontab using the plain `./run`
-syntax, but manual jobs under your own account should be initiated with
-`sudo ./run`.
 
 If you prefer to use `reportsbot` as a regular Python package and execute task
 files at arbitrary locations, you can use this syntax, which supports the same

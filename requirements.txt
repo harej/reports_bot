@@ -1,9 +1,10 @@
-mwoauth
-requests
-PyYAML
-pymysql
-mwparserfromhell
 BTrees
+PyYAML
 mediawiki-utilities
+mwoauth
+mwparserfromhell
 numpy
+pymysql
+pywikibot
+requests
 scikit-learn
