@@ -9,6 +9,7 @@ from collections import namedtuple
 from datetime import datetime
 
 import mwparserfromhell
+from mwparserfromhell.wikicode import Wikicode
 from pywikibot.data.api import Request
 
 from reportsbot.task import Task
@@ -47,7 +48,9 @@ class NewDiscussions(Task):
             except ValueError:
                 continue
 
-            name = str(section.get(0).title.strip_code()).strip()
+            title_wt = section.get(0).title
+            assert isinstance(title_wt, Wikicode), type(title_wt)
+            name = str(title_wt.strip_code()).strip()
             sections.add(_Section(name, timestamp))
 
         return sections

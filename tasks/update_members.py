@@ -28,7 +28,9 @@ class UpdateMembers(Task):
         card = card.move(new_title, "Renaming card to match WikiProject name")
 
         code = mwparserfromhell.parse(card.text)
-        tmpl = code.filter_templates(self.MEMBER_TEMPLATE)[0]
+        tmpl = code.filter_templates(
+            matches=lambda t: t.name.matches(self.MEMBER_TEMPLATE)
+        )[0]
         tmpl.add("wikiproject", project)
 
         card.text = str(code)
@@ -56,7 +58,7 @@ class UpdateMembers(Task):
         """
 
         members = {}
-        with self._bot.wikidb as cursor:
+        with self._bot.wikidb.cursor() as cursor:
             cursor.execute(query, (self.MEMBER_TEMPLATE,))
             for row in cursor.fetchall():
                 title = row[0].decode("utf-8").replace("_", " ")

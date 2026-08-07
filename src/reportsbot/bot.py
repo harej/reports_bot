@@ -63,7 +63,7 @@ class Bot:
             return
 
         query = "SELECT config_json FROM project_config WHERE config_site = %s"
-        with self.localdb as cursor:
+        with self.localdb.cursor() as cursor:
             cursor.execute(query, (self.wikiid,))
             results = cursor.fetchall()
             if not results:
@@ -85,17 +85,24 @@ class Bot:
         self._load_project_config()
 
         name = to_wiki_format(self.site, name)
-        if name not in self._project_config["projects"]:
+        if name not in self.project_config["projects"]:
             return None
 
-        config = self._project_config["defaults"].copy()
-        config.update(self._project_config["projects"][name])
+        config = self.project_config["defaults"].copy()
+        config.update(self.project_config["projects"][name])
         return config
 
     @property
     def config(self):
         """Return the bot's Config object."""
         return self._config
+
+    @property
+    def project_config(self):
+        assert self._project_config is not None, (
+            "Must call get_configured_projects to set project_config first"
+        )
+        return self._project_config
 
     @property
     def wikiid(self):
@@ -163,7 +170,7 @@ class Bot:
     def get_configured_projects(self):
         """Return a list of all WikiProjects that are configured."""
         self._load_project_config()
-        projects = self._project_config["projects"]
+        projects = self.project_config["projects"]
         return [self.get_project(name) for name in projects]
 
     def get_last_updated(self, key):
@@ -172,7 +179,7 @@ class Bot:
             FROM last_update
             WHERE lu_site = %s AND lu_key = %s"""
 
-        with self.localdb as cursor:
+        with self.localdb.cursor() as cursor:
             cursor.execute(query, (self.wikiid, key))
             results = cursor.fetchall()
 
@@ -189,5 +196,5 @@ class Bot:
         if not timestamp:
             timestamp = datetime.utcnow()
 
-        with self.localdb as cursor:
+        with self.localdb.cursor() as cursor:
             cursor.execute(query, (self.wikiid, key, timestamp, timestamp))

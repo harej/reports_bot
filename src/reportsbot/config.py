@@ -1,4 +1,3 @@
-import errno
 from os import path
 
 import yaml
@@ -22,9 +21,9 @@ class Config:
         try:
             with open(filename) as fp:
                 self._data = yaml.full_load(fp)
+        except FileNotFoundError:
+            return  # Use defaults
         except (OSError, yaml.error.YAMLError) as exc:
-            if exc.errno == errno.ENOENT:  # Ignore missing file; use defaults
-                return
             err = "Couldn't read config file ({}):\n{}"
             raise ConfigError(err.format(filename, exc)) from None
 

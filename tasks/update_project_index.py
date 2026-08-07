@@ -7,7 +7,7 @@ Licensed under MIT License: http://mitlicense.org
 import re
 from collections import namedtuple
 
-from BTrees.IIBTree import IIBTree
+from BTrees.IIBTree import IIBTree  # pyright: ignore[reportMissingImports]
 from pymysql import ProgrammingError
 
 from reportsbot.task import Task
@@ -140,7 +140,10 @@ class UpdateProjectIndex(Task):
             (?:-related|_task_force)?
             _articles$"""
         for cat in categories:
-            name = re.search(regex, cat, flags=re.VERBOSE).group(1)
+            m = re.search(regex, cat, flags=re.VERBOSE)
+            if not m:
+                continue
+            name = m.group(1)
             if not name:  # Shouldn't happen, but would break us if it did
                 continue
             name = name[0].upper() + name[1:]  # Normalize

@@ -2,6 +2,7 @@ import stat
 from collections import OrderedDict
 from getpass import getpass
 from os import chmod, makedirs, path
+from typing import Literal, Union, overload
 
 import yaml
 
@@ -21,7 +22,15 @@ class Configure(Task):
         self._defaults = OrderedDict()
         self._username = None
 
-    def _ask(self, text, default=None, require=True):
+    @overload
+    def _ask(self, text, default=None, require: Literal[True] = True) -> str: ...
+
+    @overload
+    def _ask(
+        self, text, default=None, require: Literal[False] = False
+    ) -> Union[str, None]: ...
+
+    def _ask(self, text, default=None, require=True) -> Union[str, None]:
         """Ask a question of the user and return the response."""
         text = self.PROMPT + text
         if default:
@@ -121,8 +130,8 @@ class Configure(Task):
             wikidb = self._ask("Wiki database name (e.g. '{site}_p'):")
             localhost = self._ask("Local bot database host:")
             localdb = self._ask("Local bot database name:")
-            sql["wiki"] = OrderedDict((("host", wikihost), ("db", wikidb)))
-            sql["local"] = OrderedDict((("host", localhost), ("db", localdb)))
+            sql["wiki"] = {"host": wikihost, "db": wikidb}
+            sql["local"] = {"host": localhost, "db": localdb}
 
             if self._ask_bool("Use a defaults file for SQL authentication?"):
                 defaultsfile = self._ask("Defaults file path:", "~/.my.cnf")

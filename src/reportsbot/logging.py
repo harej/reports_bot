@@ -137,6 +137,7 @@ def _setup_task_logger(logger):
     site = parts[2]
     task = parts[3]
 
+    assert _log_dir is not None
     _ensure_dirs(os.path.join(_log_dir, site))
 
     formatter = Formatter(
