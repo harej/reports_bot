@@ -1,0 +1,9 @@
+mwoauth
+requests
+PyYAML
+pymysql
+mwparserfromhell
+BTrees
+mediawiki-utilities
+numpy
+scikit-learn
