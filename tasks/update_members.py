@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
 Updates membership lists for WikiProjects using the WikiProjectCard infrastructure
 Copyright (C) 2015 James Hare, 2016 Ben Kurtovic
 Licensed under MIT License: http://mitlicense.org
 """
 
+import mwparserfromhell
+
 from reportsbot.task import Task
 from reportsbot.util import to_wiki_format
-
-import mwparserfromhell
 
 __all__ = ["UpdateMembers"]
 
@@ -102,23 +100,18 @@ class UpdateMembers(Task):
         active_title = ns_name + project + "/Members"
         inactive_title = ns_name + project + "/Members/Inactive"
 
-        return_to_wikiproject = (
-            "{{Clickable button 2|%s%s|Return to WikiProject|class=mw-ui-neutral}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>"
-            % (ns_name, project)
-        )
+        return_to_wikiproject = f"{{{{Clickable button 2|{ns_name}{project}|Return to WikiProject|class=mw-ui-neutral}}}}<span class='wp-formsGadget mw-ui-button mw-ui-progressive' data-mode='create' data-type='Join'>Join WikiProject</span>"
         lua_garbage = "{{#invoke:<includeonly>random|list|limit=3</includeonly><noinclude>list|unbulleted</noinclude>|"
         active = (
             "<noinclude>"
             + return_to_wikiproject
-            + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[%s|inactive members list]].</div>\n\n</noinclude>"
-            % inactive_title
+            + f"\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>Our WikiProject members are below. Those who have not edited Wikipedia in over a month are moved to the [[{inactive_title}|inactive members list]].</div>\n\n</noinclude>"
             + lua_garbage
         )
         inactive = (
             "<noinclude>"
             + return_to_wikiproject
-            + "\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[%s|active members list]].</div>\n\n</noinclude>"
-            % active_title
+            + f"\n\n<div style='padding-top:1.5em; padding-bottom:2em;'>These are our members who have not edited in a while. Once they edit again, they will be moved back to the [[{active_title}|active members list]].</div>\n\n</noinclude>"
             + lua_garbage
         )
 

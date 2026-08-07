@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from collections import namedtuple
 
 from .util import to_wiki_format
@@ -64,7 +62,7 @@ class WikiProject:
                 args.append(namespaces)
             else:
                 chunk = ", ".join(["%s"] * len(namespaces))
-                query += " AND page_ns IN ({})".format(chunk)
+                query += f" AND page_ns IN ({chunk})"
                 args.extend(namespaces)
 
         if redirect is not None:

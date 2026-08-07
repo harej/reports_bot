@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains Reports bot's task runner.
 """
 
-from importlib.machinery import SourceFileLoader
 import os.path
+from importlib.machinery import SourceFileLoader
 
 from .bot import Bot
 from .exceptions import TaskLoaderError

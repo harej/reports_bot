@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains the command-line interface wrapper around the task runner.
 """

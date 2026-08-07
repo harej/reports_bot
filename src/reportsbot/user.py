@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .util import to_wiki_format
 
 __all__ = ["User"]

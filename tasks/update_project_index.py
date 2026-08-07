@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Project Index -- prepares an index of WikiProjects and their in-scope pages for use by scripts
 Copyright (C) 2015 James Hare, 2016 Ben Kurtovic
 Licensed under MIT License: http://mitlicense.org
 """
 
-from collections import namedtuple
 import re
+from collections import namedtuple
 
 from BTrees.IIBTree import IIBTree
 from pymysql import ProgrammingError
@@ -92,11 +90,11 @@ class UpdateProjectIndex(Task):
 
         escname = name.replace("_", "|_")
         candidates = (
-            "WikiProject|_%s" % escname,
-            "WikiProject|_%ss" % escname,
+            f"WikiProject|_{escname}",
+            f"WikiProject|_{escname}s",
             escname,
-            "WikiProject|_%%/%s|_task|_force" % escname,
-            "WikiProject|_%%/%s" % escname,
+            f"WikiProject|_%/{escname}|_task|_force",
+            f"WikiProject|_%/{escname}",
         )
 
         for candidate in candidates:

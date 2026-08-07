@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Loads wikiproject.json, validates it, stores it
 Copyright (C) 2015 James Hare, 2016 Ben Kurtovic
 Licensed under MIT License: http://mitlicense.org
 """
 
-from datetime import datetime
 import json
+from datetime import datetime
 
 from reportsbot.task import Task
 
@@ -31,7 +29,7 @@ class LoadProjectConfig(Task):
             return
 
         wikitime = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-        page.text = "{}: {}".format(wikitime, message)
+        page.text = f"{wikitime}: {message}"
         page.save("Error while loading configuration", minor=False)
 
     def _clear_errors(self):
@@ -55,7 +53,7 @@ class LoadProjectConfig(Task):
 
         for key, type_ in sections.items():
             if key not in data:
-                self._report_error("Missing section: {}".format(key))
+                self._report_error(f"Missing section: {key}")
                 return False
             if not isinstance(data[key], type_):
                 err = "Wrong data type for section {}, should be {}"

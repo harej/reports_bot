@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from reportsbot.task import Task
 
 __all__ = ["Example"]

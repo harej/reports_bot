@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from datetime import datetime
 import re
+from datetime import datetime
 
 from reportsbot.task import Task
-from reportsbot.util import to_sql_format, split_full_title, join_full_title
+from reportsbot.util import join_full_title, split_full_title, to_sql_format
 
 __all__ = ["Metrics"]
 
@@ -179,7 +177,7 @@ class Metrics(Task):
             ns_dict = self._bot.site.namespaces
             if ns_name in ns_dict:
                 title = ns_dict[ns_name].custom_prefix() + base
-        return "# [[{}]]".format(title)
+        return f"# [[{title}]]"
 
     def _build_page_list(self, articles, oldlist):
         """Return a metrics subpage's new article list."""
@@ -221,9 +219,9 @@ class Metrics(Task):
         )
 
         comment = "<!-- Reports bot variable: {} {} -->"
-        wrap = lambda key, body: (
-            comment.format("start", key) + body + comment.format("end", key)
-        )
+
+        def wrap(key, body):
+            return comment.format("start", key) + body + comment.format("end", key)
 
         oldlist = re.search(wrap("list", r"(.*?)"), oldtext, re.S)
         pagelist, count = self._build_page_list(
@@ -320,7 +318,7 @@ The bot keeps this list alphabetized and removes deleted pages.
         if not template:
             template = self._create_template(project, tmpl_title)
 
-        tmpl_comment = "<!-- Created from: [[{}]] -->\n".format(tmpl_title)
+        tmpl_comment = f"<!-- Created from: [[{tmpl_title}]] -->\n"
         template = tmpl_comment + template
 
         for month in months:

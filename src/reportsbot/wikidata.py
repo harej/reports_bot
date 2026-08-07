@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import requests
 
 __all__ = ["Wikidata"]
@@ -35,11 +33,11 @@ class Wikidata:
         Raise ValueError if we can't parse it.
         """
         if bind["type"] != "uri":
-            raise ValueError("Unknown binding type: %s" % bind["type"])
+            raise ValueError(f"Unknown binding type: {bind['type']}")
 
         val = bind["value"]
         if "/entity/" not in val:
-            raise ValueError("Invalid value for URI binding: %s" % val)
+            raise ValueError(f"Invalid value for URI binding: {val}")
 
         itemid = val.split("/entity/", 1)[1]
         if not itemid.startswith("Q"):
@@ -48,7 +46,7 @@ class Wikidata:
         try:
             return int(itemid[1:])
         except ValueError:
-            raise ValueError("Invalid item ID for URI binding: %s" % val)
+            raise ValueError(f"Invalid item ID for URI binding: {val}")
 
     def query(self, query):
         """Make a SPARQL query and return a list of item IDs.
@@ -69,9 +67,7 @@ class Wikidata:
         try:
             data = resp.json()
         except ValueError as exc:
-            raise ValueError(
-                "Couldn't decode JSON from URL: %s: %s" % (url, exc)
-            ) from exc
+            raise ValueError(f"Couldn't decode JSON from URL: {url}: {exc}") from exc
 
         try:
             var = data["head"]["vars"][0]

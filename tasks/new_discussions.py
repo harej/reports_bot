@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
-
 """
 New Discussions -- Provides a list of new discussions within a WikiProject's scope
 Copyright (C) 2015 James Hare, 2016 Ben Kurtovic
 Licensed under MIT License: http://mitlicense.org
 """
 
+import re
 from collections import namedtuple
 from datetime import datetime
-import re
-
-from reportsbot.task import Task
-from reportsbot.util import join_full_title
 
 import mwparserfromhell
 from pywikibot.data.api import Request
+
+from reportsbot.task import Task
+from reportsbot.util import join_full_title
 
 __all__ = ["NewDiscussions"]
 
@@ -226,7 +224,7 @@ class NewDiscussions(Task):
 
         summary = "Updating new discussions"
         if news:
-            summary += ": " + ", ".join("[[%s]]" % item for item in news)
+            summary += ": " + ", ".join(f"[[{item}]]" for item in news)
         page.save(summary, minor=False)
 
     def _process(self, project, updated):

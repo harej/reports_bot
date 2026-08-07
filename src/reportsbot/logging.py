@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains utility code for Python's standard logging library.
 """
 
-from logging import getLogger, Formatter, StreamHandler, FileHandler
-from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 import os
+from logging import FileHandler, Formatter, StreamHandler, getLogger
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from stat import ST_DEV, ST_INO
 
 from .exceptions import ConfigError
@@ -77,7 +75,7 @@ class _ColorFormatter(Formatter):
         super().__init__(fmt=fmt, datefmt=_DATE_FORMAT)
 
     def format(self, record):
-        default = "[{}]".format(record.levelname)
+        default = f"[{record.levelname}]"
         record.levelcolor = self._LEVELS.get(record.levelname, default)
         return super().format(record)
 

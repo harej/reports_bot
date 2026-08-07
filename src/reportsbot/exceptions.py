@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains the Reports bot exception hierarchy.
 

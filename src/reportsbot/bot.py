@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
-from datetime import datetime
 import json
-from os.path import expanduser
 import re
+from datetime import datetime
+from os.path import expanduser
 
 import pymysql
 

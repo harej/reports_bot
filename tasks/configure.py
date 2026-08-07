@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
+import stat
 from collections import OrderedDict
 from getpass import getpass
 from os import chmod, makedirs, path
-import stat
 
 import yaml
 
@@ -27,7 +25,7 @@ class Configure(Task):
         """Ask a question of the user and return the response."""
         text = self.PROMPT + text
         if default:
-            text += " \x1b[33m[{0}]\x1b[0m".format(default)
+            text += f" \x1b[33m[{default}]\x1b[0m"
 
         while True:
             answer = input(text + " ") or default
@@ -160,7 +158,7 @@ class Configure(Task):
     def _make_password_file(self, username, password):
         """Create a .password file for Pywikibot."""
         filename = path.join(self._bot.config.dir, ".password")
-        data = "({}, {})".format(repr(username), repr(password))
+        data = f"({repr(username)}, {repr(password)})"
 
         self._write_file_with_mode(
             filename, stat.S_IWUSR | stat.S_IRUSR, lambda fp: fp.write(data)
@@ -185,18 +183,13 @@ class Configure(Task):
             access_key = self._ask("OAuth access token:")
             access_secret = self._ask("OAuth access secret:")
             config.append(
-                "authenticate['*'] = ({}, {}, {}, {})".format(
-                    repr(consumer_key),
-                    repr(consumer_secret),
-                    repr(access_key),
-                    repr(access_secret),
-                )
+                f"authenticate['*'] = ({repr(consumer_key)}, {repr(consumer_secret)}, {repr(access_key)}, {repr(access_secret)})"
             )
         else:
             username = self._get_username()
             password = self._ask_pass("Bot password:")
             pwfile = self._make_password_file(username, password)
-            config.append("password_file = {}".format(repr(pwfile)))
+            config.append(f"password_file = {repr(pwfile)}")
 
         config.append("log = []")
         config.append("noisysleep = 120")
