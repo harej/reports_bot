@@ -8,6 +8,7 @@ from reportsbot.util import to_sql_format, split_full_title, join_full_title
 
 __all__ = ["Metrics"]
 
+
 class Metrics(Task):
     """Updates monthly metrics on the number of articles in a project."""
 
@@ -71,13 +72,17 @@ class Metrics(Task):
         with self._bot.wikidb as cursor:
             while cats:
                 processed.extend(cats)
-                cursor.execute(query.format(", ".join("?" * len(cats))), cats)
-                results = [(ns, title.decode("utf8"))
-                           for (ns, title) in cursor.fetchall()]
+                cursor.execute(query.format(", ".join(["%s"] * len(cats))), cats)
+                results = [
+                    (ns, title.decode("utf8")) for (ns, title) in cursor.fetchall()
+                ]
 
                 pages |= {(ns, title) for (ns, title) in results if ns == 0}
-                cats = [title for (ns, title) in results
-                        if ns == 14 and title not in processed]
+                cats = [
+                    title
+                    for (ns, title) in results
+                    if ns == 14 and title not in processed
+                ]
 
         return pages
 
@@ -104,7 +109,7 @@ class Metrics(Task):
         JOIN page ON rev_page = page_id
         WHERE ({})
         GROUP BY page_id"""
-        clause = "(page_namespace = ? AND page_title = ?)"
+        clause = "(page_namespace = %s AND page_title = %s)"
 
         chunksize = 10000
         results = []
@@ -114,14 +119,18 @@ class Metrics(Task):
                 if start != 0:
                     self._logger.debug("Done: %s/%s", start, len(pages))
 
-                chunk = pages[start:start+chunksize]
+                chunk = pages[start : start + chunksize]
                 params = " OR ".join([clause] * len(chunk))
                 args = [arg for page in chunk for arg in page]
 
                 cursor.execute(query.format(params), args)
                 chunkdata = cursor.fetchall()
-                results.extend([(ns, title.decode("utf8"), ts.decode("utf8"))
-                                for (ns, title, ts) in chunkdata])
+                results.extend(
+                    [
+                        (ns, title.decode("utf8"), ts.decode("utf8"))
+                        for (ns, title, ts) in chunkdata
+                    ]
+                )
 
         return results
 
@@ -130,7 +139,7 @@ class Metrics(Task):
         self._logger.debug("Bucketing articles")
 
         pages = self._lookup_pages(articles)
-        for (ns, title, timestamp) in pages:
+        for ns, title, timestamp in pages:
             creation = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
             month = datetime(creation.year, creation.month, 1)
             if month in buckets:
@@ -144,18 +153,23 @@ class Metrics(Task):
         self._logger.debug("Checking %s possible redlinks", len(titles))
 
         query = "SELECT page_namespace, page_title FROM page WHERE ({})"
-        clause = "(page_namespace = ? AND page_title = ?)"
+        clause = "(page_namespace = %s AND page_title = %s)"
 
         with self._bot.wikidb as cursor:
             params = " OR ".join([clause] * len(titles))
-            args = [arg for title in titles
-                    for arg in split_full_title(self._bot.site, title)]
+            args = [
+                arg
+                for title in titles
+                for arg in split_full_title(self._bot.site, title)
+            ]
 
             cursor.execute(query.format(params), args)
             results = cursor.fetchall()
 
-        valid = {join_full_title(self._bot.site, ns, title.decode("utf8"))
-                 for (ns, title) in results}
+        valid = {
+            join_full_title(self._bot.site, ns, title.decode("utf8"))
+            for (ns, title) in results
+        }
         return list(set(titles) - valid)
 
     def _list_item_for_title(self, title):
@@ -169,8 +183,9 @@ class Metrics(Task):
 
     def _build_page_list(self, articles, oldlist):
         """Return a metrics subpage's new article list."""
-        titles = [join_full_title(self._bot.site, ns, title)
-                  for (ns, title) in articles]
+        titles = [
+            join_full_title(self._bot.site, ns, title) for (ns, title) in articles
+        ]
         possible_redlinks = []
 
         # Preliminary list of plain bot-generated entries:
@@ -191,8 +206,9 @@ class Metrics(Task):
             del entries[title]
 
         # Join list of entries' values, sorted by the corresponding keys:
-        pagelist = "\n".join(val for (key, val) in
-                             sorted(entries.items(), key=lambda item: item[0]))
+        pagelist = "\n".join(
+            val for (key, val) in sorted(entries.items(), key=lambda item: item[0])
+        )
 
         # Exclude commented-out lines in the count:
         count = sum(1 for val in entries.values() if val.startswith("#"))
@@ -200,31 +216,39 @@ class Metrics(Task):
 
     def _build_page_text(self, month, articles, oldtext, template):
         """Return a metrics subpage's new content."""
-        self._logger.debug("Updating month: %s (%s articles)",
-                           month.strftime("%B %Y"), len(articles))
+        self._logger.debug(
+            "Updating month: %s (%s articles)", month.strftime("%B %Y"), len(articles)
+        )
 
         comment = "<!-- Reports bot variable: {} {} -->"
         wrap = lambda key, body: (
-            comment.format("start", key) + body + comment.format("end", key))
+            comment.format("start", key) + body + comment.format("end", key)
+        )
 
         oldlist = re.search(wrap("list", r"(.*?)"), oldtext, re.S)
         pagelist, count = self._build_page_list(
-            articles, oldlist.group(1).strip() if oldlist else "")
+            articles, oldlist.group(1).strip() if oldlist else ""
+        )
 
         replacements = {
             "list": wrap("list", "\n" + pagelist + "\n"),
             "articlecount": wrap("count", str(count)),
             "date": month.strftime("%B %Y"),
             "month": month.strftime("%B"),
-            "year": month.strftime("%Y")
+            "year": month.strftime("%Y"),
         }
 
         if oldtext:
             newtext = oldtext
-            newtext = re.sub(wrap("list", r"(.*?)"), replacements["list"],
-                             newtext, flags=re.S)
-            newtext = re.sub(wrap("count", r"(.*?)"),
-                             replacements["articlecount"], newtext, flags=re.S)
+            newtext = re.sub(
+                wrap("list", r"(.*?)"), replacements["list"], newtext, flags=re.S
+            )
+            newtext = re.sub(
+                wrap("count", r"(.*?)"),
+                replacements["articlecount"],
+                newtext,
+                flags=re.S,
+            )
         else:
             newtext = template
             for key, val in replacements.items():
@@ -302,8 +326,9 @@ The bot keeps this list alphabetized and removes deleted pages.
         for month in months:
             monthname = month.strftime("%B %Y")
             page = self._bot.get_page(base_title + "/" + monthname)
-            page.text = self._build_page_text(month, buckets[month], page.text,
-                                              template)
+            page.text = self._build_page_text(
+                month, buckets[month], page.text, template
+            )
             page.save("Updating monthly metrics", minor=False)
 
     def _update_metrics(self, project):
@@ -319,11 +344,11 @@ The bot keeps this list alphabetized and removes deleted pages.
         try:
             months = self._get_months(start)
         except ValueError:
-            self._logger.warn("Project %s invalid start_month: %s",
-                              project.name, start)
+            self._logger.warn("Project %s invalid start_month: %s", project.name, start)
             return
-        self._logger.debug("%s months, starting with %s", len(months),
-                           months[0].strftime("%B %Y"))
+        self._logger.debug(
+            "%s months, starting with %s", len(months), months[0].strftime("%B %Y")
+        )
 
         articles = self._fetch_articles(project)
         self._logger.debug("%s articles in scope", len(articles))

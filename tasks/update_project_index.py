@@ -10,7 +10,7 @@ from collections import namedtuple
 import re
 
 from BTrees.IIBTree import IIBTree
-from oursql import ProgrammingError
+from pymysql import ProgrammingError
 
 from reportsbot.task import Task
 from reportsbot.util import join_full_title
@@ -19,6 +19,7 @@ __all__ = ["UpdateProjectIndex"]
 
 Project = namedtuple("Project", ["id", "title", "categories"])
 Page = namedtuple("Page", ["id", "talkid", "ns", "title", "isredir"])
+
 
 class UpdateProjectIndex(Task):
     """Updates the index of articles associated with each WikiProject."""
@@ -84,10 +85,10 @@ class UpdateProjectIndex(Task):
         query1 = """SELECT page_id, page_namespace, page_title,
                 rd_namespace, rd_title
             FROM page LEFT JOIN redirect ON rd_from = page_id
-            WHERE page_title LIKE ? ESCAPE "|" AND page_namespace = 4"""
+            WHERE page_title LIKE %s ESCAPE "|" AND page_namespace = 4"""
         query2 = """SELECT page_id
             FROM page
-            WHERE page_namespace = ? AND page_title = ?"""
+            WHERE page_namespace = %s AND page_title = %s"""
 
         escname = name.replace("_", "|_")
         candidates = (
@@ -95,7 +96,7 @@ class UpdateProjectIndex(Task):
             "WikiProject|_%ss" % escname,
             escname,
             "WikiProject|_%%/%s|_task|_force" % escname,
-            "WikiProject|_%%/%s" % escname
+            "WikiProject|_%%/%s" % escname,
         )
 
         for candidate in candidates:
@@ -104,8 +105,9 @@ class UpdateProjectIndex(Task):
             if "%" in candidate:
                 # If this was a wildcard search, we want to make sure we didn't
                 # accidentally pick up a subpage of a subpage:
-                results = [res for res in results
-                           if res[2].decode("utf8").count("/") <= 1]
+                results = [
+                    res for res in results if res[2].decode("utf8").count("/") <= 1
+                ]
             if len(results) == 1:  # Need a definitive result
                 break
         else:
@@ -175,9 +177,9 @@ class UpdateProjectIndex(Task):
         query1 = "SELECT project_id, project_title FROM {}"
         query2 = """DELETE {0}, {1}
             FROM {0} LEFT JOIN {1} ON project_id = index_project
-            WHERE project_id = ?"""
-        query3 = "INSERT INTO {} (project_id, project_title) VALUES (?, ?)"
-        query4 = "UPDATE {} SET project_title = ? WHERE project_id = ?"
+            WHERE project_id = %s"""
+        query3 = "INSERT INTO {} (project_id, project_title) VALUES (%s, %s)"
+        query4 = "UPDATE {} SET project_title = %s WHERE project_id = %s"
 
         query1 = query1.format(self._project_table)
         query2 = query2.format(self._project_table, self._index_table)
@@ -190,8 +192,7 @@ class UpdateProjectIndex(Task):
 
         to_remove = old.keys() - new.keys()
         to_add = new.keys() - old.keys()
-        to_update = [pid for pid in new.keys() & old.keys()
-                     if new[pid] != old[pid]]
+        to_update = [pid for pid in new.keys() & old.keys() if new[pid] != old[pid]]
 
         for pid in to_remove:
             self._logger.debug("Remove: %s: %s", pid, old[pid])
@@ -239,8 +240,7 @@ class UpdateProjectIndex(Task):
             if not resultset:
                 break
 
-            self._logger.debug(
-                "Fetched chunk (%s+%s)", len(talkmap), len(resultset))
+            self._logger.debug("Fetched chunk (%s+%s)", len(talkmap), len(resultset))
             for talkid, subjectid, isredir in resultset:
                 talkmap[talkid] = (subjectid << 1) | isredir
 
@@ -255,15 +255,22 @@ class UpdateProjectIndex(Task):
         query = """SELECT DISTINCT page_id, page_namespace - 1, page_title
             FROM page
             JOIN categorylinks ON cl_from = page_id
-            WHERE cl_type = "page" AND page_namespace % 2 = 1
+            WHERE cl_type = "page" AND page_namespace %% 2 = 1
             AND cl_to IN ({})"""
 
-        query = query.format(", ".join("?" * len(project.categories)))
+        query = query.format(", ".join(["%s"] * len(project.categories)))
         cursor.execute(query, project.categories)
-        pages = [Page(talkmap[talkid] >> 1, talkid, ns, title.decode("utf8"),
-                      bool(talkmap[talkid] & 1))
-                 for (talkid, ns, title) in cursor.fetchall()
-                 if talkid in talkmap]
+        pages = [
+            Page(
+                talkmap[talkid] >> 1,
+                talkid,
+                ns,
+                title.decode("utf8"),
+                bool(talkmap[talkid] & 1),
+            )
+            for (talkid, ns, title) in cursor.fetchall()
+            if talkid in talkmap
+        ]
 
         self._logger.debug("    %s pages", len(pages))
         return pages
@@ -275,14 +282,14 @@ class UpdateProjectIndex(Task):
 
         query1 = """DELETE {0}, {1}
             FROM {0} LEFT JOIN {1} ON page_id = index_page
-            WHERE page_talk_id = ?"""
+            WHERE page_talk_id = %s"""
         query2 = """INSERT INTO {}
             (page_id, page_talk_id, page_title, page_ns, page_is_redirect)
-            VALUES (?, ?, ?, ?, ?)"""
+            VALUES (%s, %s, %s, %s, %s)"""
         query3 = """UPDATE {}
-            SET page_talk_id = ?, page_title = ?, page_ns = ?,
-                page_is_redirect = ?
-            WHERE page_id = ?"""
+            SET page_talk_id = %s, page_title = %s, page_ns = %s,
+                page_is_redirect = %s
+            WHERE page_id = %s"""
 
         query1 = query1.format(self._page_table, self._index_table)
         query2 = query2.format(self._page_table)
@@ -295,13 +302,15 @@ class UpdateProjectIndex(Task):
 
     def _sync_pageset(self, cursor, pages):
         """Synchronize every page in the given list with the database."""
+        pageids = [page.id for page in pages]
         query = """SELECT page_id, page_talk_id, page_title, page_ns,
                 page_is_redirect
             FROM {}
-            WHERE page_id IN (%s)""".format(self._page_table)
+            WHERE page_id IN ({})""".format(
+            self._page_table, ", ".join(["%s"] * len(pageids))
+        )
 
-        pageids = [page.id for page in pages]
-        cursor.execute(query % ", ".join("?" * len(pages)), pageids)
+        cursor.execute(query, pageids)
         current = {row[0]: row[1:] for row in cursor.fetchall()}
 
         to_remove = []
@@ -340,7 +349,7 @@ class UpdateProjectIndex(Task):
         chunksize = 10000
 
         for start in range(0, len(unprocessed), chunksize):
-            chunk = unprocessed[start:start+chunksize]
+            chunk = unprocessed[start : start + chunksize]
             num = int(start / chunksize) + 1
             self._logger.debug("    sync chunk #%s: %s pages", num, len(chunk))
             self._sync_pageset(cursor, chunk)
@@ -349,7 +358,7 @@ class UpdateProjectIndex(Task):
 
     def _get_current_index(self, cursor, project):
         """Return a list of page IDs currently indexed in the given project."""
-        query = "SELECT index_page FROM {} WHERE index_project = ?"
+        query = "SELECT index_page FROM {} WHERE index_project = %s"
         cursor.execute(query.format(self._index_table), (project.id,))
         return [pageid for (pageid,) in cursor.fetchall()]
 
@@ -361,8 +370,8 @@ class UpdateProjectIndex(Task):
         change = len(set(oldids) ^ set(newids))
         self._logger.debug(msg, len(oldids), len(newids), change)
 
-        query1 = "DELETE FROM {} WHERE index_page = ? AND index_project = ?"
-        query2 = "INSERT INTO {} (index_page, index_project) VALUES (?, ?)"
+        query1 = "DELETE FROM {} WHERE index_page = %s AND index_project = %s"
+        query2 = "INSERT INTO {} (index_page, index_project) VALUES (%s, %s)"
 
         query1 = query1.format(self._index_table)
         query2 = query2.format(self._index_table)
@@ -379,7 +388,7 @@ class UpdateProjectIndex(Task):
         self._logger.debug("Clearing old pages")
 
         query1 = "SELECT page_id FROM {}"
-        query2 = "DELETE FROM {} WHERE page_id = ?"
+        query2 = "DELETE FROM {} WHERE page_id = %s"
 
         query1 = query1.format(self._page_table)
         query2 = query2.format(self._page_table)

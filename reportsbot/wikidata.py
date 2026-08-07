@@ -86,7 +86,7 @@ class Wikidata:
         """
         query = """SELECT ips_site_page
             FROM wb_items_per_site
-            WHERE ips_site_id = ? AND ips_item_id IN ({})"""
+            WHERE ips_site_id = %s AND ips_item_id IN ({})"""
 
         chunksize = 10000
         pages = []
@@ -94,7 +94,7 @@ class Wikidata:
         with self._db as cursor:
             for start in range(0, len(items), chunksize):
                 chunk = items[start:start+chunksize]
-                params = ", ".join("?" * len(chunk))
+                params = ", ".join(["%s"] * len(chunk))
                 args = [wikiid] + chunk
 
                 cursor.execute(query.format(params), args)

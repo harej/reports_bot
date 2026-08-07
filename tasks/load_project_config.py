@@ -87,9 +87,9 @@ class LoadProjectConfig(Task):
         """Save the given config data to the database."""
         self._logger.info("Saving new config to database")
 
-        query1 = "DELETE FROM project_config WHERE config_site = ?"
+        query1 = "DELETE FROM project_config WHERE config_site = %s"
         query2 = """INSERT INTO project_config (config_site, config_json)
-                    VALUES (?, ?)"""
+                    VALUES (%s, %s)"""
 
         dump = json.dumps(data)
         with self._bot.localdb as cursor:

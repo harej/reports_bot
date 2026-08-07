@@ -21,8 +21,10 @@ __all__ = ["NewDiscussions"]
 _Section = namedtuple("_Section", ["name", "timestamp"])
 _Discussion = namedtuple("_Discussion", ["title", "name", "timestamp"])
 
+
 class NewDiscussions(Task):
     """Updates a list of new discussions within a WikiProject's scope."""
+
     DISCUSSION_TEMPLATE = "WPX new discussion"
     DISCUSSIONS_PER_PAGE = 15
     DISCUSSIONS_BEFORE_FOLD = 4
@@ -54,20 +56,27 @@ class NewDiscussions(Task):
 
     def _load_pages(self, titles):
         """Load a chunk of pages from the API."""
+
         def _get_rev(page):
             try:
                 return page["revisions"][0]["slots"]["main"]["content"]
             except (KeyError, IndexError):
                 return ""
 
-        req = Request(self._bot.site, parameters={
-            "action": "query", "prop": "revisions", "rvprop": "content",
-            "rvslots": "main", "formatversion": "2", "titles": "|".join(titles)
-        })
+        req = Request(
+            self._bot.site,
+            parameters={
+                "action": "query",
+                "prop": "revisions",
+                "rvprop": "content",
+                "rvslots": "main",
+                "formatversion": "2",
+                "titles": "|".join(titles),
+            },
+        )
 
         data = req.submit()
-        return [(page["title"], _get_rev(page))
-                for page in data["query"]["pages"]]
+        return [(page["title"], _get_rev(page)) for page in data["query"]["pages"]]
 
     def _get_updated_discussions(self, start, end):
         """Return a dict mapping talk page titles to lists of section tuples.
@@ -78,28 +87,31 @@ class NewDiscussions(Task):
         query = """
         SELECT DISTINCT rc_namespace, rc_title
         FROM recentchanges
-        WHERE rc_timestamp >= ? AND rc_timestamp < ?
-        AND rc_namespace % 2 = 1 AND rc_namespace != 3
+        WHERE rc_timestamp >= %s AND rc_timestamp < %s
+        AND rc_namespace %% 2 = 1 AND rc_namespace != 3
         AND rc_source IN ('mw.edit', 'mw.new', 'mw.log')
         AND rc_bot = 0
         """
 
         startts = start.strftime("%Y%m%d%H%M%S")
         endts = end.strftime("%Y%m%d%H%M%S")
-        self._logger.info("Fetching discussions updated between %s and %s",
-                          startts, endts)
+        self._logger.info(
+            "Fetching discussions updated between %s and %s", startts, endts
+        )
 
         with self._bot.wikidb as cursor:
             cursor.execute(query, (startts, endts))
-            titles = [join_full_title(self._bot.site, ns, title.decode("utf8"))
-                      for (ns, title) in cursor.fetchall()]
+            titles = [
+                join_full_title(self._bot.site, ns, title.decode("utf8"))
+                for (ns, title) in cursor.fetchall()
+            ]
 
         self._logger.debug("Fetching sections for %s pages", len(titles))
 
         sections = {}
         chunksize = 50
         for start in range(0, len(titles), chunksize):
-            chunk = titles[start:start+chunksize]
+            chunk = titles[start : start + chunksize]
             pages = self._load_pages(chunk)
             for title, text in pages:
                 try:
@@ -122,8 +134,9 @@ class NewDiscussions(Task):
         for tmpl in code.filter_templates():
             if tmpl.name != self.DISCUSSION_TEMPLATE:
                 continue
-            if not (tmpl.has("title") and tmpl.has("section") and
-                    tmpl.has("timestamp")):
+            if not (
+                tmpl.has("title") and tmpl.has("section") and tmpl.has("timestamp")
+            ):
                 continue
 
             try:
@@ -150,17 +163,23 @@ class NewDiscussions(Task):
             elif title in current:
                 sections[title] = current[title]
 
-        discussions = [_Discussion(title, section.name, section.timestamp)
-                       for title in sections for section in sections[title]]
+        discussions = [
+            _Discussion(title, section.name, section.timestamp)
+            for title in sections
+            for section in sections[title]
+        ]
         discussions.sort(key=lambda disc: disc.timestamp, reverse=True)
-        discussions = discussions[:self.DISCUSSIONS_PER_PAGE]
+        discussions = discussions[: self.DISCUSSIONS_PER_PAGE]
 
         for disc in discussions:
-            self._logger.debug("    [[%s#%s]] at %s", disc.title, disc.name,
-                               disc.timestamp.strftime("%Y %m %d, %H:%M:%S"))
+            self._logger.debug(
+                "    [[%s#%s]] at %s",
+                disc.title,
+                disc.name,
+                disc.timestamp.strftime("%Y %m %d, %H:%M:%S"),
+            )
 
-        news = [disc.title for disc in discussions
-                if disc.title not in current][:3]
+        news = [disc.title for disc in discussions if disc.title not in current][:3]
         return discussions, news
 
     def _save_discussions(self, project, title, discussions, news):
@@ -178,12 +197,14 @@ class NewDiscussions(Task):
         template = "{{WPX new discussion|color={{{1|#37f}}}|title=%(title)s|section=%(name)s|timestamp=%(timestamp)s}}"
 
         discitems = [
-            template % {
+            template
+            % {
                 "title": disc.title,
                 "name": disc.name,
-                "timestamp": disc.timestamp.strftime("%H:%M, %d %B %Y (UTC)")
+                "timestamp": disc.timestamp.strftime("%H:%M, %d %B %Y (UTC)"),
             }
-            for disc in discussions]
+            for disc in discussions
+        ]
 
         fold = self.DISCUSSIONS_BEFORE_FOLD
         if len(discitems) > fold:
@@ -200,7 +221,7 @@ class NewDiscussions(Task):
             "title": title,
             "projname": project.name,
             "projtalk": projtalk,
-            "discussions": disclist
+            "discussions": disclist,
         }
 
         summary = "Updating new discussions"

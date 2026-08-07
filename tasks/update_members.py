@@ -52,7 +52,7 @@ class UpdateMembers(Task):
         FROM templatelinks
         INNER JOIN page ON page_id = tl_from
         INNER JOIN linktarget on lt_id = tl_target_id
-        WHERE page_namespace = 2 AND lt_namespace = 10 AND lt_title = ?
+        WHERE page_namespace = 2 AND lt_namespace = 10 AND lt_title = %s
         """
 
         members = {}

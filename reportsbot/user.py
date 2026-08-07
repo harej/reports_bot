@@ -27,7 +27,7 @@ class User:
         query = """SELECT COUNT(*)
             FROM recentchanges_userindex
             JOIN actor ON rc_actor = actor_id
-            WHERE actor_name = ? AND
+            WHERE actor_name = %s AND
             TIMESTAMP(rc_timestamp) > DATE_SUB(NOW(), INTERVAL 30 DAY)"""
 
         with self._bot.wikidb as cursor:

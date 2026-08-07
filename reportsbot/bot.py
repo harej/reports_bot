@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-import encodings
 import json
 from os.path import expanduser
 import re
 
-import oursql
+import pymysql
 
 from .user import User
 from .util import to_wiki_format
@@ -14,6 +13,7 @@ from .wikidata import Wikidata
 from .wikiproject import WikiProject
 
 __all__ = ["Bot"]
+
 
 class Bot:
     """Represents an instance of the Reports bot on a particular wiki.
@@ -35,40 +35,23 @@ class Bot:
         self._wikidata = None
         self._project_config = None
 
-    @staticmethod
-    def _register_utf8mb4():
-        """Install utf8mb4 as a valid alias for utf_8."""
-        if "utf8mb4" not in encodings.aliases.aliases:
-            encodings.aliases.aliases["utf8mb4"] = "utf_8"
-        if hasattr(encodings, "_cache") and "utf8mb4" in encodings._cache:
-            del encodings._cache["utf8mb4"]
-
     def _sql_connect(self, **kwargs):
         """Return a new SQL connection using the given arguments.
 
-        We apply some transformations: a default file is configured if not
-        username or password is provided, a default charset is set, and
-        autocommit is turned off.
-
-        The default charset really should be utf8mb4, but because of a bug in
-        oursql's handling of charsets (conflating Python codecs with MySQL
-        charsets, which are sometimes different), we cannot. Instead, if
-        utf8mb4 is chosen, we'll install it as an alias first.
+        We apply some transformations: a default file is configured if no
+        username or password is provided, and a default charset is set.
         """
-        if ("read_default_file" not in kwargs and "user" not in kwargs
-                and "password" not in kwargs):
+        if (
+            "read_default_file" not in kwargs
+            and "user" not in kwargs
+            and "password" not in kwargs
+            and "passwd" not in kwargs
+        ):
             kwargs["read_default_file"] = expanduser("~/.my.cnf")
         if "charset" not in kwargs:
             kwargs["charset"] = "utf8mb4"
-        if "autoping" not in kwargs:
-            kwargs["autoping"] = True
-        if "autoreconnect" not in kwargs:
-            kwargs["autoreconnect"] = True
 
-        if kwargs["charset"] == "utf8mb4":
-            self._register_utf8mb4()
-
-        return oursql.connect(**kwargs)
+        return pymysql.connect(**kwargs)
 
     def _load_project_config(self):
         """Load the project config JSON blob from the database.
@@ -79,7 +62,7 @@ class Bot:
         if self._project_config is not None:
             return
 
-        query = "SELECT config_json FROM project_config WHERE config_site = ?"
+        query = "SELECT config_json FROM project_config WHERE config_site = %s"
         with self.localdb as cursor:
             cursor.execute(query, (self.wikiid,))
             results = cursor.fetchall()
@@ -128,9 +111,11 @@ class Bot:
     def site(self):
         """Return a Pywikibot Site instance."""
         import pywikibot
+
         if not self._site:
-            self._site = pywikibot.Site(self._lang, self._project,
-                                        self._config.username)
+            self._site = pywikibot.Site(
+                self._lang, self._project, self._config.username
+            )
         return self._site
 
     @property
@@ -160,6 +145,7 @@ class Bot:
     def get_page(self, title):
         """Return a Pywikibot Page instance for the given page."""
         import pywikibot
+
         return pywikibot.Page(self.site, title)
 
     def get_project(self, name):
@@ -184,7 +170,7 @@ class Bot:
         """Get the last update timestamp for the given key."""
         query = """SELECT lu_timestamp
             FROM last_update
-            WHERE lu_site = ? AND lu_key = ?"""
+            WHERE lu_site = %s AND lu_key = %s"""
 
         with self.localdb as cursor:
             cursor.execute(query, (self.wikiid, key))
@@ -197,8 +183,8 @@ class Bot:
     def set_last_updated(self, key, timestamp=None):
         """Set the last update timestamp for the given key."""
         query = """INSERT INTO last_update (lu_site, lu_key, lu_timestamp)
-            VALUES(?, ?, ?)
-            ON DUPLICATE KEY UPDATE lu_timestamp = ?"""
+            VALUES(%s, %s, %s)
+            ON DUPLICATE KEY UPDATE lu_timestamp = %s"""
 
         if not timestamp:
             timestamp = datetime.utcnow()

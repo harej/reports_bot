@@ -53,21 +53,21 @@ class WikiProject:
             FROM {0}_index
             JOIN {0}_page ON index_page = page_id
             JOIN {0}_project ON index_project = project_id
-            WHERE project_title = ?"""
+            WHERE project_title = %s"""
 
         args = [self._name]
 
         if namespaces is not None:
             if isinstance(namespaces, int):
-                query += " AND page_ns = ?"
+                query += " AND page_ns = %s"
                 args.append(namespaces)
             else:
-                chunk = ", ".join("?" * len(namespaces))
+                chunk = ", ".join(["%s"] * len(namespaces))
                 query += " AND page_ns IN ({})".format(chunk)
                 args.extend(namespaces)
 
         if redirect is not None:
-            query += " AND page_is_redirect = ?"
+            query += " AND page_is_redirect = %s"
             args.append(int(redirect))
 
         with self._bot.localdb as cursor:
