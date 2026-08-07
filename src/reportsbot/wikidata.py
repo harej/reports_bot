@@ -61,15 +61,17 @@ class Wikidata:
         """
         params = {"query": query, "format": "json"}
         url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?"
-        req = requests.get(
+        resp = requests.get(
             url, params=params, headers={"User-Agent": self._get_user_agent()}
         )
-        req.raise_for_status()
+        resp.raise_for_status()
 
         try:
-            data = req.json()
+            data = resp.json()
         except ValueError as exc:
-            raise ValueError("Couldn't decode JSON from URL: %s: %s" % (url, exc))
+            raise ValueError(
+                "Couldn't decode JSON from URL: %s: %s" % (url, exc)
+            ) from exc
 
         try:
             var = data["head"]["vars"][0]

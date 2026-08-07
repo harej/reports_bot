@@ -1,0 +1,38 @@
+[project]
+name = "reports_bot"
+version = "1.0.dev0"
+authors = [
+    {name = "James Hare", email = "jamesmhare@gmail.com"},
+    {name = "Ben Kurtovic", email = "ben@benkurtovic.com"},
+]
+description = "Reports bot maintains reports and other useful things for Wikipedia WikiProjects"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "BTrees",
+    "PyYAML",
+    "mediawiki-utilities",
+    "mwoauth",
+    "mwparserfromhell",
+    "numpy",
+    "pymysql",
+    "pywikibot",
+    "requests",
+    "scikit-learn",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+
+[project.scripts]
+reports_bot = "reportsbot.cli:main"
+
+[tool.pyright]
+pythonVersion = "3.9"
+venvPath = "."
+venv = "venv"
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP"]

@@ -19,5 +19,5 @@ export REPORTS_BOT_LOGS_DIR="$SCRIPT_DIR"/logs
 
 export PYWIKIBOT2_DIR=$REPORTS_BOT_CONFIG_DIR
 
-. venv/bin/activate
+. "$SCRIPT_DIR"/venv/bin/activate
 exec python -m reportsbot.cli "$@"

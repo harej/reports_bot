@@ -1,6 +1,10 @@
 # Python
 __pycache__/
 *.pyc
+*.egg-info/
+
+# Pywikibot
+throttle.ctrl
 
 # Reports bot
 config/
