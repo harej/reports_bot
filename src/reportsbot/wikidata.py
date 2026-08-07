@@ -91,7 +91,7 @@ class Wikidata:
         chunksize = 10000
         pages = []
 
-        with self._db as cursor:
+        with self._db.cursor() as cursor:
             for start in range(0, len(items), chunksize):
                 chunk = items[start : start + chunksize]
                 params = ", ".join(["%s"] * len(chunk))

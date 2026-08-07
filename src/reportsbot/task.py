@@ -1,10 +1,11 @@
+from .bot import Bot
 from .logging import get_logger
 
 
 class Task:
     """Represents a single task to be done by the bot."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self._bot = bot
 
         name = type(self).__module__

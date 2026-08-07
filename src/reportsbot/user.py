@@ -1,4 +1,9 @@
+import typing
+
 from .util import to_wiki_format
+
+if typing.TYPE_CHECKING:
+    from .bot import Bot
 
 __all__ = ["User"]
 
@@ -9,7 +14,7 @@ class User:
     Users can be part of multiple WikiProjects.
     """
 
-    def __init__(self, bot, name):
+    def __init__(self, bot: Bot, name):
         self._bot = bot
         self._name = to_wiki_format(bot.site, name)
 
@@ -29,7 +34,7 @@ class User:
             WHERE actor_name = %s AND
             TIMESTAMP(rc_timestamp) > DATE_SUB(NOW(), INTERVAL 30 DAY)"""
 
-        with self._bot.wikidb as cursor:
+        with self._bot.wikidb.cursor() as cursor:
             cursor.execute(query, (self._name,))
             count = cursor.fetchall()[0][0]
 

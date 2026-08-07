@@ -1,6 +1,10 @@
+import typing
 from collections import namedtuple
 
 from .util import to_wiki_format
+
+if typing.TYPE_CHECKING:
+    from .bot import Bot
 
 __all__ = ["WikiProject"]
 
@@ -10,7 +14,7 @@ _Page = namedtuple("_Page", ["id", "title", "ns"])
 class WikiProject:
     """Represents a single WikiProject on a single site."""
 
-    def __init__(self, bot, name, config=None):
+    def __init__(self, bot: Bot, name, config=None):
         self._bot = bot
         self._name = to_wiki_format(bot.site, name)
 
@@ -69,6 +73,6 @@ class WikiProject:
             query += " AND page_is_redirect = %s"
             args.append(int(redirect))
 
-        with self._bot.localdb as cursor:
+        with self._bot.localdb.cursor() as cursor:
             cursor.execute(query.format(self._bot.wikiid), tuple(args))
             return [_Page(*res) for res in cursor.fetchall()]

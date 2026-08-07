@@ -92,7 +92,7 @@ class LoadProjectConfig(Task):
                     VALUES (%s, %s)"""
 
         dump = json.dumps(data)
-        with self._bot.localdb as cursor:
+        with self._bot.localdb.cursor() as cursor:
             cursor.execute("BEGIN")
             cursor.execute(query1, (self._bot.wikiid,))
             cursor.execute(query2, (self._bot.wikiid, dump))

@@ -67,7 +67,7 @@ class Metrics(Task):
         cats = [to_sql_format(cat) for cat in cats]
         processed = []
 
-        with self._bot.wikidb as cursor:
+        with self._bot.wikidb.cursor() as cursor:
             while cats:
                 processed.extend(cats)
                 cursor.execute(query.format(", ".join(["%s"] * len(cats))), cats)
@@ -112,7 +112,7 @@ class Metrics(Task):
         chunksize = 10000
         results = []
 
-        with self._bot.wikidb as cursor:
+        with self._bot.wikidb.cursor() as cursor:
             for start in range(0, len(pages), chunksize):
                 if start != 0:
                     self._logger.debug("Done: %s/%s", start, len(pages))
@@ -153,7 +153,7 @@ class Metrics(Task):
         query = "SELECT page_namespace, page_title FROM page WHERE ({})"
         clause = "(page_namespace = %s AND page_title = %s)"
 
-        with self._bot.wikidb as cursor:
+        with self._bot.wikidb.cursor() as cursor:
             params = " OR ".join([clause] * len(titles))
             args = [
                 arg

@@ -100,7 +100,7 @@ class NewDiscussions(Task):
             "Fetching discussions updated between %s and %s", startts, endts
         )
 
-        with self._bot.wikidb as cursor:
+        with self._bot.wikidb.cursor() as cursor:
             cursor.execute(query, (startts, endts))
             titles = [
                 join_full_title(self._bot.site, ns, title.decode("utf8"))
@@ -215,7 +215,9 @@ class NewDiscussions(Task):
         else:
             disclist = "\n".join(discitems)
 
-        projtalk = self._bot.get_page(project.name).toggleTalkPage().title()
+        projtalk_page = self._bot.get_page(project.name).toggleTalkPage()
+        assert projtalk_page is not None, f"Couldn't toggle talk for {project.name}"
+        projtalk = projtalk_page.title()
 
         page = self._bot.get_page(title)
         page.text = text % {
