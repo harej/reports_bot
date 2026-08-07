@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 
 from .util import to_wiki_format
